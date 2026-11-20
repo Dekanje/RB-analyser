@@ -31,7 +31,7 @@ def main():
     (out/"validation.json").write_text(json.dumps(checks,indent=2))
     ok=sorted(x["legend"] for x in checks if x["status"]=="complete")
     allpairs=list(itertools.combinations_with_replacement(ok,2))
-    selection=[(i,a,b) for i,(a,b) in enumerate(allpairs) if i%a_count(a.count)==a.index]
+    selection=[(i,left,right) for i,(left,right) in enumerate(allpairs) if i % a.count == a.index]
     print(f"SHARD {a.index}/{a.count}: supported={len(ok)} pairings={len(selection)}/{len(allpairs)}",flush=True)
     games=[];series=[];summaries=[]
     started=time.monotonic()
@@ -74,6 +74,5 @@ def main():
     print("RESULT "+json.dumps(meta),flush=True)
     return 0 if len(summaries)==len(selection) and len(games)==len(selection)*6 else 1
 
-def a_count(n):return n
 
 if __name__=="__main__":raise SystemExit(main())
