@@ -11,9 +11,9 @@ on:
       mode:
         description: 'check = import only; smoke = up to six real games; one_pair = up to two games'
         required: true
-        default: 'smoke'
+        default: 'bo3_matrix'
         type: choice
-        options: [check, smoke, one_pair, matrix]
+        options: [check, smoke, one_pair, matrix, bo3_matrix]
       agent:
         description: 'Start with random AI; MCTS is substantially slower'
         required: true
@@ -66,7 +66,11 @@ jobs:
       - name: Run the engine and preserve exact results
         if: ${{ github.event_name == 'push' || inputs.mode != 'check' }}
         run: |
-          python3 scripts/run_actual_games.py --mode "${{ inputs.mode || 'matrix' }}" --agent "${{ inputs.agent || 'mcts:sims=10' }}" --seconds 90 --budget-seconds 1300
+          if [ "${{ inputs.mode || 'bo3_matrix' }}" = "bo3_matrix" ]; then
+            python3 scripts/run_three_game_series.py --agent "${{ inputs.agent || 'mcts:sims=10' }}" --seconds 90 --budget-seconds 2400
+          else
+            python3 scripts/run_actual_games.py --mode "${{ inputs.mode || 'smoke' }}" --agent "${{ inputs.agent || 'random' }}" --seconds 90 --budget-seconds 1300
+          fi
 
       - name: Upload available results and error logs
         if: always()
