@@ -27,7 +27,14 @@ for filename in decks:
         match=re.fullmatch(r"(\d+)\s+(.+)",line)
         if not match:continue
         qty,name=int(match.group(1)),match.group(2)
-        matches=byname.get(name,[])
+        # Legends are serialized by subtitle in the compiled CardDB ("Loose Cannon"),
+        # but the Piltover deck format uses full "Jinx, Loose Cannon" labels.
+        # Use the card type and exact subtitle; never label every legend unknown.
+        if section=="Legend":
+            subtitle=name.split(", ",1)[-1]
+            matches=[c for c in byname.get(subtitle,[]) if c["card_type"]=="legend"]
+        else:
+            matches=byname.get(name,[])
         reason="OK" if matches else "NOT_IN_COMPILED_ENGINE"
         if matches and all(c["banned"] for c in matches):reason="BANNED_IN_ENGINE"
         row={"legend":legend,"deck":filename.name,"section":section,"card":name,
