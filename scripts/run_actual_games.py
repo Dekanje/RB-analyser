@@ -28,7 +28,7 @@ def gametest(exe,a,b,seed,seconds,agent):
 def main():
     p=argparse.ArgumentParser()
     p.add_argument("--engine",default="alpharune/build/riftbound")
-    p.add_argument("--mode",choices=["check","smoke","one_pair"],default="smoke")
+    p.add_argument("--mode",choices=["check","smoke","one_pair","matrix"],default="smoke")
     p.add_argument("--agent",default="random")
     p.add_argument("--seconds",type=int,default=120)
     args=p.parse_args()
@@ -43,7 +43,7 @@ def main():
         missing=[]
         for name,file in named.items():
             for line in file.read_text().splitlines():
-                mat=re.match(r"^(\\d+) (.+)$",line)
+                mat=re.match(r"^(\d+) (.+)$",line)
                 if mat and mat.group(2) not in known: missing.append((name,mat.group(2)))
         with (OUT/"catalog_missing.csv").open("w",newline="") as f:
             w=csv.writer(f);w.writerow(["Legend","Card missing from catalog"]);w.writerows(missing)
@@ -51,8 +51,32 @@ def main():
     if args.mode=="check": return 0
     exe=ROOT/args.engine
     if not exe.exists(): print("Missing compiled AlphaRune binary",file=sys.stderr);return 2
+
+    # The gallery card list is not the compiled 955-card engine registry.
+    # Run ONE actual deterministic game for each unchanged deck against
+    # the known-working Kennen deck to detect unavailable cards and game errors.
+    anchor_name="Kennen, Heart of the Tempest"
+    if anchor_name not in named: raise RuntimeError("Missing known-working anchor")
+    checked=[]
+    for idx,(name,deck) in enumerate(sorted(named.items())):
+        validation=gametest(exe,deck,named[anchor_name],2026112700+idx,min(30,args.seconds),"random")
+        checked.append({"legend":name,"status":validation["status"],
+                        "winner":validation["winner"],"error":validation["stderr_tail"][:1200],
+                        "seed":2026112700+idx,"engine_commit":"ec90f0fed002aed374d06249fa95e83e3cfbd386"})
+        detail=validation["stderr_tail"].strip().splitlines()[-1] if validation["stderr_tail"].strip() else ""
+        print(f"CHECK {idx+1:02d}/{len(named)} {name}: {validation['status']} {detail}",flush=True)
+    with (OUT/"deck_validation.jsonl").open("w") as stream:
+        for item in checked: stream.write(json.dumps(item)+"\\n")
+    supported=sum(item["status"]=="complete" for item in checked)
+    print(f"Engine-resolved validation games: {supported} / {len(checked)}",flush=True)
     pairs=[("Azir, Emperor of the Sands","Rek'Sai, Void Burrower"),("Vex, Gloomist","Riven, The Exile"),("Kennen, Heart of the Tempest","Irelia, Blade Dancer")]
     if args.mode=="one_pair": pairs=pairs[:1]
+    if args.mode=="matrix":
+        # Match-mode single games, not true BO3 series (no sideboard swaps).
+        # Only use decks that passed complete engine-resolved games.
+        ok={item["legend"] for item in checked if item["status"]=="complete"}
+        pairs=[(a,b) for a,b in itertools.combinations_with_replacement(sorted(ok),2)]
+        print(f"Eligible pairings: {len(pairs)}; mode=matrix, game-only, no sideboard swaps.",flush=True)
     records=[]
     for idx,(name_a,name_b) in enumerate(pairs):
         for seating,(a,b) in enumerate([(name_a,name_b),(name_b,name_a)]):
@@ -66,5 +90,6 @@ def main():
     with (OUT/"engine_games.jsonl").open("w") as f:
         for record in records: f.write(json.dumps(record)+"\n")
     print(f"Real AlphaRune games completed: {sum(x['status']=='complete' for x in records)} / {len(records)}",flush=True)
+    print("This is engine gameplay with unchanged custom decks. It is NOT a tournament BO3 (no post-game sideboard choices).",flush=True)
     return 0 if any(x["status"]=="complete" for x in records) else 1
 if __name__=="__main__":sys.exit(main())
