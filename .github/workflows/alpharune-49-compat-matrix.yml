@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   simulate:
-    name: 49-deck shard ${D}{{ matrix.shard }} / 8
+    name: 49-deck shard ${{ matrix.shard }} / 8
     runs-on: ubuntu-24.04
     timeout-minutes: 35
     strategy:
@@ -44,12 +44,12 @@ jobs:
           cmake --build alpharune/build --target riftbound -j 2
       - name: Play the real engine with all 49 compatible decks
         run: |
-          python3 compat/run_parallel.py --index ${D}{{ matrix.shard }} --count 8 --agent 'mcts:sims=10' --seconds 90 --budget 1700
+          python3 compat/run_parallel.py --index ${{ matrix.shard }} --count 8 --agent 'mcts:sims=10' --seconds 90 --budget 1700
       - name: Save game/series results for this shard
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: compat49-shard-${D}{{ matrix.shard }}
+          name: compat49-shard-${{ matrix.shard }}
           path: |
             results/
             compat_results/
@@ -73,7 +73,14 @@ jobs:
       - name: Make path compatible with original aggregator
         run: |
           for f in shard_artifacts/compat49-shard-*; do
-            mv "$f" "shard_artifacts/bo3-shard-${D}{f##*-}"
+            id="${f##*-}"
+            mkdir -p "shard_artifacts/bo3-shard-$id"
+            if [ -f "$f/results/metadata.json" ]; then
+              source_dir="$f/results"
+            else
+              source_dir="$f"
+            fi
+            cp "$source_dir/games.csv" "$source_dir/series.csv" "$source_dir/summary.csv" "$source_dir/metadata.json" "shard_artifacts/bo3-shard-$id/"
           done
       - name: Verify and merge actual engine results
         run: python3 bo3/aggregate.py
