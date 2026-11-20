@@ -1,0 +1,87 @@
+{
+  "azir_emperor_of_the_sands.txt": {
+    "MainDeck": {
+      "Battle Preparations": -2,
+      "Back Off": 1,
+      "Charm": 1
+    },
+    "Sideboard": {
+      "Hush": -1,
+      "Salvage": 1
+    }
+  },
+  "diana_scorn_of_the_moon.txt": {
+    "MainDeck": {
+      "An Offer You Can't Refuse": -1,
+      "Hard Bargain": 1
+    },
+    "Sideboard": {
+      "An Offer You Can't Refuse": -2,
+      "Decree of Insight": 1,
+      "Up from the Deep": 1
+    }
+  },
+  "jinx_loose_cannon.txt": {
+    "MainDeck": {
+      "Reckless Innovator": -1,
+      "Scryer's Bloom": 1
+    }
+  },
+  "kha_zix_voidreaver.txt": {
+    "MainDeck": {
+      "Reckless Innovator": -2,
+      "Scryer's Bloom": 1,
+      "Bone Skewer": 1
+    }
+  },
+  "lucian_purifier.txt": {
+    "MainDeck": {
+      "Detonation Amplifier": -1,
+      "Dune Surfer": 1
+    },
+    "Sideboard": {
+      "Elnuk Herd": -1,
+      "Void Seeker": 1
+    }
+  },
+  "miss_fortune_bounty_hunter.txt": {
+    "MainDeck": {
+      "Elnuk Herd": -1,
+      "Reckless Innovator": -2,
+      "Scryer's Bloom": 1,
+      "Vex, Apathetic": 1,
+      "Bone Skewer": 1
+    },
+    "Sideboard": {
+      "An Offer You Can't Refuse": -1,
+      "Corrupt Enforcer": 1
+    }
+  },
+  "ornn_fire_below_the_mountain.txt": {
+    "MainDeck": {
+      "Forgefire Cape": -2,
+      "Doran's Shield": 1,
+      "Sterak's Gage": 1
+    }
+  },
+  "renekton_butcher_of_the_sands.txt": {
+    "Sideboard": {
+      "Elnuk Herd": -1,
+      "Shimmering Swimmer": -1,
+      "Blast Corps Cadet": 1,
+      "Gem Jammer": 1
+    }
+  },
+  "rengar_pridestalker.txt": {
+    "MainDeck": {
+      "Detonation Amplifier": -1,
+      "Petricite Monument": 1
+    }
+  },
+  "sivir_battle_mistress.txt": {
+    "Sideboard": {
+      "An Offer You Can't Refuse": -1,
+      "Corrupt Enforcer": 1
+    }
+  }
+}
