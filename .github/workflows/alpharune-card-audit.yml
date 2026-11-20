@@ -1,0 +1,49 @@
+name: AlphaRune exact card and deck legality audit
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/alpharune-card-audit.yml'
+      - 'audit/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare 58 original decklists
+        run: python3 scripts/run_actual_games.py --mode check
+      - name: Install AlphaRune C++ dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq cmake ninja-build g++ libboost-all-dev nlohmann-json3-dev
+      - name: Checkout fixed AlphaRune source
+        run: |
+          git clone --quiet https://github.com/chorlick/alpharune.git alpharune
+          git -C alpharune checkout --quiet --detach ec90f0fed002aed374d06249fa95e83e3cfbd386
+      - name: Restore compiled C++ engine
+        id: engine-cache
+        uses: actions/cache@v4
+        with:
+          path: alpharune/build/riftbound
+          key: alpharune-ubuntu2404-ec90f0f-release-v1
+      - name: Build if needed
+        if: steps.engine-cache.outputs.cache-hit != 'true'
+        run: |
+          cmake -S alpharune -B alpharune/build -G Ninja -DCMAKE_BUILD_TYPE=Release -DRIFTBOUND_BUILD_JOBS=2
+          cmake --build alpharune/build --target riftbound -j 2
+      - name: Check all 58 decks against compiled registry and legal limits
+        run: python3 audit/card_audit.py
+      - name: Preserve diagnostic reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: alpharune-full-card-coverage-audit
+          path: audit_results/
+          retention-days: 14
+          if-no-files-found: warn
