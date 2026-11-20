@@ -70,7 +70,7 @@ def main():
         for item in checked: stream.write(json.dumps(item)+"\n")
     supported=sum(item["status"]=="complete" for item in checked)
     print(f"Engine-resolved validation games: {supported} / {len(checked)}",flush=True)
-    pairs=[("Azir, Emperor of the Sands","Rek'Sai, Void Burrower"),("Vex, Gloomist","Riven, The Exile"),("Kennen, Heart of the Tempest","Irelia, Blade Dancer")]
+    pairs=[("Annie, Dark Child","Rek'Sai, Void Burrower"),("Kennen, Heart of the Tempest","Irelia, Blade Dancer"),("Vex, Gloomist","Master Yi, Wuju Bladesman")]
     if args.mode=="one_pair": pairs=pairs[:1]
     if args.mode=="matrix":
         # Match-mode single games, not true BO3 series (no sideboard swaps).
