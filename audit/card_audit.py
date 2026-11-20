@@ -42,7 +42,6 @@ for filename in decks:
              "banned":all(c["banned"] for c in matches) if matches else "",
              "keywords":";".join(str(c.get("features",{}).get("keywords","")) for c in matches)}
         items.append(row)
-        if reason!="OK":unsupported[legend].append(row)
     # Nonmutation legal uniqueness + non-unique copy limits across all deck sections.
     counts=Counter()
     for x in items:
@@ -59,6 +58,17 @@ for filename in decks:
     r=gametest(exe,filename,anchor,2026122900+len(checks),25,"random")
     checks.append({"legend":legend,"status":r["status"],
                    "diagnostic":r["stderr_tail"][-600:] if r["stderr_tail"] else r["stdout_tail"][-400:]})
+# The actual parser/game run, rather than a gallery-label heuristic, is authoritative
+# about whether a Legend is unsupported. This fixes subtitle/alias mismatches.
+missing_legends={check["legend"] for check in checks
+                 if "unknown card '"+check["legend"]+"'" in check["diagnostic"]}
+unsupported=defaultdict(list)
+for item in items:
+    if item["engine_status"]=="OK":continue
+    if item["section"]=="Legend" and item["legend"] not in missing_legends:
+        item["engine_status"]="ENGINE_LEGEND_ALIAS_RESOLVED"
+        continue
+    unsupported[item["legend"]].append(item)
 def write(p,rows,fields):
     with p.open("w",newline="",encoding="utf8") as f:
         w=csv.DictWriter(f,fieldnames=fields);w.writeheader();w.writerows(rows)
