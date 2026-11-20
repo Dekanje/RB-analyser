@@ -66,7 +66,7 @@ jobs:
       - name: Run the engine and preserve exact results
         if: ${{ github.event_name == 'push' || inputs.mode != 'check' }}
         run: |
-          python3 scripts/run_actual_games.py --mode "${{ inputs.mode || 'smoke' }}" --agent "${{ inputs.agent || 'mcts:sims=10' }}" --seconds 90 --budget-seconds 1300
+          python3 scripts/run_actual_games.py --mode "${{ inputs.mode || 'matrix' }}" --agent "${{ inputs.agent || 'mcts:sims=10' }}" --seconds 90 --budget-seconds 1300
 
       - name: Upload available results and error logs
         if: always()
