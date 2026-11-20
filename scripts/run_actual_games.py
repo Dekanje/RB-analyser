@@ -31,6 +31,7 @@ def main():
     p.add_argument("--mode",choices=["check","smoke","one_pair","matrix"],default="smoke")
     p.add_argument("--agent",default="random")
     p.add_argument("--seconds",type=int,default=120)
+    p.add_argument("--budget-seconds",type=int,default=1300)
     args=p.parse_args()
     OUT.mkdir(exist_ok=True)
     decks=decode(); named={header(x):x for x in decks}
@@ -66,7 +67,7 @@ def main():
         detail=validation["stderr_tail"].strip().splitlines()[-1] if validation["stderr_tail"].strip() else ""
         print(f"CHECK {idx+1:02d}/{len(named)} {name}: {validation['status']} {detail}",flush=True)
     with (OUT/"deck_validation.jsonl").open("w") as stream:
-        for item in checked: stream.write(json.dumps(item)+"\\n")
+        for item in checked: stream.write(json.dumps(item)+"\n")
     supported=sum(item["status"]=="complete" for item in checked)
     print(f"Engine-resolved validation games: {supported} / {len(checked)}",flush=True)
     pairs=[("Azir, Emperor of the Sands","Rek'Sai, Void Burrower"),("Vex, Gloomist","Riven, The Exile"),("Kennen, Heart of the Tempest","Irelia, Blade Dancer")]
@@ -78,7 +79,11 @@ def main():
         pairs=[(a,b) for a,b in itertools.combinations_with_replacement(sorted(ok),2)]
         print(f"Eligible pairings: {len(pairs)}; mode=matrix, game-only, no sideboard swaps.",flush=True)
     records=[]
+    pair_start=time.monotonic()
     for idx,(name_a,name_b) in enumerate(pairs):
+        if time.monotonic()-pair_start > args.budget_seconds:
+            print(f"PAIR_SWEEP_BUDGET_REACHED after {idx} pairings; remaining skipped.",flush=True)
+            break
         for seating,(a,b) in enumerate([(name_a,name_b),(name_b,name_a)]):
             if a not in named or b not in named: raise RuntimeError(f"Missing deck: {a} / {b}")
             seed=2026112301+idx*100+seating
@@ -89,6 +94,12 @@ def main():
             print(f"{a} vs {b}: {result['status']} winner seat {result['winner']}; time {record['duration_sec']}s",flush=True)
     with (OUT/"engine_games.jsonl").open("w") as f:
         for record in records: f.write(json.dumps(record)+"\n")
+    if records:
+        with (OUT/"engine_games.csv").open("w",newline="") as f:
+            columns=["deck1","deck2","seed","agent","engine_commit","duration_sec",
+                     "status","winner","returncode","stderr_tail","stdout_tail"]
+            writer=csv.DictWriter(f,fieldnames=columns)
+            writer.writeheader(); writer.writerows(records)
     print(f"Real AlphaRune games completed: {sum(x['status']=='complete' for x in records)} / {len(records)}",flush=True)
     print("This is engine gameplay with unchanged custom decks. It is NOT a tournament BO3 (no post-game sideboard choices).",flush=True)
     return 0 if any(x["status"]=="complete" for x in records) else 1
