@@ -1,0 +1,70 @@
+name: AlphaRune real-game smoke test
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/alpharune-smoke.yml'
+      - 'scripts/**'
+      - 'data/**'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'check = import only; smoke = up to six real games; one_pair = up to two games'
+        required: true
+        default: 'smoke'
+        type: choice
+        options: [check, smoke, one_pair]
+      agent:
+        description: 'Start with random AI; MCTS is substantially slower'
+        required: true
+        default: 'random'
+        type: choice
+        options: [random, 'mcts:sims=10']
+
+permissions:
+  contents: read
+
+jobs:
+  verify-and-play:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - name: Check out RB-analyser
+        uses: actions/checkout@v4
+
+      - name: Verify and extract original 58 custom decks
+        run: python3 scripts/run_actual_games.py --mode check
+
+      - name: Install AlphaRune C++ dependencies
+        if: ${{ github.event_name == 'push' || inputs.mode != 'check' }}
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq cmake ninja-build g++ libboost-all-dev nlohmann-json3-dev
+
+      - name: Get AlphaRune engine at a fixed commit
+        if: ${{ github.event_name == 'push' || inputs.mode != 'check' }}
+        run: |
+          git clone https://github.com/chorlick/alpharune.git alpharune
+          cd alpharune
+          git checkout --detach ec90f0fed002aed374d06249fa95e83e3cfbd386
+          git rev-parse HEAD
+
+      - name: Build real AlphaRune game engine
+        if: ${{ github.event_name == 'push' || inputs.mode != 'check' }}
+        run: |
+          cmake -S alpharune -B alpharune/build -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake --build alpharune/build --target riftbound -j 2
+
+      - name: Run the engine and preserve exact results
+        if: ${{ github.event_name == 'push' || inputs.mode != 'check' }}
+        run: |
+          python3 scripts/run_actual_games.py --mode "${{ inputs.mode || 'smoke' }}" --agent "${{ inputs.agent || 'random' }}" --seconds 90
+
+      - name: Upload available results and error logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: alpharune-smoke-results
+          path: results/
+          if-no-files-found: ignore
+          retention-days: 7
