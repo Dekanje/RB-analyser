@@ -15,13 +15,13 @@ def decode():
     return sorted(dest.glob("*.txt"))
 def header(p):
     s=p.read_text(encoding="utf-8")
-    m=re.search(r"^Legend:\\s*\\n1 (.+)$",s,re.M)
+    m=re.search(r"^Legend:\s*\n1 (.+)$",s,re.M)
     return m.group(1) if m else p.stem
 def gametest(exe,a,b,seed,seconds,agent):
     cmd=[str(exe.absolute()),"--deck1",str(a.absolute()),"--deck2",str(b.absolute()),"--agent1",agent,"--agent2",agent,"--game-mode","match","--seed",str(seed),"--web","off","--render-html","off"]
     try:
         p=subprocess.run(cmd,capture_output=True,text=True,timeout=seconds)
-        hit=re.search(r"Game over:\\s*winner\\s*=\\s*([012])",p.stdout)
+        hit=re.search(r"Game over:\s*winner\s*=\s*([012])",p.stdout)
         return {"status":"complete" if p.returncode==0 and hit else "failed","winner":int(hit.group(1)) if hit else None,"returncode":p.returncode,"stdout_tail":p.stdout[-2500:],"stderr_tail":p.stderr[-2500:]}
     except subprocess.TimeoutExpired:
         return {"status":"timeout","winner":None,"returncode":None,"stdout_tail":"","stderr_tail":"Exceeded "+str(seconds)+"s"}
@@ -64,7 +64,7 @@ def main():
             records.append(record)
             print(f"{a} vs {b}: {result['status']} winner seat {result['winner']}; time {record['duration_sec']}s",flush=True)
     with (OUT/"engine_games.jsonl").open("w") as f:
-        for record in records: f.write(json.dumps(record)+"\\n")
+        for record in records: f.write(json.dumps(record)+"\n")
     print(f"Real AlphaRune games completed: {sum(x['status']=='complete' for x in records)} / {len(records)}",flush=True)
     return 0 if any(x["status"]=="complete" for x in records) else 1
 if __name__=="__main__":sys.exit(main())
