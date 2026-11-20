@@ -1,0 +1,83 @@
+name: AlphaRune eight-way parallel matchup study
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/alpharune-parallel.yml'
+      - 'bo3/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  simulate:
+    name: Shard ${{ matrix.shard }} of 8
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Decode exact 58 custom decklists
+        run: python3 scripts/run_actual_games.py --mode check
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq cmake ninja-build g++ libboost-all-dev nlohmann-json3-dev
+      - name: Checkout pinned AlphaRune engine
+        run: |
+          git clone --quiet https://github.com/chorlick/alpharune.git alpharune
+          cd alpharune
+          git checkout --quiet --detach ec90f0fed002aed374d06249fa95e83e3cfbd386
+      - name: Restore precompiled engine
+        id: engine-cache
+        uses: actions/cache@v4
+        with:
+          path: alpharune/build/riftbound
+          key: alpharune-ubuntu2404-ec90f0f-release-v1
+      - name: Compile if no cache
+        if: steps.engine-cache.outputs.cache-hit != 'true'
+        run: |
+          cmake -S alpharune -B alpharune/build -G Ninja -DCMAKE_BUILD_TYPE=Release -DRIFTBOUND_BUILD_JOBS=2
+          cmake --build alpharune/build --target riftbound -j 2
+      - name: Execute actual MCTS engine games
+        run: |
+          python3 bo3/parallel_runner.py --index ${{ matrix.shard }} --count 8 --agent 'mcts:sims=10' --budget 1700
+      - name: Upload shard output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bo3-shard-${{ matrix.shard }}
+          path: results/
+          if-no-files-found: warn
+          retention-days: 7
+
+  aggregate:
+    name: Merge and validate eight shards
+    needs: simulate
+    if: always()
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download all eight results
+        uses: actions/download-artifact@v4
+        with:
+          pattern: bo3-shard-*
+          path: shard_artifacts
+          merge-multiple: false
+      - name: Merge and audit completeness
+        run: python3 bo3/aggregate.py
+      - name: Upload combined results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: alpharune-parallel-complete-results
+          path: combined_results/
+          retention-days: 14
+          if-no-files-found: warn
