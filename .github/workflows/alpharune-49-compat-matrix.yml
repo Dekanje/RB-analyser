@@ -1,0 +1,89 @@
+name: AlphaRune 49-deck compatibility matchup matrix
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/alpharune-49-compat-matrix.yml'
+      - 'compat/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  simulate:
+    name: 49-deck shard ${D}{{ matrix.shard }} / 8
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install compiler dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq cmake ninja-build g++ libboost-all-dev nlohmann-json3-dev
+      - name: Checkout pinned AlphaRune engine
+        run: |
+          git clone --quiet https://github.com/chorlick/alpharune.git alpharune
+          git -C alpharune checkout --quiet --detach ec90f0fed002aed374d06249fa95e83e3cfbd386
+      - name: Restore cached AlphaRune executable
+        id: engine-cache
+        uses: actions/cache@v4
+        with:
+          path: alpharune/build/riftbound
+          key: alpharune-ubuntu2404-ec90f0f-release-v1
+      - name: Build if cache absent
+        if: steps.engine-cache.outputs.cache-hit != 'true'
+        run: |
+          cmake -S alpharune -B alpharune/build -G Ninja -DCMAKE_BUILD_TYPE=Release -DRIFTBOUND_BUILD_JOBS=2
+          cmake --build alpharune/build --target riftbound -j 2
+      - name: Play the real engine with all 49 compatible decks
+        run: |
+          python3 compat/run_parallel.py --index ${D}{{ matrix.shard }} --count 8 --agent 'mcts:sims=10' --seconds 90 --budget 1700
+      - name: Save game/series results for this shard
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: compat49-shard-${D}{{ matrix.shard }}
+          path: |
+            results/
+            compat_results/
+          retention-days: 7
+          if-no-files-found: warn
+
+  aggregate:
+    name: Validate 49-deck matrix and report all 58 legends
+    needs: simulate
+    if: always()
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download all eight shard artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: compat49-shard-*
+          path: shard_artifacts
+          merge-multiple: false
+      - name: Make path compatible with original aggregator
+        run: |
+          for f in shard_artifacts/compat49-shard-*; do
+            mv "$f" "shard_artifacts/bo3-shard-${D}{f##*-}"
+          done
+      - name: Verify and merge actual engine results
+        run: python3 bo3/aggregate.py
+      - name: Add all 58 legends and unsupported matchup status
+        run: python3 compat/report_58.py
+      - name: Upload complete matrix and coverage reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: alpharune-49-complete-matrix-and-58-status
+          path: combined_results/
+          retention-days: 14
+          if-no-files-found: warn
