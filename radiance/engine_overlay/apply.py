@@ -226,4 +226,42 @@ replace_once(observer,
     "        put(out, r.pool.spell_power); put(out, r.pool.gear_power);\n"
     "        put(out, r.pool.unit_or_gear_power);")
 
+
+# The printed Mordekaiser restriction says "PLAY units or gear", not pay
+# for those cards' activated abilities. Preserve old restrictions allowing
+# unit-energy for unit abilities and gear-power for gear abilities.
+replace_once(pool,
+    "    Gear,    // playing a gear, or an activated ability of a gear",
+    "    Gear,    // playing a gear, or an activated ability of a gear\n"
+    "    UnitAbility, // activated ability of a unit; excludes Mordekaiser play-only [A]\n"
+    "    GearAbility, // activated ability of gear; excludes Mordekaiser play-only [A]")
+replace_once(pool,
+    "return (f == SpendFor::Unit ? unit_energy : 0) +",
+    "return ((f == SpendFor::Unit || f == SpendFor::UnitAbility) ? unit_energy : 0) +")
+replace_once(pool,
+    "if (f == SpendFor::Unit) take(unit_energy);",
+    "if (f == SpendFor::Unit || f == SpendFor::UnitAbility) take(unit_energy);")
+replace_once(pool,
+    "(f == SpendFor::Gear ? gear_power : 0) +",
+    "((f == SpendFor::Gear || f == SpendFor::GearAbility) ? gear_power : 0) +")
+replace_once(pool,
+    "if (f == SpendFor::Gear) take(gear_power);",
+    "if (f == SpendFor::Gear || f == SpendFor::GearAbility) take(gear_power);")
+resource_header=engine/"src/engine/resource_payment.h"
+replace_once(resource_header,
+    "/// A showdown (or the combat that follows it) is under way somewhere.",
+    """inline SpendFor spendForActivation(const GameObject& obj) {
+    if (obj.isUnit()) return SpendFor::UnitAbility;
+    if (obj.isGear()) return SpendFor::GearAbility;
+    return spendForObject(obj);
+}
+
+/// A showdown (or the combat that follows it) is under way somewhere.""")
+replace_once(game,
+    "const SpendFor spend_for = spendForObject(state_.getObject(source_id));",
+    "const SpendFor spend_for = spendForActivation(state_.getObject(source_id));")
+replace_once(game,
+    "        spendForObject(state_.getObject(source)));",
+    "        spendForActivation(state_.getObject(source)));")
+
 print("OVERLAY_SUCCESS ten experimental Radiance C++ classes")
