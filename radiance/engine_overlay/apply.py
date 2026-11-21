@@ -18,7 +18,9 @@ for src,dest in [
     ("cards/legends/0963_iron_revenant.cpp","src/cards/legends/0963_iron_revenant.cpp"),
     ("cards/units/0964_twice_slain.cpp","src/cards/units/0964_twice_slain.cpp"),
     ("cards/spells/0965_realm_of_death.cpp","src/cards/spells/0965_realm_of_death.cpp"),
-    ("cards/legends/0969_jarvan_package.cpp","src/cards/legends/0969_jarvan_package.cpp")]:
+    ("cards/legends/0969_jarvan_package.cpp","src/cards/legends/0969_jarvan_package.cpp"),
+    ("cards/legends/0972_orianna_package.cpp","src/cards/legends/0972_orianna_package.cpp"),
+    ("cards/legends/0978_ziggs_package.cpp","src/cards/legends/0978_ziggs_package.cpp")]:
     target=engine/dest
     if target.exists():raise SystemExit("Collision: "+str(target))
     shutil.copyfile(source/src,target)
@@ -28,9 +30,9 @@ def replace_once(path,before,after):
     path.write_text(s.replace(before,after,1))
 init=engine/"src/cards/cards_init.cpp"
 replace_once(init,"void register_card_955(CardRegistry&);",
-"void register_card_955(CardRegistry&);\nvoid register_card_956(CardRegistry&);\nvoid register_card_957(CardRegistry&);\nvoid register_card_958(CardRegistry&);\nvoid register_card_959(CardRegistry&);\nvoid register_card_960(CardRegistry&);\nvoid register_card_961(CardRegistry&);\nvoid register_card_962(CardRegistry&);\nvoid register_card_963(CardRegistry&);\nvoid register_card_964(CardRegistry&);\nvoid register_card_965(CardRegistry&);\nvoid register_card_969(CardRegistry&);\nvoid register_card_970(CardRegistry&);\nvoid register_card_971(CardRegistry&);")
+"void register_card_955(CardRegistry&);\nvoid register_card_956(CardRegistry&);\nvoid register_card_957(CardRegistry&);\nvoid register_card_958(CardRegistry&);\nvoid register_card_959(CardRegistry&);\nvoid register_card_960(CardRegistry&);\nvoid register_card_961(CardRegistry&);\nvoid register_card_962(CardRegistry&);\nvoid register_card_963(CardRegistry&);\nvoid register_card_964(CardRegistry&);\nvoid register_card_965(CardRegistry&);\nvoid register_card_969(CardRegistry&);\nvoid register_card_970(CardRegistry&);\nvoid register_card_971(CardRegistry&);\nvoid register_card_972(CardRegistry&);\nvoid register_card_973(CardRegistry&);\nvoid register_card_974(CardRegistry&);\nvoid register_card_978(CardRegistry&);\nvoid register_card_979(CardRegistry&);\nvoid register_card_980(CardRegistry&);\nvoid register_card_981(CardRegistry&);\nvoid register_card_982(CardRegistry&);")
 replace_once(init,"    register_card_955(registry);",
-"    register_card_955(registry);\n    register_card_956(registry);\n    register_card_957(registry);\n    register_card_958(registry);\n    register_card_959(registry);\n    register_card_960(registry);\n    register_card_961(registry);\n    register_card_962(registry);\n    register_card_963(registry);\n    register_card_964(registry);\n    register_card_965(registry);\n    register_card_969(registry);\n    register_card_970(registry);\n    register_card_971(registry);")
+"    register_card_955(registry);\n    register_card_956(registry);\n    register_card_957(registry);\n    register_card_958(registry);\n    register_card_959(registry);\n    register_card_960(registry);\n    register_card_961(registry);\n    register_card_962(registry);\n    register_card_963(registry);\n    register_card_964(registry);\n    register_card_965(registry);\n    register_card_969(registry);\n    register_card_970(registry);\n    register_card_971(registry);\n    register_card_972(registry);\n    register_card_973(registry);\n    register_card_974(registry);\n    register_card_978(registry);\n    register_card_979(registry);\n    register_card_980(registry);\n    register_card_981(registry);\n    register_card_982(registry);")
 game=engine/"src/engine/game_engine.cpp"
 original="        if (state_.player(card.controller).otherUnitsEnterReady(card.id)) enters_ready = true;"
 replacement=original+"""
@@ -358,4 +360,59 @@ replace_once(trigger,
     // Battlefield cards: "When combat starts here," (Threshold of the Gray).
     fireBattlefieldTriggers(TriggerType::WhenCombatStartsHere, e.attacker, e.battlefield);""")
 
-print("OVERLAY_SUCCESS thirteen Radiance classes; Deploy enabled")
+
+# Orianna: a chosen gear has both unit and gear properties while chosen;
+# reset this on leaving the board. Printed CardType stays Gear.
+object_header=engine/"src/core/game_object.h"
+replace_once(object_header,
+    "    // ── Convenience ──",
+    "    bool radiance_unit_gear = false; // Orianna's chosen gear is also a unit\n"
+    "    // ── Convenience ──")
+replace_once(object_header,
+    "    bool isUnit() const { return card_type == CardType::Unit; }",
+    "    bool isUnit() const { return card_type == CardType::Unit || radiance_unit_gear; }")
+board_state=engine/"src/core/board_state.h"
+replace_once(board_state,
+    "    obj.moves_this_turn = 0;\n    // Keywords: the printed ones again.",
+    "    obj.moves_this_turn = 0;\n    obj.radiance_unit_gear = false;\n"
+    "    if (def) obj.base_might = def->might;\n    // Keywords: the printed ones again.")
+
+# Ziggs: gear ability Bonus Damage applies to each separate damage instance.
+player_state=engine/"src/core/game_state.h"
+replace_once(player_state,
+    "    int bonus_damage_dealt = 0;      // Annie, Fiery",
+    "    int radiance_gear_bonus_damage = 0; // Ziggs, Short-Fused\n"
+    "    int bonus_damage_dealt = 0;      // Annie, Fiery")
+replace_once(game,
+    "        ps.bonus_damage_dealt = 0;   // Annie, Fiery",
+    "        ps.bonus_damage_dealt = 0;   // Annie, Fiery\n"
+    "        ps.radiance_gear_bonus_damage = 0;")
+executor_impl=engine/"src/engine/effect_executor.cpp"
+replace_once(executor_impl,
+    "int bonus = state_.player(src_obj.controller).bonus_damage_dealt +",
+    "int bonus = state_.player(src_obj.controller).bonus_damage_dealt +\n"
+    "                            (src_obj.isGear() ? state_.player(src_obj.controller).radiance_gear_bonus_damage : 0) +")
+
+# Reckless Innovator: when a unit becomes exhausted. The engine already
+# emits ObjectStateChangedEvent("exhausted") on standard move, activation,
+# and direct effects. Route it into a typed trigger.
+effects=engine/"src/effects/effect_types.h"
+replace_once(effects,
+    "    WhenAnOpponentHidesACard,    // delayed abilities only:",
+    "    WhenIAmExhausted,           // Radiance: When I become exhausted\n"
+    "    WhenAnOpponentHidesACard,    // delayed abilities only:")
+replace_once(trigger,
+    '    if (e.what_changed == "joined_combat") {',
+    """    if (e.what_changed == "exhausted") {
+        const auto& obj=state_.getObject(e.object);
+        if (obj.isUnit() && obj.card_def_id!=kInvalidId &&
+            cardFiresOn(card_registry_,obj.card_def_id,TriggerType::WhenIAmExhausted))
+            fireTrigger(e.object,controller,0,TriggerType::WhenIAmExhausted);
+        return;
+    }
+    if (e.what_changed == "joined_combat") {""")
+replace_once(executor_impl,
+    '    if (!inPlay(obj)) return;\n    obj.is_exhausted = true;\n    events_.emit(ObjectStateChangedEvent{target, "exhausted"});',
+    '    if (!inPlay(obj) || obj.is_exhausted) return;\n    obj.is_exhausted = true;\n    events_.emit(ObjectStateChangedEvent{target, "exhausted"});')
+
+print("OVERLAY_SUCCESS twenty-one experimental Radiance definitions, including Bomb token")

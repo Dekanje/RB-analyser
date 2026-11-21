@@ -7,7 +7,7 @@ out=root/"radiance/engine_overlay/compiled_registry.json"
 subprocess.run([str(exe),"--dump-registry",str(out)],check=True)
 cards=json.loads(out.read_text())["cards"]
 bycode={c["public_code"]:c for c in cards}
-assert len(cards)==968,len(cards)
+assert len(cards)==976,len(cards)
 assert bycode["RAD-149/167"]["name"]=="The Exile"
 assert bycode["RAD-149/167"]["card_type"]=="legend"
 assert bycode["RAD-086/167"]["name"]=="K'Sante, Courageous"
@@ -33,7 +33,14 @@ assert bycode["RAD-144/167"]["super_type"]=="signature"
 assert bycode["RAD-155/167"]["card_type"]=="legend"
 assert bycode["RAD-133/167"]["name"]=="Jarvan IV, Royal Heir"
 assert bycode["RAD-156/167"]["card_type"]=="gear"
-print("REGISTRY_PASS: 968 compiled, includes 13 experimental Radiance classes")
+assert bycode["RAD-145/167"]["card_type"]=="legend"
+assert bycode["RAD-042/167"]["name"]=="Orianna, Exquisite"
+assert bycode["RAD-146/167"]["card_type"]=="gear"
+assert bycode["RAD-141/167"]["card_type"]=="legend"
+assert bycode["RAD-023/167"]["name"]=="Ziggs, Short-Fused"
+assert bycode["RAD-142/167"]["card_type"]=="spell"
+assert bycode["RAD-105/167"]["name"]=="Reckless Innovator"
+print("REGISTRY_PASS: 976 compiled, includes 21 experimental Radiance additions including Bomb token")
 # Real original Riven deck smoke; status is NOT a full semantic certification.
 import sys
 sys.path.insert(0,str(root/"scripts"))
@@ -59,4 +66,12 @@ j=gametest(exe,decks["Jarvan IV, Exemplar of Demacia"],
            decks["Kennen, Heart of the Tempest"],20261121651,90,"random")
 print("ORIGINAL_JARVAN_VS_KENNEN "+str(j["status"])+" "+j["stderr_tail"][-250:])
 assert j["status"]=="complete",j["stderr_tail"][-1000:]
+o=gametest(exe,decks["Orianna, Lady of Clockwork"],
+           decks["Kennen, Heart of the Tempest"],20261121731,90,"random")
+print("ORIGINAL_ORIANNA_VS_KENNEN "+str(o["status"])+" "+o["stderr_tail"][-250:])
+assert o["status"]=="complete",o["stderr_tail"][-1000:]
+z=gametest(exe,decks["Ziggs, Hexplosives Expert"],
+           decks["Kennen, Heart of the Tempest"],20261121811,90,"random")
+print("ORIGINAL_ZIGGS_VS_KENNEN "+str(z["status"])+" "+z["stderr_tail"][-250:])
+assert z["status"]=="complete",z["stderr_tail"][-1000:]
 print("FULL_NINE_DECKS_CERTIFIED: false")
