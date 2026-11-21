@@ -56,4 +56,30 @@ replace_once(
     "           ? choosePrePlayViable(pre, payable)\n"
     "           : collectFinalizeChoices(std::move(pre));"
 )
+# Modes must be validated against *all* legal target types, not merely the
+# first printed mode. Otherwise a valid choice can be offered and then fail
+# with "no legal choice for a required target" when the first mode is empty.
+mesmerize = ENGINE / "src/cards/spells/0839_mesmerize.cpp"
+replace_once(
+    mesmerize,
+    "return friendlyUnitChoice(state, controller, object);",
+    "const auto legal = chooseableUnits(state, controller,\n"
+    "    [](const GameObject&) { return true; });\n"
+    "return std::find(legal.begin(), legal.end(), object) != legal.end()\n"
+    "    ? FinalizeChoice::Yes : FinalizeChoice::No;"
+)
+rocket = ENGINE / "src/cards/spells/0400_rocket_barrage.cpp"
+replace_once(
+    rocket,
+    "return friendlyUnitChoice(state, controller, object,\n"
+    "            [&](const GameObject& u) {\n"
+    "                return u.isAtBase();\n"
+    "            });",
+    "const auto units = unitsInBases(state, controller);\n"
+    "const auto gear = gearOnBoard(state, controller);\n"
+    "return (std::find(units.begin(), units.end(), object) != units.end() ||\n"
+    "        std::find(gear.begin(), gear.end(), object) != gear.end())\n"
+    "    ? FinalizeChoice::Yes : FinalizeChoice::No;"
+)
+
 print("PINNED_ISMCTS_STABILITY_PATCH_APPLIED", EXPECTED)
