@@ -141,8 +141,8 @@ card_impl.write_text(s.replace(payment,payment_new,1)
 # Each grant stacks, and it follows Shield changes until expiration.
 object_header=engine/"src/core/game_object.h"
 replace_once(object_header,
-    '    int temp_shield_value = 0;  // temporary shield applied "this turn"',
-    '    int temp_shield_value = 0;  // temporary shield applied "this turn"\n'
+    '    int temp_shield_value = 0;   // temporary shield applied "this turn"',
+    '    int temp_shield_value = 0;   // temporary shield applied "this turn"\n'
     '    int temp_assault_shield_multiples = 0; // K\'Sante: dynamic Assault=Shield grants this turn')
 replace_once(object_header,
     "            current_might += assault_value;",
