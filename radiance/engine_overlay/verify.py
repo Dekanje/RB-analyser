@@ -7,7 +7,7 @@ out=root/"radiance/engine_overlay/compiled_registry.json"
 subprocess.run([str(exe),"--dump-registry",str(out)],check=True)
 cards=json.loads(out.read_text())["cards"]
 bycode={c["public_code"]:c for c in cards}
-assert len(cards)==986,len(cards)
+assert len(cards)==988,len(cards)
 assert bycode["RAD-149/167"]["name"]=="The Exile"
 assert bycode["RAD-149/167"]["card_type"]=="legend"
 assert bycode["RAD-086/167"]["name"]=="K'Sante, Courageous"
@@ -53,7 +53,11 @@ for code, name, typ in [
     ("RAD-081/167", "Elnuk Herd", "unit"),
 ]:
     assert bycode[code]["name"] == name and bycode[code]["card_type"] == typ, code
-print("REGISTRY_PASS: 986 compiled; all nine Radiance decks plus four extra RAD staples")
+assert bycode["RAD-041/167"]["name"]=="Hush"
+assert bycode["RAD-041/167"]["card_type"]=="spell"
+assert bycode["RAD-014/167"]["name"]=="Shimmering Swimmer"
+assert bycode["RAD-014/167"]["card_type"]=="unit"
+print("REGISTRY_PASS: 988 compiled; nine Radiance legends and six required staples")
 # Real original Riven deck smoke; status is NOT a full semantic certification.
 import sys
 sys.path.insert(0,str(root/"scripts"))
