@@ -1,0 +1,24 @@
+name: Audit original Ornn deck unique-card violation
+on:
+  push:
+    branches: ['radiance/engine-mechanics-development']
+    paths: ['.github/workflows/inspect-original-ornn.yml']
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Show exact original Ornn list and SHA
+        run: |
+          PYTHONPATH=scripts python3 - <<'PY'
+          import hashlib
+          from run_actual_games import decode,header
+          for path in decode():
+              if header(path)=="Ornn, Fire Below the Mountain":
+                  print("ORIGINAL_ORNN_SHA256",hashlib.sha256(path.read_bytes()).hexdigest())
+                  for n,l in enumerate(path.read_text().splitlines(),1):
+                      print(f"ORNN_DECK_LINE {n:02d}: {l}")
+                  break
+          PY
