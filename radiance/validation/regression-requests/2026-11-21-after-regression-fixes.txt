@@ -1,0 +1,3 @@
+Re-run all 3638 upstream tests against updated 986-definition experimental Radiance engine.
+Commit 0049cc0f6859aa853aa84eed94ca9ca2901b4cf7.
+Report failures unchanged; no tests skipped.
