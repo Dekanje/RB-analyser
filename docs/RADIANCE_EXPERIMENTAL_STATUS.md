@@ -51,3 +51,18 @@
 5. Run and label BO3 results with real outcomes and observed statistical uncertainty. Do not merge experimental win rates into verified results prematurely.
 
 No auto notifications or periodic monitoring are enabled.
+
+
+## Expanded compatibility and rules-legal Ornn candidate (21 November 2026)
+
+The first strict original-58 run [#44883114325](https://github.com/Dekanje/RB-analyser/actions/runs/44883114325) completed **100/116** unchanged-deck engine games. Eight original legends failed due to four additional Radiance cards absent from the old engine (Battle Preparations, An Offer You Can't Refuse, Detonation Amplifier, Elnuk Herd) and an illegal original Ornn list. **All nine Radiance original legends passed both player seats.**
+
+The four extra cards (RAD-032, RAD-101, RAD-017, RAD-081) have now been implemented on this experimental branch; compile/gameplay verification remains subject to [experimental build #44883988842](https://github.com/Dekanje/RB-analyser/actions/runs/44883988842).
+
+**Illegal original Ornn (do not silently weaken rules):** the SHA-pinned original `Ornn, Fire Below the Mountain` deck has 3 copies of Forgefire Cape, a Unique one-copy-per-deck signature card. Exact original SHA256: `a579f4781f1ed38f0dc439383cdbaf81df43aa3a73c840b78fc005fb646d72e6`. The original is unchanged. A separate, explicitly disclosed candidate at `scripts/legal_candidate.py` reduces Forgefire Cape from 3 to 1 and increases Doran's Shield from 2 to 3 and Sterak's Gage from 2 to 3, preserving 39 main-deck cards and legal Calm-domain gear slots. It writes separate source/effective SHA256 receipts and changes **only this one deck**. [Candidate compatibility workflow #44884117616](https://github.com/Dekanje/RB-analyser/actions/runs/44884117616) is separate from the strict-original audit.
+
+The BO3 workflow has been explicitly relabeled as **57 unchanged originals plus one disclosed legal Ornn candidate**, and its source validation requires the corresponding SHA lineage before running. It is **not** a tournament-accurate sideboarding simulator; no such full match results have yet been published.
+
+The first broad engine regression [#44883195092](https://github.com/Dekanje/RB-analyser/actions/runs/44883195092) ran **3,638 tests: 3,632 passed, six failed**. Failures included native choice-finalization and a no-op Bomb trigger (actual gameplay defects), an integer-encoded Orianna object reference, an omitted Deploy keyword-name mapping, and two pinned-count/hash assertions affected by the expanded card pool. The first four classes of source issues were patched and the full suite re-triggered in [run #44884223776](https://github.com/Dekanje/RB-analyser/actions/runs/44884223776). Pinned tests must not be silently ignored or treated as gameplay certification.
+
+**Acceptance remains gated** on legal 58-deck validation, deterministic card-effect scenarios, broad regression review, and actual completed game data. These steps cannot be replaced by a gallery import or a smoke-game completion.
