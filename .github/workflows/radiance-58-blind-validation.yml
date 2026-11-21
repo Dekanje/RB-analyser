@@ -1,0 +1,58 @@
+name: Independently validate Radiance deck changes on fresh ISMCTS BO3 seeds
+on:
+  push:
+    branches: ['optimization/full-radiance-2026-11-21']
+    paths:
+      - '.github/workflows/radiance-58-blind-validation.yml'
+      - 'scripts/blind_validate_radiance.py'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  blind:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m py_compile scripts/blind_validate_radiance.py scripts/evaluate_radiance_ismcts.py
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 44930045768
+          github-token: ${{ github.token }}
+          name: all-58-radiance-ismcts-candidate-results
+          path: results/radiance_58_ismcts
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 44929504017
+          github-token: ${{ github.token }}
+          name: radiance-full-catalog-58-legends-coverage
+          path: results/full_radiance_pool
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 44900171748
+          github-token: ${{ github.token }}
+          name: verified-ismcts-engine-58
+          path: .
+      - name: Install compiled engine runtime libraries
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libboost-all-dev
+          chmod +x alpharune/build/riftbound
+      - name: Validate chosen Radiance upgrades on entirely new fixed BO3 seeds
+        run: |
+          python3 -u scripts/blind_validate_radiance.py \
+            --selected results/radiance_58_ismcts \
+            --baselines results/full_radiance_pool \
+            --engine alpharune/build/riftbound \
+            --output results/radiance_blind \
+            --agent ismcts:sims=24 \
+            --repetitions 2 --workers 4 --timeout 75 \
+            --seed 202611249121
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: radiance-58-independent-blind-seed-results
+          path: results/radiance_blind/
+          retention-days: 30
+          if-no-files-found: ignore
