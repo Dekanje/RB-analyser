@@ -7,7 +7,7 @@ out=root/"radiance/engine_overlay/compiled_registry.json"
 subprocess.run([str(exe),"--dump-registry",str(out)],check=True)
 cards=json.loads(out.read_text())["cards"]
 bycode={c["public_code"]:c for c in cards}
-assert len(cards)==976,len(cards)
+assert len(cards)==982,len(cards)
 assert bycode["RAD-149/167"]["name"]=="The Exile"
 assert bycode["RAD-149/167"]["card_type"]=="legend"
 assert bycode["RAD-086/167"]["name"]=="K'Sante, Courageous"
@@ -40,7 +40,13 @@ assert bycode["RAD-141/167"]["card_type"]=="legend"
 assert bycode["RAD-023/167"]["name"]=="Ziggs, Short-Fused"
 assert bycode["RAD-142/167"]["card_type"]=="spell"
 assert bycode["RAD-105/167"]["name"]=="Reckless Innovator"
-print("REGISTRY_PASS: 976 compiled, includes 21 experimental Radiance additions including Bomb token")
+assert bycode["RAD-139/167"]["card_type"]=="legend"
+assert bycode["RAD-021/167"]["name"]=="Ekko, Revolutionary"
+assert bycode["RAD-140/167"]["card_type"]=="spell"
+assert bycode["RAD-151/167"]["card_type"]=="legend"
+assert bycode["RAD-065/167"]["name"]=="Seraphine, Inspiring"
+assert bycode["RAD-152/167"]["card_type"]=="spell"
+print("REGISTRY_PASS: 982 compiled; all 26 audited Radiance cards plus Bomb token")
 # Real original Riven deck smoke; status is NOT a full semantic certification.
 import sys
 sys.path.insert(0,str(root/"scripts"))
@@ -74,4 +80,12 @@ z=gametest(exe,decks["Ziggs, Hexplosives Expert"],
            decks["Kennen, Heart of the Tempest"],20261121811,90,"random")
 print("ORIGINAL_ZIGGS_VS_KENNEN "+str(z["status"])+" "+z["stderr_tail"][-250:])
 assert z["status"]=="complete",z["stderr_tail"][-1000:]
+ek=gametest(exe,decks["Ekko, Boy Who Shattered Time"],
+           decks["Kennen, Heart of the Tempest"],20261121871,90,"random")
+print("ORIGINAL_EKKO_VS_KENNEN "+str(ek["status"])+" "+ek["stderr_tail"][-250:])
+assert ek["status"]=="complete",ek["stderr_tail"][-1000:]
+ser=gametest(exe,decks["Seraphine, Starry-Eyed Songstress"],
+           decks["Kennen, Heart of the Tempest"],20261121891,90,"random")
+print("ORIGINAL_SERAPHINE_VS_KENNEN "+str(ser["status"])+" "+ser["stderr_tail"][-250:])
+assert ser["status"]=="complete",ser["stderr_tail"][-1000:]
 print("FULL_NINE_DECKS_CERTIFIED: false")

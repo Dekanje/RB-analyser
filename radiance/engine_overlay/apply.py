@@ -20,7 +20,9 @@ for src,dest in [
     ("cards/spells/0965_realm_of_death.cpp","src/cards/spells/0965_realm_of_death.cpp"),
     ("cards/legends/0969_jarvan_package.cpp","src/cards/legends/0969_jarvan_package.cpp"),
     ("cards/legends/0972_orianna_package.cpp","src/cards/legends/0972_orianna_package.cpp"),
-    ("cards/legends/0978_ziggs_package.cpp","src/cards/legends/0978_ziggs_package.cpp")]:
+    ("cards/legends/0978_ziggs_package.cpp","src/cards/legends/0978_ziggs_package.cpp"),
+    ("cards/legends/0966_ekko_package.cpp","src/cards/legends/0966_ekko_package.cpp"),
+    ("cards/legends/0975_seraphine_package.cpp","src/cards/legends/0975_seraphine_package.cpp")]:
     target=engine/dest
     if target.exists():raise SystemExit("Collision: "+str(target))
     shutil.copyfile(source/src,target)
@@ -30,9 +32,9 @@ def replace_once(path,before,after):
     path.write_text(s.replace(before,after,1))
 init=engine/"src/cards/cards_init.cpp"
 replace_once(init,"void register_card_955(CardRegistry&);",
-"void register_card_955(CardRegistry&);\nvoid register_card_956(CardRegistry&);\nvoid register_card_957(CardRegistry&);\nvoid register_card_958(CardRegistry&);\nvoid register_card_959(CardRegistry&);\nvoid register_card_960(CardRegistry&);\nvoid register_card_961(CardRegistry&);\nvoid register_card_962(CardRegistry&);\nvoid register_card_963(CardRegistry&);\nvoid register_card_964(CardRegistry&);\nvoid register_card_965(CardRegistry&);\nvoid register_card_969(CardRegistry&);\nvoid register_card_970(CardRegistry&);\nvoid register_card_971(CardRegistry&);\nvoid register_card_972(CardRegistry&);\nvoid register_card_973(CardRegistry&);\nvoid register_card_974(CardRegistry&);\nvoid register_card_978(CardRegistry&);\nvoid register_card_979(CardRegistry&);\nvoid register_card_980(CardRegistry&);\nvoid register_card_981(CardRegistry&);\nvoid register_card_982(CardRegistry&);")
+"void register_card_955(CardRegistry&);\nvoid register_card_956(CardRegistry&);\nvoid register_card_957(CardRegistry&);\nvoid register_card_958(CardRegistry&);\nvoid register_card_959(CardRegistry&);\nvoid register_card_960(CardRegistry&);\nvoid register_card_961(CardRegistry&);\nvoid register_card_962(CardRegistry&);\nvoid register_card_963(CardRegistry&);\nvoid register_card_964(CardRegistry&);\nvoid register_card_965(CardRegistry&);\nvoid register_card_969(CardRegistry&);\nvoid register_card_970(CardRegistry&);\nvoid register_card_971(CardRegistry&);\nvoid register_card_972(CardRegistry&);\nvoid register_card_973(CardRegistry&);\nvoid register_card_974(CardRegistry&);\nvoid register_card_978(CardRegistry&);\nvoid register_card_979(CardRegistry&);\nvoid register_card_980(CardRegistry&);\nvoid register_card_981(CardRegistry&);\nvoid register_card_982(CardRegistry&);\nvoid register_card_966(CardRegistry&);\nvoid register_card_967(CardRegistry&);\nvoid register_card_968(CardRegistry&);\nvoid register_card_975(CardRegistry&);\nvoid register_card_976(CardRegistry&);\nvoid register_card_977(CardRegistry&);")
 replace_once(init,"    register_card_955(registry);",
-"    register_card_955(registry);\n    register_card_956(registry);\n    register_card_957(registry);\n    register_card_958(registry);\n    register_card_959(registry);\n    register_card_960(registry);\n    register_card_961(registry);\n    register_card_962(registry);\n    register_card_963(registry);\n    register_card_964(registry);\n    register_card_965(registry);\n    register_card_969(registry);\n    register_card_970(registry);\n    register_card_971(registry);\n    register_card_972(registry);\n    register_card_973(registry);\n    register_card_974(registry);\n    register_card_978(registry);\n    register_card_979(registry);\n    register_card_980(registry);\n    register_card_981(registry);\n    register_card_982(registry);")
+"    register_card_955(registry);\n    register_card_956(registry);\n    register_card_957(registry);\n    register_card_958(registry);\n    register_card_959(registry);\n    register_card_960(registry);\n    register_card_961(registry);\n    register_card_962(registry);\n    register_card_963(registry);\n    register_card_964(registry);\n    register_card_965(registry);\n    register_card_969(registry);\n    register_card_970(registry);\n    register_card_971(registry);\n    register_card_972(registry);\n    register_card_973(registry);\n    register_card_974(registry);\n    register_card_978(registry);\n    register_card_979(registry);\n    register_card_980(registry);\n    register_card_981(registry);\n    register_card_982(registry);\n    register_card_966(registry);\n    register_card_967(registry);\n    register_card_968(registry);\n    register_card_975(registry);\n    register_card_976(registry);\n    register_card_977(registry);")
 game=engine/"src/engine/game_engine.cpp"
 original="        if (state_.player(card.controller).otherUnitsEnterReady(card.id)) enters_ready = true;"
 replacement=original+"""
@@ -415,4 +417,125 @@ replace_once(executor_impl,
     '    if (!inPlay(obj)) return;\n    obj.is_exhausted = true;\n    events_.emit(ObjectStateChangedEvent{target, "exhausted"});',
     '    if (!inPlay(obj) || obj.is_exhausted) return;\n    obj.is_exhausted = true;\n    events_.emit(ObjectStateChangedEvent{target, "exhausted"});')
 
-print("OVERLAY_SUCCESS twenty-one experimental Radiance definitions, including Bomb token")
+
+# Seraphine: optional alternate spell cost paid BEFORE normal resources.
+# The extra cost is exhaust the ready legend and three distinct ready units.
+game=engine/"src/engine/game_engine.cpp"
+replace_once(game,
+    "void GameEngine::forgetPlayPayments(PlayerId player, GameObjectId card_id) {",
+    """static std::vector<GameObjectId> seraphineReadyUnits(const GameState& state, PlayerId player) {
+    std::vector<GameObjectId> ready;
+    for (const auto& [id,obj] : state.objects.onBoard())
+        if (obj.isUnit() && obj.controller == player && obj.location && !obj.is_exhausted)
+            ready.push_back(id);
+    return ready;
+}
+static bool seraphineMayReduceSpell(const GameState& state, PlayerId player) {
+    const auto legend = state.player(player).legend_zone;
+    if (!state.objectExists(legend)) return false;
+    const auto& l = state.getObject(legend);
+    return l.card_def_id == CardDefId::fromRaw(975) && !l.is_exhausted &&
+           seraphineReadyUnits(state,player).size() >= 3;
+}
+void GameEngine::forgetPlayPayments(PlayerId player, GameObjectId card_id) {""")
+replace_once(game,
+    """    if (!addl.exists || !addl.payable) return {};
+    CardContext ctx{state_, events_, *effect_executor_, player, card_id};
+    const EffectExecutor::ActingFor acting(*effect_executor_, card_id);
+    ctx.registry = &card_registry_;
+    const auto adj = cc->payAdditionalPlayCost(ctx, [&](const Card::PlayCostAdjust& a) {
+        return canAffordWith(player, card_id, extra_any_power, a);
+    });
+    if (adj.ignore_cost || adj.energy_reduction > 0 || adj.power_reduction > 0)
+        RIFT_TRACE(events_, "ADDITIONAL_COST: " + state_.getObject(card_id).name +
+                         (adj.ignore_cost ? " ignores its cost"
+                              : " costs [" + std::to_string(adj.energy_reduction) + "] and " +
+                                std::to_string(adj.power_reduction) + " Power less"));
+    return adj;""",
+    """    Card::PlayCostAdjust adj{};
+    CardContext ctx{state_, events_, *effect_executor_, player, card_id};
+    const EffectExecutor::ActingFor acting(*effect_executor_, card_id);
+    ctx.registry = &card_registry_;
+    if (addl.exists && addl.payable)
+        adj = cc->payAdditionalPlayCost(ctx, [&](const Card::PlayCostAdjust& a) {
+            return canAffordWith(player, card_id, extra_any_power, a);
+        });
+    if (state_.getObject(card_id).isSpell() && seraphineMayReduceSpell(state_,player)) {
+        Card::PlayCostAdjust discounted=adj;
+        discounted.energy_reduction+=2;
+        if (canAffordWith(player,card_id,extra_any_power,discounted)) {
+            const bool must_pay=!canAffordWith(player,card_id,extra_any_power,adj);
+            if (must_pay || effect_executor_->confirmNow(player,
+                "Seraphine: exhaust legend and three ready friendly units to reduce spell cost by 2?")) {
+                auto available=seraphineReadyUnits(state_,player);
+                std::vector<GameObjectId> selected;
+                for(int i=0;i<3;i++) {
+                    if(available.empty())break;
+                    const auto chosen=effect_executor_->chooseObjectNow(player,available,
+                        "Seraphine: choose a distinct ready unit to exhaust");
+                    if(chosen==kInvalidId || !state_.objectExists(chosen))break;
+                    selected.push_back(chosen);
+                    available.erase(std::remove(available.begin(),available.end(),chosen),available.end());
+                }
+                if(selected.size()==3) {
+                    const auto legend=state_.player(player).legend_zone;
+                    effect_executor_->exhaustObject(legend);
+                    // Pay the simultaneous exhaustion cost before announcing it.
+                    for(auto id:selected)state_.getObject(id).is_exhausted=true;
+                    for(auto id:selected)
+                        events_.emit(ObjectStateChangedEvent{id,"exhausted"});
+                    events_.emit(ObjectStateChangedEvent{selected.front(),"seraphine_three_exhausted"});
+                    adj.energy_reduction+=2;
+                }
+            }
+        }
+    }
+    if (adj.ignore_cost || adj.energy_reduction > 0 || adj.power_reduction > 0)
+        RIFT_TRACE(events_, "ADDITIONAL_COST: " + state_.getObject(card_id).name +
+                         (adj.ignore_cost ? " ignores its cost"
+                              : " costs [" + std::to_string(adj.energy_reduction) + "] and " +
+                                std::to_string(adj.power_reduction) + " Power less"));
+    return adj;""")
+replace_once(game,
+    "    return canAffordWith(player, card_obj, extra_any_power, Card::PlayCostAdjust{});\n}\n\n// Whether",
+    """    if (card.isSpell() && seraphineMayReduceSpell(state_,player)) {
+        Card::PlayCostAdjust discount{};
+        discount.energy_reduction=2;
+        if (const Card* cls=card_registry_.get(card.card_def_id)) {
+            const auto a=cls->additionalPlayCost(state_,card_db_,player,card_obj);
+            if(a.exists && a.payable) {
+                discount.energy_reduction+=a.best.energy_reduction;
+                discount.power_reduction+=a.best.power_reduction;
+                discount.ignore_cost=a.best.ignore_cost;
+            }
+        }
+        if(canAffordWith(player,card_obj,extra_any_power,discount))return true;
+    }
+    return canAffordWith(player, card_obj, extra_any_power, Card::PlayCostAdjust{});
+}
+
+// Whether""")
+replace_once(game,
+    '    for (auto unit_id : moving) events_.emit(ObjectStateChangedEvent{unit_id, "exhausted"});',
+    '    for (auto unit_id : moving) events_.emit(ObjectStateChangedEvent{unit_id, "exhausted"});\n'
+    '    if(moving.size()>=3)\n'
+    '        events_.emit(ObjectStateChangedEvent{moving.front(),"seraphine_three_exhausted"});')
+replace_once(effects,
+    "    WhenIAmExhausted,           // Radiance: When I become exhausted",
+    "    WhenIAmExhausted,           // Radiance: When I become exhausted\n"
+    "    WhenThreeFriendsExhausted, // Radiance: a batch exhausted >=3 friendly units")
+replace_once(trigger,
+    "    if (e.what_changed == \"joined_combat\") {",
+    """    if (e.what_changed == "seraphine_three_exhausted") {
+        std::vector<GameObjectId> watchers;
+        for(const auto& [id,o]:state_.objects.onBoard())
+            if(o.isUnit()&&o.controller==controller&&o.location&&o.card_def_id!=kInvalidId &&
+                cardFiresOn(card_registry_,o.card_def_id,TriggerType::WhenThreeFriendsExhausted))
+                watchers.push_back(id);
+        for(auto id:watchers)
+            fireTrigger(id,controller,0,TriggerType::WhenThreeFriendsExhausted);
+        return;
+    }
+    if (e.what_changed == "joined_combat") {""")
+
+print("OVERLAY_SUCCESS all 26 audited Radiance cards plus one Bomb token")
