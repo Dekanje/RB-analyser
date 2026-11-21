@@ -141,28 +141,28 @@ card_impl.write_text(s.replace(payment,payment_new,1)
 object_header=engine/"src/core/game_object.h"
 replace_once(object_header,
     '    int temp_shield_value = 0;  // temporary shield applied "this turn"',
-    '    int temp_shield_value = 0;  // temporary shield applied "this turn"\\n'
+    '    int temp_shield_value = 0;  // temporary shield applied "this turn"\n'
     '    int temp_assault_shield_multiples = 0; // K\'Sante: dynamic Assault=Shield grants this turn')
 replace_once(object_header,
     "            current_might += assault_value;",
     "            current_might += assault_value + temp_assault_shield_multiples * shield_value;")
 board_state=engine/"src/core/board_state.h"
 replace_once(board_state,
-    "    obj.temp_shield_value = 0;\\n    obj.temp_deflect_value = 0;",
-    "    obj.temp_shield_value = 0;\\n    obj.temp_deflect_value = 0;\\n"
+    "    obj.temp_shield_value = 0;\n    obj.temp_deflect_value = 0;",
+    "    obj.temp_shield_value = 0;\n    obj.temp_deflect_value = 0;\n"
     "    obj.temp_assault_shield_multiples = 0;")
 replace_once(board_state,
     "obj.temp_assault_value != 0 || obj.temp_shield_value != 0 ||",
-    "obj.temp_assault_value != 0 || obj.temp_shield_value != 0 ||\\n"
+    "obj.temp_assault_value != 0 || obj.temp_shield_value != 0 ||\n"
     "           obj.temp_assault_shield_multiples != 0 ||")
 replace_once(game,
     '    obj.temp_deflect_value = 0;   // [Deflect N] given "this turn"',
-    '    obj.temp_deflect_value = 0;   // [Deflect N] given "this turn"\\n'
+    '    obj.temp_deflect_value = 0;   // [Deflect N] given "this turn"\n'
     '    obj.temp_assault_shield_multiples = 0;')
 executor_impl=engine/"src/engine/effect_executor.cpp"
 replace_once(executor_impl,
     '    mix(static_cast<uint64_t>(static_cast<int64_t>(obj.temp_assault_value)));',
-    '    mix(static_cast<uint64_t>(static_cast<int64_t>(obj.temp_assault_value)));\\n'
+    '    mix(static_cast<uint64_t>(static_cast<int64_t>(obj.temp_assault_value)));\n'
     '    mix(static_cast<uint64_t>(static_cast<int64_t>(obj.temp_assault_shield_multiples)));')
 
 print("OVERLAY_SUCCESS six experimental C++ cards; includes K\'Sante Shield-scaled Assault")
