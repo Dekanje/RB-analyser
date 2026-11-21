@@ -78,6 +78,7 @@ private:
   d.set_code="RAD";d.set_name="Radiance";d.public_code="RAD-141/167";
   d.collector_number=141;d.card_type=CardType::Legend;d.rarity=Rarity::Rare;
   d.domains={Domain::Fury,Domain::Chaos};d.tags={"Yordle","Ziggs"};
+  d.champion_tag="Ziggs";
   d.ability_text="[1][A], [E]: Play a Bomb gear token to a battlefield.";
   return d;
  }();
