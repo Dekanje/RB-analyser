@@ -224,4 +224,47 @@ void StepDriver::markDone()""",
 
 void StepDriver::markDone()""")
 
+# CRITICAL: Boost.Context's forced_unwind exception must never be suppressed.
+# StepDriver::~StepDriver destroys parked speculative ISMCTS clone fibers by
+# unwinding. Mordekaiser's immediate [Add] ability enters probeAdds(), whose
+# two catch-all handlers previously swallowed forced_unwind and corrupted the
+# suspended fiber continuation (observed jump_fcontext with RSP=0).
+# Preserve the documented handling of regular probe failures, but rethrow
+# forced_unwind in both handlers. All genuine game outcomes remain unchanged.
+replace_once(
+    engine,
+    '#include "game_engine.h"',
+    '#include "game_engine.h"\n#include <boost/context/fiber.hpp>'
+)
+replace_once(
+    engine,
+    """                    reached = search(depth + 1);
+                } catch (...) {
+                    reached = false;
+                }
+                state_ = std::move(saved);""",
+    """                    reached = search(depth + 1);
+                } catch (const boost::context::detail::forced_unwind&) {
+                    throw;  // destroying parked ISMCTS fibers must unwind
+                } catch (...) {
+                    reached = false;
+                }
+                state_ = std::move(saved);"""
+)
+replace_once(
+    engine,
+    """            ok = search(0);
+        } catch (...) {
+            ok = false;
+        }
+        if (effect_executor_->hasPendingChoice())""",
+    """            ok = search(0);
+        } catch (const boost::context::detail::forced_unwind&) {
+            throw;  // cannot continue from a destroyed caller context
+        } catch (...) {
+            ok = false;
+        }
+        if (effect_executor_->hasPendingChoice())"""
+)
+
 print("PINNED_ISMCTS_STABILITY_PATCH_APPLIED", EXPECTED)
