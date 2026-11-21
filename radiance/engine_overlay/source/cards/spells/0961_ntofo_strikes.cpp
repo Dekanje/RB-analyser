@@ -56,6 +56,7 @@ private:
   d.set_code="RAD";d.set_name="Radiance";d.public_code="RAD-148/167";
   d.collector_number=148;d.card_type=CardType::Spell;
   d.super_type=SuperType::Signature;d.domains={Domain::Calm,Domain::Body};
+  d.tags={"K\'Sante"};
   d.energy_cost=2;d.power_cost=1;d.rarity=Rarity::Epic;
   d.keywords.set(Keyword::Action);
   d.ability_text="[Action] Give a friendly unit [Shield 2] this turn, then deal damage equal to its [Shield] to an enemy unit.";
