@@ -1,0 +1,34 @@
+name: Fast preflight for Radiance 58-deck candidates
+on:
+  push:
+    branches: ['radiance/engine-mechanics-development']
+    paths: ['.github/workflows/radiance-fast-preflight.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  preflight:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile Python sources and verify original SHA-pinned corrections
+        run: |
+          python3 -m py_compile scripts/legal_candidate.py scripts/run_actual_games.py scripts/run_bo3_pairings.py scripts/validate_58_originals.py scripts/aggregate_bo3.py radiance/engine_overlay/apply.py radiance/engine_overlay/verify.py
+          python3 - <<'PY'
+          import sys,json
+          sys.path.insert(0,"scripts")
+          from run_actual_games import decode
+          from legal_candidate import make_legal_candidate
+          original=decode()
+          decks=make_legal_candidate(original,"decks_legal_candidate","results/four_legal_candidates_manifest.json")
+          data=json.load(open("results/four_legal_candidates_manifest.json"))
+          assert len(original)==len(decks)==58
+          changed={x["legend"] for x in data["decks"] if x["changed"]}
+          assert changed=={
+            "Ornn, Fire Below the Mountain","Lucian, Purifier",
+            "Miss Fortune, Bounty Hunter","Rengar, Pridestalker"},changed
+          assert data["originals_untouched"]
+          print("PRECHECK_PASS 58 deck sources; 54 unchanged and 4 SHA-pinned legal candidates")
+          for item in data["edits"]:print("DISCLOSED_CHANGE",item)
+          PY
