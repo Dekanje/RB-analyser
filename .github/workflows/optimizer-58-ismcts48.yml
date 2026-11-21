@@ -38,8 +38,10 @@ jobs:
           import json
           cards=json.load(open('radiance_registry_preflight.json'))['cards']
           assert len(cards)==988,len(cards)
-          assert sum(c.get('set_code')=='RAD' for c in cards)>=25
-          print('OPTIMIZER_58_PREFLIGHT_PASS',len(cards),flush=True)
+          bycode={c.get('public_code'):c for c in cards}
+          required=('RAD-149/167','RAD-086/167','RAD-153/167','RAD-150/167','RAD-148/167','RAD-041/167')
+          assert all(code in bycode for code in required),[code for code in required if code not in bycode]
+          print('OPTIMIZER_58_PREFLIGHT_PASS',len(cards),'RAD_REGISTERED',sum(c.get('set_code')=='RAD' for c in cards),flush=True)
           PY
   optimize:
     needs: preflight
