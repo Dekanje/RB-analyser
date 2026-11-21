@@ -23,10 +23,19 @@ public:
  TriggerType triggerType()const override{return TriggerType::WhenIDie;}
  unsigned choicesAtFinalization()const override{return kFinalizeTrigger;}
  void onTrigger(CardContext& ctx,const std::vector<GameObjectId>&)override{
-  if(!ctx.state.objectExists(ctx.source))return;
+  if(!ctx.state.objectExists(ctx.source)){
+   finalizingChoices(ctx);
+   return;
+  }
   const auto& bomb=ctx.state.getObject(ctx.source);
-  const auto& old=bomb.last_location;
-  if(!old||!std::holds_alternative<BattlefieldLocation>(*old))return;
+  // Last-known location is recorded at the kill (CR 383.2.c.3); tokens
+  // may have no historical last_location after leaving the battlefield.
+  const auto& old=bomb.last_known.valid && bomb.last_known.location
+     ? bomb.last_known.location : bomb.last_location;
+  if(!old||!std::holds_alternative<BattlefieldLocation>(*old)){
+   finalizingChoices(ctx);
+   return;
+  }
   const auto bf=std::get<BattlefieldLocation>(*old).id;
   std::vector<GameObjectId> enemy,bombs;
   for(const auto& [id,c]:ctx.state.objects.onBoard()){
