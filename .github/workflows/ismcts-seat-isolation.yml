@@ -1,0 +1,62 @@
+name: Localize Mordekaiser ISMCTS crash by agent seat
+on:
+  push:
+    branches: ['repair/ismcts-stability-2026-11-21']
+    paths: ['.github/workflows/ismcts-seat-isolation.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  seats:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 44932743894
+          github-token: ${{ github.token }}
+          name: repaired-ismcts-engine-preflight
+          path: .
+      - run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libboost-all-dev
+          chmod +x alpharune/build/riftbound
+      - name: Replay exact failure separately by searching seat
+        run: |
+          python3 - <<'PY'
+          import pathlib,sys,json,subprocess,re
+          sys.path.insert(0,'scripts')
+          from run_actual_games import decode
+          from legal_candidate import make_legal_candidate
+          decks=make_legal_candidate(decode(),pathlib.Path('decks_legal_candidate'))
+          combos=[
+             ('mord_azir','Mordekaiser, Iron Revenant','Azir, Emperor of the Sands',202611556010),
+             ('mord_mirror','Mordekaiser, Iron Revenant','Mordekaiser, Iron Revenant',202611556151)]
+          agents=[('ismcts:sims=24','random'),('random','ismcts:sims=24'),
+                  ('ismcts:sims=24','mcts:sims=24'),('mcts:sims=24','ismcts:sims=24')]
+          rows=[]
+          for label,a,b,seed in combos:
+           for p1,p2 in agents:
+            cmd=['alpharune/build/riftbound','--deck1',str(decks[a]),'--deck2',str(decks[b]),
+                 '--agent1',p1,'--agent2',p2,'--game-mode','match','--seed',str(seed),
+                 '--web','off','--render-html','off']
+            try:
+             p=subprocess.run(cmd,capture_output=True,text=True,timeout=85)
+             winner=re.search(r'Game over:\s*winner\s*=\s*([012])',p.stdout)
+             row={'case':label,'agent1':p1,'agent2':p2,'rc':p.returncode,
+                  'complete':p.returncode==0 and winner is not None,
+                  'error':p.stderr[-650:]}
+            except subprocess.TimeoutExpired:
+             row={'case':label,'agent1':p1,'agent2':p2,'rc':'TIMEOUT','complete':False,'error':'TIMEOUT'}
+            print('SEARCH_SEAT_CASE',json.dumps(row),flush=True)
+            rows.append(row)
+          pathlib.Path('results').mkdir(exist_ok=True)
+          pathlib.Path('results/ismcts_seat_isolation.json').write_text(json.dumps(rows,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ismcts-agent-seat-crash-isolation
+          path: results/ismcts_seat_isolation.json
+          if-no-files-found: error
