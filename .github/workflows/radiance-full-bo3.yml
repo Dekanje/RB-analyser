@@ -50,6 +50,15 @@ jobs:
         with:
           name: validated-engine
           path: .
+      - name: Install compiled engine runtime libraries on shard worker
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libboost-all-dev
+          ldd alpharune/build/riftbound
+          if ldd alpharune/build/riftbound | grep -q 'not found'; then
+            echo 'ERROR: compiled engine has missing runtime libraries'
+            exit 1
+          fi
       - run: |
           chmod +x alpharune/build/riftbound
           python3 scripts/run_bo3_pairings.py --legal-candidates --validation results/all_58_legal_candidate_validation.json --shards 16 --shard ${{ matrix.shard }} --series-per-pair 2 --seconds 40 --max-seconds 2300 --output results/bo3_shard_${{ matrix.shard }}.json
