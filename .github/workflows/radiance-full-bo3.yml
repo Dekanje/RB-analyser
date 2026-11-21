@@ -34,7 +34,7 @@ jobs:
           path: |
             alpharune/build/riftbound
             results/all_58_legal_candidate_validation.json
-            results/ornn_legal_candidate_manifest.json
+            results/four_legal_candidates_manifest.json
           compression-level: 0
   simulate:
     needs: prepare
