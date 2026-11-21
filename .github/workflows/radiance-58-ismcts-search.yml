@@ -1,0 +1,116 @@
+name: Optimize all 58 decks with playable Radiance additions (ISMCTS BO3)
+on:
+  push:
+    branches: ['optimization/full-radiance-2026-11-21']
+    paths:
+      - '.github/workflows/radiance-58-ismcts-search.yml'
+      - 'scripts/evaluate_radiance_ismcts.py'
+      - 'scripts/aggregate_radiance_ismcts.py'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: radiance-58-playable-ismcts-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  preflight:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Syntax and integrity of optimizer
+        run: |
+          python3 -m py_compile scripts/evaluate_radiance_ismcts.py scripts/aggregate_radiance_ismcts.py scripts/radiance_full_pool.py scripts/optimize_58.py
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 44929504017
+          github-token: ${{ github.token }}
+          name: radiance-full-catalog-58-legends-coverage
+          path: results/full_radiance_pool
+      - name: Verify all 58 audited sources and the 167-card audit receipts
+        run: |
+          python3 - <<'PY'
+          import json,pathlib,csv
+          root=pathlib.Path('results/full_radiance_pool')
+          report=json.load(open(root/'coverage_report.json'))
+          assert report['radiance_numbered_cards']==167,report
+          assert report['legends']==58,report
+          assert report['compiled_radiance_name_matches']>=25,report
+          assert len(list((root/'baselines').glob('*.txt')))==58
+          with (root/'all_58_radiance_proposals.csv').open() as f:
+              rows=list(csv.DictReader(f))
+          assert len(rows)>=58
+          print('RADIANCE_58_PREFLIGHT_PASS',json.dumps(report),flush=True)
+          PY
+  simulate:
+    needs: preflight
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 58
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 44929504017
+          github-token: ${{ github.token }}
+          name: radiance-full-catalog-58-legends-coverage
+          path: results/full_radiance_pool
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 44900171748
+          github-token: ${{ github.token }}
+          name: verified-ismcts-engine-58
+          path: .
+      - name: Install AlphaRune runtime libraries
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libboost-all-dev
+          chmod +x alpharune/build/riftbound
+          ldd alpharune/build/riftbound
+          if ldd alpharune/build/riftbound | grep -q 'not found'; then exit 1; fi
+      - name: Compare Radiance substitutions with matched ISMCTS vs ISMCTS BO3 series
+        run: |
+          python3 -u scripts/evaluate_radiance_ismcts.py \
+            --audit results/full_radiance_pool \
+            --engine alpharune/build/riftbound \
+            --output results/radiance_shard_${{ matrix.shard }} \
+            --shards 16 --shard ${{ matrix.shard }} \
+            --agent ismcts:sims=24 \
+            --candidates 2 --opponents 3 \
+            --training-samples 2 --holdout-samples 2 \
+            --min-delta 3 --workers 4 --timeout 75 \
+            --seed 2026112321
+      - name: Upload actual games and selected lists, including incomplete work
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: radiance-ismcts-shard-${{ matrix.shard }}
+          path: results/radiance_shard_${{ matrix.shard }}/
+          if-no-files-found: ignore
+          retention-days: 30
+  aggregate:
+    if: always()
+    needs: [simulate]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: radiance-ismcts-shard-*
+          path: results/shards
+      - name: Require complete 58-deck provenance and candidate decisions
+        run: |
+          python3 scripts/aggregate_radiance_ismcts.py --source results/shards --output results/radiance_58_ismcts
+      - name: Upload detailed comparison and complete proposed deck roster
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: all-58-radiance-ismcts-candidate-results
+          path: results/radiance_58_ismcts/
+          retention-days: 30
+          if-no-files-found: ignore
