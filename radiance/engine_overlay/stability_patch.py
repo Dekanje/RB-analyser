@@ -83,40 +83,76 @@ replace_once(
 )
 
 
-# Convergent Mutation has TWO chosen friendly units. The old engine used
-# one play-intent target and another finalize target, leaving target payment
-# validation split across paths. Use the same complete *pair* selection
-# machinery used for other two-target spells (all choices before cost).
-mutation = ENGINE / "src/cards/spells/0108_convergent_mutation.cpp"
-replace_once(
-    mutation,
-    """    void onResolve(CardContext& ctx, const std::vector<GameObjectId>& targets) override {
-        const GameObjectId chosen = targets.empty() ? kInvalidId : targets[0];
-        const auto other = selectTargetOrNone(*this, ctx, "Convergent Mutation (copy Might from)",
-                                              friendlyUnits(ctx.state, ctx.controller, chosen),
-                                              7, /*allow_none=*/false);
-        if (!other.has_value()) return;          // waiting for the agent
-        if (finalizingChoices(ctx)) return;      // choices end here (CR 355)
-        // Either target no longer legal: that instruction is ignored (CR
-        // 359.3.e.5), and it has nothing else to do.
-        if (chosen == kInvalidId || *other == kInvalidId) return;
-        if (!ctx.state.objectExists(chosen) || !ctx.state.objectExists(*other)) return;
-        const int target_might = ctx.state.getObject(*other).current_might;""",
-    """    bool needsPlayTimeTargetPair() const override { return true; }
-    void onResolve(CardContext& ctx, const std::vector<GameObjectId>&) override {
-        const auto own = friendlyUnits(ctx.state, ctx.controller, kInvalidId);
-        const auto options = [&](GameObjectId chosen) {
-            return friendlyUnits(ctx.state, ctx.controller, chosen);
-        };
-        auto [chosen, other] = pickTargetPair(ctx, "Convergent Mutation", own, options);
-        if (finalizingChoices(ctx)) return;
-        if (chosen == kInvalidId || other == kInvalidId) return;
-        if (!ctx.state.objectExists(chosen) || !ctx.state.objectExists(other)) return;
-        const int target_might = ctx.state.getObject(other).current_might;"""
-)
-replace_once(mutation,
-    "return TargetRequirements{.count = 1, .must_be_unit = true, .must_be_friendly = true};",
-    "return TargetRequirements{.count = 2, .must_be_unit = true, .must_be_friendly = true};")
+# Keep Convergent Mutation's existing two-stage play-target contract: one
+# target in the intent, another in its pre-play finalize choice. The tested
+# contract is necessary for chain-response semantics and the pinned C++
+# regression tests. Filter each *first* target by whether a COMPLETE,
+# affordable second-target choice exists before offering that play.
+header = ENGINE / "src/engine/game_engine.h"
+replace_once(header,
+    """    bool prePlayProbe(PlayerId player, GameObjectId card_id,
+                      const PlayerState::TrashReplayGrant* grant);""",
+    """    bool prePlayProbe(PlayerId player, GameObjectId card_id,
+                      const PlayerState::TrashReplayGrant* grant,
+                      const std::vector<GameObjectId>& initial_targets = {});""")
+replace_once(engine,
+    """bool GameEngine::prePlayProbe(PlayerId player, GameObjectId card_id,
+                              const PlayerState::TrashReplayGrant* grant) {""",
+    """bool GameEngine::prePlayProbe(PlayerId player, GameObjectId card_id,
+                              const PlayerState::TrashReplayGrant* grant,
+                              const std::vector<GameObjectId>& initial_targets) {""")
+replace_once(engine,
+    """    pre.pre_play_choices = true;
+    // The grant, if any, is looked up again in each run:""",
+    """    pre.pre_play_choices = true;
+    pre.targets = initial_targets;
+    // The grant, if any, is looked up again in each run:""")
+replace_once(engine,
+    """    effect_executor_->setChoiceFilter([this, player, card_id, via_grant](GameObjectId t) {
+        std::vector<GameObjectId> all;
+        if (state_.chain.resuming.has_value()) all = state_.chain.resuming->chosen_objects;
+        all.push_back(t);
+        std::vector<GameObjectId> unpaid = {t};""",
+    """    effect_executor_->setChoiceFilter([this, player, card_id, via_grant, initial_targets](GameObjectId t) {
+        std::vector<GameObjectId> all;
+        if (state_.chain.resuming.has_value()) all = state_.chain.resuming->chosen_objects;
+        all.push_back(t);
+        for (auto pt : initial_targets)
+            if (std::find(all.begin(), all.end(), pt) == all.end()) all.push_back(pt);
+        std::vector<GameObjectId> unpaid = initial_targets;
+        unpaid.push_back(t);""")
+replace_once(engine,
+    """    const PrePlayPayable payable = [this, player, card_id, via_grant](
+                                       const std::vector<GameObjectId>& chosen) {
+        const auto* g = via_grant ? trashGrantFor(player, card_id) : nullptr;
+        if (via_grant) return g && canPayTrashGrant(player, card_id, *g, chosen, {});
+        return chosen.empty() ? canAfford(player, card_id)
+                              : canAffordChoosing(player, card_id, chosen, {});
+    };""",
+    """    const PrePlayPayable payable = [this, player, card_id, via_grant, initial_targets](
+                                       const std::vector<GameObjectId>& chosen_in) {
+        std::vector<GameObjectId> chosen = chosen_in;
+        for (auto pt : initial_targets)
+            if (std::find(chosen.begin(), chosen.end(), pt) == chosen.end()) chosen.push_back(pt);
+        const auto* g = via_grant ? trashGrantFor(player, card_id) : nullptr;
+        if (via_grant) return g && canPayTrashGrant(player, card_id, *g, chosen, initial_targets);
+        return chosen.empty() ? canAfford(player, card_id)
+                              : canAffordChoosing(player, card_id, chosen, initial_targets);
+    };""")
+replace_once(engine,
+    """            for (auto& tset : spellTargetSets(spell_card, state_, player, req, legal_targets)) {
+                if (!affordableChoosing(tset)) continue;
+                Intent play;""",
+    """            for (auto& tset : spellTargetSets(spell_card, state_, player, req, legal_targets)) {
+                if (!affordableChoosing(tset)) continue;
+                // Convergent Mutation chooses a second distinct unit in a
+                // finalize pass. Its first target alone being affordable does
+                // not prove the full spell is playable (CR 355.8).
+                if (card.name == "Convergent Mutation" &&
+                    !state_.chain.resuming.has_value() &&
+                    !const_cast<GameEngine*>(this)->prePlayProbe(player, card_id, nullptr, tset))
+                    continue;
+                Intent play;""")
 
 # For two-mode spells, an affordable printed cost alone does not guarantee
 # any complete payable target sequence. Use the engine's exact pre-play probe
