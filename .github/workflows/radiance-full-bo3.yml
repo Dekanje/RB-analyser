@@ -86,4 +86,5 @@ jobs:
           path: |
             results/bo3_all_matchups.json
             results/bo3_all_matchups.csv
+            results/bo3_legend_rankings.csv
           if-no-files-found: ignore
