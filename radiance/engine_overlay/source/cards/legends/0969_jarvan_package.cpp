@@ -97,6 +97,20 @@ class DemacianStandard final:public GearCard {
   std::vector<TriggerType> triggerTypes()const override{
     return {TriggerType::WhenIAttack,TriggerType::WhenIHold};
   }
+  bool triggerCondition(const GameState& state,GameObjectId source,PlayerId controller,
+                        TriggerType trigger,GameObjectId)const override{
+    if(!state.objectExists(source))return false;
+    const auto& gear=state.getObject(source);
+    const auto bf=gear.battlefieldId();
+    if(!bf||gear.controller!=controller)return false;
+    if(trigger==TriggerType::WhenIHold)return true;
+    if(trigger!=TriggerType::WhenIAttack)return false;
+    for(const auto& [id,unit]:state.objects.onBoard())
+      if(unit.isUnit()&&unit.controller==controller&&unit.battlefieldId() &&
+         *unit.battlefieldId()==*bf &&
+         unit.combat_designation==CombatDesignation::Attacker)return true;
+    return false;
+  }
   unsigned choicesAtFinalization()const override{return kFinalizeTrigger;}
   void onTrigger(CardContext& ctx,const std::vector<GameObjectId>&)override{
     if(!ctx.state.objectExists(ctx.source)){finalizingChoices(ctx);return;}
