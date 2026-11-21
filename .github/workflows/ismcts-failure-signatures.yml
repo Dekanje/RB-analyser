@@ -1,0 +1,52 @@
+name: Diagnose failed ISMCTS seeds by root-cause signature
+on:
+  push:
+    branches: ['repair/ismcts-stability-2026-11-21']
+    paths: ['.github/workflows/ismcts-failure-signatures.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  classify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 44900171748
+          github-token: ${{ github.token }}
+          pattern: ismcts-bo3-shard-*
+          path: old-shards
+      - name: Classify every failed match without discarding data
+        run: |
+          python3 - <<'PY'
+          import collections,glob,json,pathlib,re
+          paths=glob.glob('old-shards/ismcts-bo3-shard-*/ismcts_bo3_shard_*.json')
+          assert len(paths)==64,len(paths)
+          groups=collections.defaultdict(list)
+          for p in paths:
+            for s in json.load(open(p))['results']:
+              if s['status']=='complete':continue
+              g=s['games'][-1]
+              tail=g.get('stderr_tail','')
+              signature=next((line.strip() for line in reversed(tail.splitlines())
+                              if 'exception:' in line or 'what():' in line or 'error:' in line),
+                               tail[-160:].strip() or 'SEGFAULT_NO_STDERR')
+              groups[(str(g.get('returncode')),signature)].append({
+                'a':s['legend_a'],'b':s['legend_b'],'seed':g['seed'],'instance':s['instance'],
+                'game_number':g['number'],'stderr_tail':tail[-1200:]})
+          summary=[{'returncode':code,'error_signature':sig,'occurrences':len(rows),'samples':rows[:12]}
+                    for (code,sig),rows in sorted(groups.items(),key=lambda t:-len(t[1]))]
+          out={'total_failures':sum(len(x) for x in groups.values()),'error_groups':summary}
+          pathlib.Path('failure-signatures.json').write_text(json.dumps(out,indent=2))
+          for x in summary[:50]:
+           print('PREVIOUS_ERROR_SIGNATURE',json.dumps(x),flush=True)
+          assert out['total_failures']==556,out
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: old-ismcts-556-failures-classified
+          path: failure-signatures.json
+          retention-days: 30
