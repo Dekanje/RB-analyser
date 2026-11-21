@@ -101,9 +101,36 @@ payment_new="""    const bool payable_regular = resource::canPay(
         resource::maskOf(cost.power_any_domain ? Domain::Count : cost.power_domain),
         SpendFor::Gear)) return false;
     if (!payEquipExtraCost(ctx, unit)) return false;"""
+# The pinned engine has two distinct Equip paths:
+# - payEquipAndAttach(): immediate attachment (Weaponmaster)
+# - payEquip(): pay the activated Equip cost, attach after resolving its chain item.
+# They share the payment logic, but have different return statements.
+payment_deferred = """    if (!ctx.executor.payResources(ctx.controller, cost.energy, cost.power,
+                                    resource::maskOf(cost.power_any_domain ? Domain::Count
+                                                                           : cost.power_domain),
+                                    SpendFor::Gear))
+        return false;
+    return payEquipExtraCost(ctx, unit);"""
+payment_deferred_new = """    const bool payable_regular = resource::canPay(
+        ctx.state, ctx.controller, cost.energy, cost.power,
+        cost.power_any_domain ? Domain::Count : cost.power_domain, SpendFor::Gear);
+    const bool payable_other = canPayEquipAlternative(
+        ctx.state, ctx.controller, ctx.source, unit);
+    if (!payable_regular && !payable_other) return false;
+    const bool choose_other = payable_other &&
+        (!payable_regular || ctx.executor.confirmNow(ctx.controller,
+            "Pay Equip by exhausting a friendly unit instead of Power?"));
+    if (choose_other) {
+        if (!payEquipAlternative(ctx, unit)) return false;
+    } else if (!ctx.executor.payResources(
+        ctx.controller, cost.energy, cost.power,
+        resource::maskOf(cost.power_any_domain ? Domain::Count : cost.power_domain),
+        SpendFor::Gear)) return false;
+    return payEquipExtraCost(ctx, unit);"""
 s=card_impl.read_text()
-if s.count(payment)!=2:
+if s.count(payment)!=1 or s.count(payment_deferred)!=1:
     raise SystemExit("Unrecognized AlphaRune Equip payment implementation")
-card_impl.write_text(s.replace(payment,payment_new))
+card_impl.write_text(s.replace(payment,payment_new,1)
+                      .replace(payment_deferred,payment_deferred_new,1))
 
 print("OVERLAY_SUCCESS four C++ cards; Riven static, Evelynn Legend and generalized Equip OR cost")
