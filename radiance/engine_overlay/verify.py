@@ -99,4 +99,13 @@ ser=gametest(exe,decks["Seraphine, Starry-Eyed Songstress"],
            decks["Kennen, Heart of the Tempest"],20261121891,90,"random")
 print("ORIGINAL_SERAPHINE_VS_KENNEN "+str(ser["status"])+" "+ser["stderr_tail"][-250:])
 assert ser["status"]=="complete",ser["stderr_tail"][-1000:]
+for new_legend, seed in [
+    ("Azir, Emperor of the Sands", 20261121901),
+    ("Renekton, Butcher of the Sands", 20261121902),
+]:
+    checked=gametest(exe,decks[new_legend],
+                     decks["Kennen, Heart of the Tempest"],seed,90,"random")
+    print("ORIGINAL_"+new_legend.upper().replace(" ","_")+" "+checked["status"]+
+          " "+checked["stderr_tail"][-250:])
+    assert checked["status"]=="complete",checked["stderr_tail"][-1000:]
 print("FULL_NINE_DECKS_CERTIFIED: false")
