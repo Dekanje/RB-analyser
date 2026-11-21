@@ -599,4 +599,25 @@ replace_once(overt,
                 return ua.current_might<ub.current_might;
             });""")
 
+
+# A pair-target spell must be affordable with a COMPLETE legal pair.
+# Previously the fast-path skipped the full probe whenever base cost was
+# payable and there was no Deflect, which can offer Back to Back even when
+# finalization has no valid two-target choice. Probe the exact finalized
+# choices on every pair play offer, both hand and trash replay.
+replace_once(game,
+    """            if (payable && spell_card->needsPlayTimeTargetPair() &&
+                (spell_card->choicesAtFinalization() & Card::kFinalizeResolve) &&
+                (!afford_plain || anyDeflectFor(player)))
+                payable = payableThroughAFinalizeChoice(player, card_id, nullptr, true);""",
+    """            if (payable && spell_card->needsPlayTimeTargetPair() &&
+                (spell_card->choicesAtFinalization() & Card::kFinalizeResolve))
+                payable = payableThroughAFinalizeChoice(player, card_id, nullptr, true);""")
+replace_once(game,
+    """            if (any && (spell_card->choicesAtFinalization() & Card::kFinalizeResolve) &&
+                (!plain || anyDeflectFor(player)))
+                any = payableThroughAFinalizeChoice(player, card_id, grant, true);""",
+    """            if (any && (spell_card->choicesAtFinalization() & Card::kFinalizeResolve))
+                any = payableThroughAFinalizeChoice(player, card_id, grant, true);""")
+
 print("OVERLAY_SUCCESS 988 definitions, stable visible-unit ordering, regression source count")
