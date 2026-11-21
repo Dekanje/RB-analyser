@@ -42,10 +42,13 @@ def validate_manifest(decks, validation):
         if actual!=verified[name]:raise RuntimeError("Original deck content changed: "+name)
 
 def run_series(exe,decks,a,b,index,instance,seconds,agent):
-    score={a:0,b:0}; games=[]
+    score={"A":0,"B":0}; games=[]
     for n in range(3):
-        first=a if (n+instance)%2==0 else b
-        second=b if first==a else a
+        first_side="A" if (n+instance)%2==0 else "B"
+        second_side="B" if first_side=="A" else "A"
+        first=a if first_side=="A" else b
+        second=b if second_side=="B" else a
+        # Both competitors remain distinct even in same-legend mirror games.
         # Mirrored first-game seat in instance 2, deterministic distinct seeds.
         seed=202611300000 + index*100 + instance*10 + n
         result=gametest(exe,decks[first],decks[second],seed,seconds,agent)
@@ -57,13 +60,16 @@ def run_series(exe,decks,a,b,index,instance,seconds,agent):
             return {"legend_a":a,"legend_b":b,"instance":instance,"status":"incomplete",
                     "reason":"Failed, timed-out, or tied engine game. No winner assigned.",
                     "games":games}
+        winner_side=first_side if result["winner"]==1 else second_side
         winner=first if result["winner"]==1 else second
         entry["winner"]=winner
+        entry["winner_side"]=winner_side
         games.append(entry)
-        score[winner]+=1
-        if score[winner]==2:
+        score[winner_side]+=1
+        if score[winner_side]==2:
             return {"legend_a":a,"legend_b":b,"instance":instance,"status":"complete",
-                    "winner":winner,"score":score,"games":games}
+                    "winner":winner,"winner_side":winner_side,"score":score,
+                    "mirror":a==b,"games":games}
     return {"legend_a":a,"legend_b":b,"instance":instance,"status":"incomplete",
             "reason":"No player reached two wins.","games":games}
 
