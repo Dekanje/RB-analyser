@@ -20,11 +20,11 @@
 | Mordekaiser | 3 | 3 | Completed |
 | Jarvan IV | 3 | 3 | Completed |
 | Orianna | 3 | 3 | Completed |
-| Ziggs | 4 | 4 (+ Bomb) | Retesting after Bomb death-trigger fix |
-| Ekko | 3 | 3 | Awaiting post-Ziggs verification |
-| Seraphine | 3 | 3 | Awaiting post-Ziggs verification |
+| Ziggs | 4 | 4 (+ Bomb) | Completed |
+| Ekko | 3 | 3 | Completed |
+| Seraphine | 3 | 3 | Completed |
 
-The six completed original-deck games are supported by the logs of runs #44881519314 and #44882395508. In the latter, the registry passed but Ziggs's Bomb death trigger raised a choice-finalization error. The source was corrected in commit `50073c74be32903d1e81dce50b96d097e5cdede7`; its new workflow is [#44882736908](https://github.com/Dekanje/RB-analyser/actions/runs/44882736908). This page must not imply that the new run has passed before it has.
+**All nine** original Radiance decks completed engine-resolved games against Kennen with no substitutions in [successful run #44882736908](https://github.com/Dekanje/RB-analyser/actions/runs/44882736908). This proves game compatibility, not full effect/competitive accuracy. The subsequent broader **58-deck, both-seat validation** was triggered in [run #44883114325](https://github.com/Dekanje/RB-analyser/actions/runs/44883114325); its results are pending.
 
 ## Engine changes
 
@@ -44,8 +44,8 @@ The six completed original-deck games are supported by the logs of runs #4488151
 
 ## Remaining acceptance conditions
 
-1. Pass latest nine original-deck smoke tests, including Ziggs, Ekko and Seraphine.
-2. Run all 58 original decks through the real engine in both seats and preserve their source SHA manifests.
+1. **Passed:** All nine original Radiance smoke tests (run #44882736908).
+2. **In progress:** Run all 58 original decks in both seats, preserving source SHA manifests (run #44883114325).
 3. Build and execute deterministic card-by-card mechanics tests, including replacement events, targeting/Deflect, Deploy timing, Bomb chains, source-zone changes, simultaneous exhaustion, and end-of-turn effects.
 4. Execute broad upstream regression tests and analyze any failed test before merging.
 5. Run and label BO3 results with real outcomes and observed statistical uncertainty. Do not merge experimental win rates into verified results prematurely.
