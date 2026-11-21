@@ -559,4 +559,18 @@ replace_once(trigger,
         ? std::max(0, state_.player(controller).deathknell_double_count) +
           radiance_extra : 0;""")
 
-print("OVERLAY_SUCCESS original nine cards plus four missing RAD cards used in 58-deck audit")
+
+# Correct regression invariants: native typed object identity, official
+# spelling of new Deploy keyword in logs/card ledger.
+object_header=engine/"src/core/game_object.h"
+replace_once(object_header,
+    "    bool radiance_unit_gear = false; // Orianna's chosen gear is also a unit",
+    "    bool radiance_unit_gear = false; // Orianna's chosen gear is also a unit\n"
+    "    std::optional<GameObjectId> radiance_selected_gear; // typed legend reference")
+types_impl=engine/"src/core/types.cpp"
+replace_once(types_impl,
+    '        case Keyword::Flow:         return "Flow";',
+    '        case Keyword::Flow:         return "Flow";\n'
+    '        case Keyword::Deploy:       return "Deploy";')
+
+print("OVERLAY_SUCCESS 986 definitions and corrected card/regression contracts")

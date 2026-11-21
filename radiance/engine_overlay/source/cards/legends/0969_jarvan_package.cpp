@@ -99,9 +99,9 @@ class DemacianStandard final:public GearCard {
   }
   unsigned choicesAtFinalization()const override{return kFinalizeTrigger;}
   void onTrigger(CardContext& ctx,const std::vector<GameObjectId>&)override{
-    if(!ctx.state.objectExists(ctx.source))return;
+    if(!ctx.state.objectExists(ctx.source)){finalizingChoices(ctx);return;}
     auto bf=ctx.state.getObject(ctx.source).battlefieldId();
-    if(!bf)return;
+    if(!bf){finalizingChoices(ctx);return;}
     if(ctx.firing_trigger==TriggerType::WhenIHold) {
        int ok=confirmOptional(ctx,"Demacian Standard: return to owner's hand?",
             [&](){return ctx.state.objectExists(ctx.source) &&
@@ -110,7 +110,10 @@ class DemacianStandard final:public GearCard {
        ctx.executor.bounceToHand(ctx.source);
        return;
     }
-    if(ctx.firing_trigger!=TriggerType::WhenIAttack)return;
+    if(ctx.firing_trigger!=TriggerType::WhenIAttack){
+      finalizingChoices(ctx);
+      return;
+    }
     std::vector<GameObjectId> attackers;
     for(const auto& [id,u]:ctx.state.objects.onBoard())
        if(u.isUnit()&&u.controller==ctx.controller&&u.battlefieldId() &&

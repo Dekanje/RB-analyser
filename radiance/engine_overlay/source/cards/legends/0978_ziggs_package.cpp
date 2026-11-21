@@ -21,6 +21,22 @@ class BombToken final:public GearCard {
 public:
  const CardDef& def()const override{return d_;}
  TriggerType triggerType()const override{return TriggerType::WhenIDie;}
+ bool triggerCondition(const GameState& s,GameObjectId source,PlayerId controller,
+                       TriggerType,GameObjectId)const override{
+  if(!s.objectExists(source))return false;
+  const auto& obj=s.getObject(source);
+  const auto old=obj.last_known.valid && obj.last_known.location
+    ? obj.last_known.location : obj.last_location;
+  if(!old || !std::holds_alternative<BattlefieldLocation>(*old))return false;
+  const auto bf=std::get<BattlefieldLocation>(*old).id;
+  for(const auto& [id,x]:s.objects.onBoard()){
+   if(!x.battlefieldId() || *x.battlefieldId()!=bf)continue;
+   if((x.isUnit() && x.controller!=controller) ||
+      (x.isGear()&&x.controller==controller&&x.name=="Bomb"&&id!=source))
+      return true;
+  }
+  return false;
+ }
  unsigned choicesAtFinalization()const override{return kFinalizeTrigger;}
  void onTrigger(CardContext& ctx,const std::vector<GameObjectId>&)override{
   if(!ctx.state.objectExists(ctx.source)){

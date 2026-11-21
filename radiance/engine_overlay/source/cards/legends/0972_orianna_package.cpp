@@ -36,9 +36,8 @@ public:
   if(finalizingChoices(ctx)||!paid||costUnpaid(ctx))return;
   if(!ctx.state.objectExists(chosen))return;
   auto& legend=ctx.state.getObject(ctx.source);
-  auto it=legend.card_counters.find("__orianna_selected_gear");
-  if(it!=legend.card_counters.end()){
-   auto old=GameObjectId::fromRaw(it->second);
+  if(legend.radiance_selected_gear.has_value()){
+   auto old=*legend.radiance_selected_gear;
    if(old!=chosen&&ctx.state.objectExists(old)){
     auto& previous=ctx.state.getObject(old);
     previous.radiance_unit_gear=false;
@@ -51,7 +50,7 @@ public:
   current.radiance_unit_gear=true;
   current.base_might=ctx.executor.cardDB().get(current.card_def_id).energy_cost;
   current.recomputeMight();
-  legend.card_counters["__orianna_selected_gear"]=static_cast<int>(chosen.raw());
+  legend.radiance_selected_gear=chosen;
   ctx.executor.recalculateContinuousEffects();
  }
 private:
