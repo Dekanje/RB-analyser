@@ -1,0 +1,49 @@
+name: Isolate hidden-information determinization from Boost context faults
+on:
+  push:
+    branches: ['repair/ismcts-stability-2026-11-21']
+    paths: ['.github/workflows/ismcts-sampler-isolation.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  sampler:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 17
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 44932743894
+          github-token: ${{ github.token }}
+          name: repaired-ismcts-engine-preflight
+          path: .
+      - run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libboost-all-dev
+          chmod +x alpharune/build/riftbound
+      - name: Compare same seeds under sampled-world and perfect-world MCTS with identical budget
+        run: |
+          python3 - <<'PY'
+          import pathlib,sys,json
+          sys.path.insert(0,'scripts')
+          from run_actual_games import decode,gametest
+          from legal_candidate import make_legal_candidate
+          decks=make_legal_candidate(decode(),pathlib.Path('decks_legal_candidate'))
+          cases=[('mord_azir','Mordekaiser, Iron Revenant','Azir, Emperor of the Sands',202611556010),
+                 ('mord_mirror','Mordekaiser, Iron Revenant','Mordekaiser, Iron Revenant',202611556151)]
+          rows=[]
+          for label,a,b,seed in cases:
+           for agent in ('ismcts:sims=24,world=sampled','ismcts:sims=24,world=perfect','mcts:sims=24'):
+            r=gametest(pathlib.Path('alpharune/build/riftbound'),decks[a],decks[b],seed,95,agent)
+            row={'case':label,'agent':agent,'seed':seed,'status':r['status'],'rc':r['returncode'],'winner':r['winner'],'error':r['stderr_tail'][-450:]}
+            rows.append(row);print('WORLD_MODEL_CASE',json.dumps(row),flush=True)
+          pathlib.Path('results').mkdir(exist_ok=True)
+          pathlib.Path('results/world_model_crash_isolation.json').write_text(json.dumps(rows,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ismcts-determinization-vs-engine-crash-isolation
+          path: results/world_model_crash_isolation.json
+          if-no-files-found: error
