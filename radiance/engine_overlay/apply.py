@@ -187,16 +187,14 @@ replace_once(playperm,
 replace_once(trigger,
     "void TriggerManager::announceUnitPlayed(GameObjectId unit, PlayerId player) {\n    std::vector<GameObjectId> watchers;",
     """void TriggerManager::announceUnitPlayed(GameObjectId unit, PlayerId player) {
-    // Last Caress: this permission is consumed by the very next unit played,
-    // even a face-down unit or a token. The same play is also buffed.
+    // Last Caress: consume location permission on the first unit played.
+    // The actual Buff is a delayed triggered ability on the chain, not
+    // an immediate/unreactable bonus.
     auto& ps = state_.player(player);
-    if (effect_executor_ && ps.next_unit_any_bf_buff_count > 0 &&
+    if (ps.next_unit_any_bf_buff_count > 0 &&
         ps.next_unit_any_bf_buff_turn == state_.turn.turn_number &&
-        state_.objectExists(unit)) {
-        const int count = ps.next_unit_any_bf_buff_count;
+        state_.objectExists(unit))
         ps.next_unit_any_bf_buff_count = 0;
-        for (int i = 0; i < count; ++i) effect_executor_->buffUnit(unit);
-    }
     std::vector<GameObjectId> watchers;""")
 
 print("OVERLAY_SUCCESS seven C++ cards; includes Last Caress delayed play and K\'Sante Assault")
