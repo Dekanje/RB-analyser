@@ -66,6 +66,10 @@ jobs:
              ("Mordekaiser, Iron Revenant","Mordekaiser, Iron Revenant",202611556151),
              ("Darius, Hand of Noxus","Seraphine, Starry-Eyed Songstress",202611621040),
              ("Seraphine, Starry-Eyed Songstress","Darius, Hand of Noxus",202611621041),
+             ("Lux, Lady of Luminosity","Seraphine, Starry-Eyed Songstress",202612593080),
+             ("Lillia, Bashful Bloom","Seraphine, Starry-Eyed Songstress",202612534022),
+             ("Diana, Scorn of the Moon","Seraphine, Starry-Eyed Songstress",202611673010),
+             ("Garen, Might of Demacia","Seraphine, Starry-Eyed Songstress",202611964040),
           ]
           rows=[]
           for a,b,seed in cases:
@@ -78,7 +82,7 @@ jobs:
           pathlib.Path('results/repaired_exact_seed_replay.json').write_text(json.dumps(rows,indent=2))
           if any(r['status']!='complete' or r['winner'] not in (1,2) for r in rows):
             raise SystemExit('STABILITY_PREFLIGHT_FAILED: preserve failure receipts; no all-field run')
-          print('STABILITY_PREFLIGHT_8_OF_8_COMPLETE')
+          print('STABILITY_PREFLIGHT_12_OF_12_COMPLETE')
           PY
       - uses: actions/upload-artifact@v4
         if: always()
