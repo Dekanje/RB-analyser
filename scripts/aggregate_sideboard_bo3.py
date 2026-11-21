@@ -120,7 +120,10 @@ def main(args):
       "expected_matchups":1711,"observed_matchups":len(by_matchup),
       "expected_series":1711*expected_instances,"observed_series":len(series),
       "complete":full,"shards_expected":shard_count,"shards_found":len(headers),
-      "postboard_games":postboard_games,\n      "games_with_sideboard_exchange":swapped_games,\n      "total_one_card_exchanges":total_exchanges,\n      "matchups":rows,
+      "postboard_games":postboard_games,
+      "games_with_sideboard_exchange":swapped_games,
+      "total_one_card_exchanges":total_exchanges,
+      "matchups":rows,
       "legend_rankings":leaderboard
     }
     output=pathlib.Path(args.output)
