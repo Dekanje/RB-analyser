@@ -5,6 +5,8 @@ on:
     paths:
       - '.github/workflows/radiance-fast-preflight.yml'
       - 'scripts/legal_candidate.py'
+      - 'scripts/run_bo3_pairings.py'
+      - 'scripts/aggregate_bo3.py'
       - 'radiance/validation/preflight-requests/**'
   workflow_dispatch:
 permissions:
