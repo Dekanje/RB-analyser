@@ -1,0 +1,164 @@
+name: Experimental 58-deck ISMCTS-48 with between-game sideboarding
+on:
+  push:
+    branches: ['experiment/ismcts-48-sideboard-2026-11-21']
+    paths:
+      - '.github/workflows/ismcts-48-sideboard-58.yml'
+      - 'scripts/sideboard_bo3.py'
+      - 'scripts/aggregate_sideboard_bo3.py'
+      - 'tests/test_sideboard_bo3.py'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: experiment-sideboard-48-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  preflight:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Static code checks and deterministic sideboard tests
+        run: |
+          python3 -m py_compile scripts/sideboard_bo3.py scripts/aggregate_sideboard_bo3.py
+          PYTHONPATH=scripts python3 -m unittest discover -s tests -p 'test_sideboard_bo3.py' -v
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 44936484425
+          github-token: ${{ github.token }}
+          name: repaired-ismcts-engine-preflight
+          path: .
+      - name: Restore same engine validated in the complete 58-deck baseline
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libboost-all-dev
+          chmod +x alpharune/build/riftbound
+          if ldd alpharune/build/riftbound | grep -q 'not found'; then exit 1; fi
+      - name: Verify 58 SHA-locked deck sources and sideboard transitions
+        run: |
+          python3 - <<'PY'
+          import hashlib,pathlib,sys
+          sys.path.insert(0,'scripts')
+          from run_actual_games import decode
+          from legal_candidate import make_legal_candidate
+          from run_bo3_pairings import validate_manifest
+          from sideboard_bo3 import parse_sections,one_swap
+          root=pathlib.Path('.')
+          decks=make_legal_candidate(decode(),root/'preflight_legal_decks')
+          validate_manifest(decks,root/'results/all_58_legal_candidate_validation.json',True)
+          changed=0
+          for name,original in sorted(decks.items()):
+              _,main,side=parse_sections(original)
+              before=hashlib.sha256(original.read_bytes()).hexdigest()
+              for game in (2,3):
+                  updated,swaps=one_swap(original,"Kennen, Heart of the Tempest",
+                      202612480000,"A",game,root/'preflight_postboard_decks')
+                  _,after_main,after_side=parse_sections(updated)
+                  assert after_main+after_side==main+side
+                  assert len(swaps)<=1
+                  changed+=bool(swaps)
+              assert before==hashlib.sha256(original.read_bytes()).hexdigest()
+          print("POSTBOARD_PREFLIGHT_PASS",{"decks":58,"attempted_postboard_states":116,
+                                            "states_with_swap":changed})
+          PY
+  pilot:
+    needs: preflight
+    strategy:
+      fail-fast: false
+      matrix:
+        pilot_shard: [0, 1]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 44936484425
+          github-token: ${{ github.token }}
+          name: repaired-ismcts-engine-preflight
+          path: .
+      - name: Install runtime dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libboost-all-dev
+          chmod +x alpharune/build/riftbound
+      - name: Require real complete post-board BO3 games in small pilot
+        run: |
+          python3 -u scripts/sideboard_bo3.py --engine alpharune/build/riftbound \
+            --validation results/all_58_legal_candidate_validation.json \
+            --shards 256 --shard ${{ matrix.pilot_shard }} \
+            --series-per-pair 1 --agent ismcts:sims=48 \
+            --seconds 100 --max-seconds 2700 \
+            --output results/pilot/postboard_shard_${{ matrix.pilot_shard }}.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: postboard-pilot-${{ matrix.pilot_shard }}
+          path: results/pilot/postboard_shard_${{ matrix.pilot_shard }}.json
+          if-no-files-found: ignore
+  simulate:
+    needs: [preflight, pilot]
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 58
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 44936484425
+          github-token: ${{ github.token }}
+          name: repaired-ismcts-engine-preflight
+          path: .
+      - name: Install runtime dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libboost-all-dev
+          chmod +x alpharune/build/riftbound
+          if ldd alpharune/build/riftbound | grep -q 'not found'; then exit 1; fi
+      - name: Run actual ISMCTS vs ISMCTS BO3 with exploratory post-board swaps
+        run: |
+          python3 -u scripts/sideboard_bo3.py --engine alpharune/build/riftbound \
+            --validation results/all_58_legal_candidate_validation.json \
+            --shards 128 --shard ${{ matrix.shard }} \
+            --series-per-pair 20 --agent ismcts:sims=48 \
+            --seconds 100 --max-seconds 3050 \
+            --output results/postboard_shard_${{ matrix.shard }}.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: postboard-ismcts48-shard-${{ matrix.shard }}
+          path: results/postboard_shard_${{ matrix.shard }}.json
+          retention-days: 30
+          if-no-files-found: ignore
+  aggregate:
+    if: always()
+    needs: [preflight, pilot, simulate]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: postboard-ismcts48-shard-*
+          path: results/shards
+          merge-multiple: false
+      - name: Fail closed unless all 1711 pairings and 34220 BO3 series finished
+        run: |
+          python3 scripts/aggregate_sideboard_bo3.py \
+            --inputs 'results/shards/postboard-ismcts48-shard-*/postboard_shard_*.json' \
+            --output results/ismcts48_postboard_all_matchups.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ismcts48-postboard-58-matrix-and-rankings
+          path: |
+            results/ismcts48_postboard_all_matchups.json
+            results/ismcts48_postboard_all_matchups.csv
+            results/bo3_legend_rankings.csv
+          retention-days: 30
+          if-no-files-found: ignore
