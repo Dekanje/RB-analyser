@@ -2,7 +2,10 @@ name: Fast preflight for Radiance 58-deck candidates
 on:
   push:
     branches: ['radiance/engine-mechanics-development']
-    paths: ['.github/workflows/radiance-fast-preflight.yml']
+    paths:
+      - '.github/workflows/radiance-fast-preflight.yml'
+      - 'scripts/legal_candidate.py'
+      - 'radiance/validation/preflight-requests/**'
   workflow_dispatch:
 permissions:
   contents: read
