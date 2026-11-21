@@ -134,7 +134,8 @@ def main(args):
              'accepted':sum(x['changed'] for x in reports),
              'total_game_attempts':len(cache),
              'no_unsupported_cards_simulated':True,
-             'source':'full 167-card Radiance catalog, executable compiled-name subset only',\n             'format':'fixed-deck best-of-three ISMCTS vs ISMCTS',
+             'source':'full 167-card Radiance catalog, executable compiled-name subset only',
+             'format:'fixed-deck best-of-three ISMCTS vs ISMCTS',
              'limitations':'Fixed-deck BO3, no between-game sideboarding; exploratory ISMCTS comparisons, not a complete all-matchup tournament ranking.'}
     (out/'summary.json').write_text(json.dumps(summary,indent=2))
     print('RAD_ISMCTS_SUMMARY',json.dumps(summary),flush=True)
