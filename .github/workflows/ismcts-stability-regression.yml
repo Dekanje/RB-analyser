@@ -2,7 +2,10 @@ name: Regression-test repaired ISMCTS engine mechanics
 on:
   push:
     branches: ['repair/ismcts-stability-2026-11-21']
-    paths: ['.github/workflows/ismcts-stability-regression.yml']
+    paths:
+      - '.github/workflows/ismcts-stability-regression.yml'
+      - 'radiance/engine_overlay/stability_patch.py'
+      - 'radiance/engine_overlay/source/cards/**'
   workflow_dispatch:
 permissions:
   contents: read
