@@ -66,6 +66,8 @@ jobs:
           git add radiance/data/radiance_catalog.json
           if ! git diff --cached --quiet; then
             git commit -m 'Refresh complete Riot Radiance gallery metadata (mechanics remain unverified)'
+            git fetch origin main
+            git rebase origin/main
             git push origin HEAD:main
           fi
       - name: Preserve current source coverage and complete audit
