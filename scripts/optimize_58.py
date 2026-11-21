@@ -106,7 +106,7 @@ def card_score(card, totals, leader):
 def propose(name,path,byname,total_pop,n,seed):
     original,main,side=parse_deck(path)
     domains=effective_domains(name,byname)
-    chosen=re.search(r'^ChosenChampion:\s*\n1 (.+)
+    chosen=re.search(r'^ChosenChampion:\s*\n1 (.+)$',original,re.M)
     chosen_card=byname.get(chosen.group(1)) if chosen else None
     leader_tags=set(chosen_card.get('tags') or ()) if chosen_card else set()
     # Require a known, already compiled card before considering a substitution.
