@@ -52,3 +52,4 @@ private:
 };
 }
 void register_card_959(CardRegistry& r) {r.registerCard(959,std::make_unique<BladeOfTheExile>());}
+} // namespace riftbound
