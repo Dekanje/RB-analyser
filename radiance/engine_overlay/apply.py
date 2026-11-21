@@ -22,7 +22,8 @@ for src,dest in [
     ("cards/legends/0972_orianna_package.cpp","src/cards/legends/0972_orianna_package.cpp"),
     ("cards/legends/0978_ziggs_package.cpp","src/cards/legends/0978_ziggs_package.cpp"),
     ("cards/legends/0966_ekko_package.cpp","src/cards/legends/0966_ekko_package.cpp"),
-    ("cards/legends/0975_seraphine_package.cpp","src/cards/legends/0975_seraphine_package.cpp")]:
+    ("cards/legends/0975_seraphine_package.cpp","src/cards/legends/0975_seraphine_package.cpp"),
+    ("cards/units/0983_additional_deck_cards.cpp","src/cards/units/0983_additional_deck_cards.cpp")]:
     target=engine/dest
     if target.exists():raise SystemExit("Collision: "+str(target))
     shutil.copyfile(source/src,target)
@@ -32,9 +33,9 @@ def replace_once(path,before,after):
     path.write_text(s.replace(before,after,1))
 init=engine/"src/cards/cards_init.cpp"
 replace_once(init,"void register_card_955(CardRegistry&);",
-"void register_card_955(CardRegistry&);\nvoid register_card_956(CardRegistry&);\nvoid register_card_957(CardRegistry&);\nvoid register_card_958(CardRegistry&);\nvoid register_card_959(CardRegistry&);\nvoid register_card_960(CardRegistry&);\nvoid register_card_961(CardRegistry&);\nvoid register_card_962(CardRegistry&);\nvoid register_card_963(CardRegistry&);\nvoid register_card_964(CardRegistry&);\nvoid register_card_965(CardRegistry&);\nvoid register_card_969(CardRegistry&);\nvoid register_card_970(CardRegistry&);\nvoid register_card_971(CardRegistry&);\nvoid register_card_972(CardRegistry&);\nvoid register_card_973(CardRegistry&);\nvoid register_card_974(CardRegistry&);\nvoid register_card_978(CardRegistry&);\nvoid register_card_979(CardRegistry&);\nvoid register_card_980(CardRegistry&);\nvoid register_card_981(CardRegistry&);\nvoid register_card_982(CardRegistry&);\nvoid register_card_966(CardRegistry&);\nvoid register_card_967(CardRegistry&);\nvoid register_card_968(CardRegistry&);\nvoid register_card_975(CardRegistry&);\nvoid register_card_976(CardRegistry&);\nvoid register_card_977(CardRegistry&);")
+"void register_card_955(CardRegistry&);\nvoid register_card_956(CardRegistry&);\nvoid register_card_957(CardRegistry&);\nvoid register_card_958(CardRegistry&);\nvoid register_card_959(CardRegistry&);\nvoid register_card_960(CardRegistry&);\nvoid register_card_961(CardRegistry&);\nvoid register_card_962(CardRegistry&);\nvoid register_card_963(CardRegistry&);\nvoid register_card_964(CardRegistry&);\nvoid register_card_965(CardRegistry&);\nvoid register_card_969(CardRegistry&);\nvoid register_card_970(CardRegistry&);\nvoid register_card_971(CardRegistry&);\nvoid register_card_972(CardRegistry&);\nvoid register_card_973(CardRegistry&);\nvoid register_card_974(CardRegistry&);\nvoid register_card_978(CardRegistry&);\nvoid register_card_979(CardRegistry&);\nvoid register_card_980(CardRegistry&);\nvoid register_card_981(CardRegistry&);\nvoid register_card_982(CardRegistry&);\nvoid register_card_966(CardRegistry&);\nvoid register_card_967(CardRegistry&);\nvoid register_card_968(CardRegistry&);\nvoid register_card_975(CardRegistry&);\nvoid register_card_976(CardRegistry&);\nvoid register_card_977(CardRegistry&);\nvoid register_card_983(CardRegistry&);\nvoid register_card_984(CardRegistry&);\nvoid register_card_985(CardRegistry&);\nvoid register_card_986(CardRegistry&);")
 replace_once(init,"    register_card_955(registry);",
-"    register_card_955(registry);\n    register_card_956(registry);\n    register_card_957(registry);\n    register_card_958(registry);\n    register_card_959(registry);\n    register_card_960(registry);\n    register_card_961(registry);\n    register_card_962(registry);\n    register_card_963(registry);\n    register_card_964(registry);\n    register_card_965(registry);\n    register_card_969(registry);\n    register_card_970(registry);\n    register_card_971(registry);\n    register_card_972(registry);\n    register_card_973(registry);\n    register_card_974(registry);\n    register_card_978(registry);\n    register_card_979(registry);\n    register_card_980(registry);\n    register_card_981(registry);\n    register_card_982(registry);\n    register_card_966(registry);\n    register_card_967(registry);\n    register_card_968(registry);\n    register_card_975(registry);\n    register_card_976(registry);\n    register_card_977(registry);")
+"    register_card_955(registry);\n    register_card_956(registry);\n    register_card_957(registry);\n    register_card_958(registry);\n    register_card_959(registry);\n    register_card_960(registry);\n    register_card_961(registry);\n    register_card_962(registry);\n    register_card_963(registry);\n    register_card_964(registry);\n    register_card_965(registry);\n    register_card_969(registry);\n    register_card_970(registry);\n    register_card_971(registry);\n    register_card_972(registry);\n    register_card_973(registry);\n    register_card_974(registry);\n    register_card_978(registry);\n    register_card_979(registry);\n    register_card_980(registry);\n    register_card_981(registry);\n    register_card_982(registry);\n    register_card_966(registry);\n    register_card_967(registry);\n    register_card_968(registry);\n    register_card_975(registry);\n    register_card_976(registry);\n    register_card_977(registry);\n    register_card_983(registry);\n    register_card_984(registry);\n    register_card_985(registry);\n    register_card_986(registry);")
 game=engine/"src/engine/game_engine.cpp"
 original="        if (state_.player(card.controller).otherUnitsEnterReady(card.id)) enters_ready = true;"
 replacement=original+"""
@@ -538,4 +539,24 @@ replace_once(trigger,
     }
     if (e.what_changed == "joined_combat") {""")
 
-print("OVERLAY_SUCCESS all 26 audited Radiance cards plus one Bomb token")
+
+# Radiance Detonation Amplifier: each friendly Deathknell at its battlefield
+# produces one additional real chain item, additive with Karthus, Eternal.
+replace_once(trigger,
+    """    const int extra = obj.hasKeyword(Keyword::Deathknell)
+        ? std::max(0, state_.player(controller).deathknell_double_count) : 0;""",
+    """    int radiance_extra = 0;
+    const auto where = obj.last_known.valid && obj.last_known.location
+                       ? obj.last_known.location : obj.last_location;
+    if (obj.hasKeyword(Keyword::Deathknell) && where) {
+        for (const auto& [id, gear] : state_.objects.onBoard()) {
+            if (!gear.isGear() || gear.card_def_id != CardDefId::fromRaw(985) ||
+                gear.controller != controller || !gear.location.has_value()) continue;
+            if (*gear.location == *where) ++radiance_extra;
+        }
+    }
+    const int extra = obj.hasKeyword(Keyword::Deathknell)
+        ? std::max(0, state_.player(controller).deathknell_double_count) +
+          radiance_extra : 0;""")
+
+print("OVERLAY_SUCCESS original nine cards plus four missing RAD cards used in 58-deck audit")
