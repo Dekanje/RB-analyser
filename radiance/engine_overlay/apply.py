@@ -13,7 +13,8 @@ for src,dest in [
     ("cards/legends/0958_agonys_embrace.cpp","src/cards/legends/0958_agonys_embrace.cpp"),
     ("cards/gear/0959_blade_of_the_exile.cpp","src/cards/gear/0959_blade_of_the_exile.cpp"),
     ("cards/legends/0960_pride_of_nazumah.cpp","src/cards/legends/0960_pride_of_nazumah.cpp"),
-    ("cards/spells/0961_ntofo_strikes.cpp","src/cards/spells/0961_ntofo_strikes.cpp")]:
+    ("cards/spells/0961_ntofo_strikes.cpp","src/cards/spells/0961_ntofo_strikes.cpp"),
+    ("cards/spells/0962_last_caress.cpp","src/cards/spells/0962_last_caress.cpp")]:
     target=engine/dest
     if target.exists():raise SystemExit("Collision: "+str(target))
     shutil.copyfile(source/src,target)
@@ -23,9 +24,9 @@ def replace_once(path,before,after):
     path.write_text(s.replace(before,after,1))
 init=engine/"src/cards/cards_init.cpp"
 replace_once(init,"void register_card_955(CardRegistry&);",
-"void register_card_955(CardRegistry&);\nvoid register_card_956(CardRegistry&);\nvoid register_card_957(CardRegistry&);\nvoid register_card_958(CardRegistry&);\nvoid register_card_959(CardRegistry&);\nvoid register_card_960(CardRegistry&);\nvoid register_card_961(CardRegistry&);")
+"void register_card_955(CardRegistry&);\nvoid register_card_956(CardRegistry&);\nvoid register_card_957(CardRegistry&);\nvoid register_card_958(CardRegistry&);\nvoid register_card_959(CardRegistry&);\nvoid register_card_960(CardRegistry&);\nvoid register_card_961(CardRegistry&);\nvoid register_card_962(CardRegistry&);")
 replace_once(init,"    register_card_955(registry);",
-"    register_card_955(registry);\n    register_card_956(registry);\n    register_card_957(registry);\n    register_card_958(registry);\n    register_card_959(registry);\n    register_card_960(registry);\n    register_card_961(registry);")
+"    register_card_955(registry);\n    register_card_956(registry);\n    register_card_957(registry);\n    register_card_958(registry);\n    register_card_959(registry);\n    register_card_960(registry);\n    register_card_961(registry);\n    register_card_962(registry);")
 game=engine/"src/engine/game_engine.cpp"
 original="        if (state_.player(card.controller).otherUnitsEnterReady(card.id)) enters_ready = true;"
 replacement=original+"""
@@ -165,4 +166,37 @@ replace_once(executor_impl,
     '    mix(static_cast<uint64_t>(static_cast<int64_t>(obj.temp_assault_value)));\n'
     '    mix(static_cast<uint64_t>(static_cast<int64_t>(obj.temp_assault_shield_multiples)));')
 
-print("OVERLAY_SUCCESS six experimental C++ cards; includes K\'Sante Shield-scaled Assault")
+
+# Last Caress: a turn-scoped delayed one-shot for the next unit play.
+player_state=engine/"src/core/game_state.h"
+replace_once(player_state,
+    '    bool units_enter_ready_this_turn = false;   // "Units you play this turn enter ready" (Confront, Bushwhack)',
+    '    int next_unit_any_bf_buff_turn = -1;\n'
+    '    int next_unit_any_bf_buff_count = 0;\n'
+    '    bool units_enter_ready_this_turn = false;   // "Units you play this turn enter ready" (Confront, Bushwhack)')
+replace_once(player_state,
+    "        units_enter_ready_this_turn = false;",
+    "        next_unit_any_bf_buff_count = 0;\n        next_unit_any_bf_buff_turn = -1;\n"
+    "        units_enter_ready_this_turn = false;")
+playperm=engine/"src/engine/play_permissions.cpp"
+replace_once(playperm,
+    "    if (controlled) return true;  // default: controlled BFs",
+    "    if (controlled) return true;  // default: controlled BFs\n"
+    "    if (ps.next_unit_any_bf_buff_turn == state.turn.turn_number &&\n"
+    "        ps.next_unit_any_bf_buff_count > 0) return true; // Last Caress")
+replace_once(trigger,
+    "void TriggerManager::announceUnitPlayed(GameObjectId unit, PlayerId player) {\n    std::vector<GameObjectId> watchers;",
+    """void TriggerManager::announceUnitPlayed(GameObjectId unit, PlayerId player) {
+    // Last Caress: this permission is consumed by the very next unit played,
+    // even a face-down unit or a token. The same play is also buffed.
+    auto& ps = state_.player(player);
+    if (effect_executor_ && ps.next_unit_any_bf_buff_count > 0 &&
+        ps.next_unit_any_bf_buff_turn == state_.turn.turn_number &&
+        state_.objectExists(unit)) {
+        const int count = ps.next_unit_any_bf_buff_count;
+        ps.next_unit_any_bf_buff_count = 0;
+        for (int i = 0; i < count; ++i) effect_executor_->buffUnit(unit);
+    }
+    std::vector<GameObjectId> watchers;""")
+
+print("OVERLAY_SUCCESS seven C++ cards; includes Last Caress delayed play and K\'Sante Assault")
