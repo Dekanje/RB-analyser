@@ -1,0 +1,29 @@
+name: Export current experimental source overlay for code audit
+on:
+  push:
+    branches: ['radiance/engine-mechanics-development']
+    paths: ['.github/workflows/export-current-radiance-overlay.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  export:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - name: Package exact checked-out experimental sources and validation scripts
+        run: |
+          tar -czf radiance-overlay-review.tgz \
+            radiance/engine_overlay \
+            scripts/legal_candidate.py \
+            scripts/run_actual_games.py \
+            scripts/validate_58_originals.py \
+            scripts/run_bo3_pairings.py \
+            scripts/aggregate_bo3.py
+          sha256sum radiance-overlay-review.tgz
+      - uses: actions/upload-artifact@v4
+        with:
+          name: radiance-current-overlay-source
+          path: radiance-overlay-review.tgz
+          retention-days: 3
