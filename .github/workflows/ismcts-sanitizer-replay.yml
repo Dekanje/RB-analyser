@@ -1,0 +1,84 @@
+name: ISMCTS crash root-cause sanitizer replay
+on:
+  push:
+    branches: ['repair/ismcts-stability-2026-11-21']
+    paths: ['.github/workflows/ismcts-sanitizer-replay.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  sanitizer:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 65
+    strategy:
+      fail-fast: false
+      matrix:
+        sanitizer: ['address,undefined']
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pinned build dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq cmake ninja-build g++ ccache libboost-all-dev nlohmann-json3-dev
+      - name: Clone pinned engine and apply reproducible stability patch
+        run: |
+          git clone --quiet https://github.com/chorlick/alpharune.git alpharune
+          git -C alpharune checkout --quiet --detach ec90f0fed002aed374d06249fa95e83e3cfbd386
+          python3 radiance/engine_overlay/apply.py
+          python3 radiance/engine_overlay/stability_patch.py
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/ccache
+          key: ismcts-sanitizer-v1-${{ runner.os }}-${{ matrix.sanitizer }}
+      - name: Build AddressSanitizer and UndefinedBehaviorSanitizer engine
+        run: |
+          cmake -S alpharune -B alpharune/build -G Ninja \
+            -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+            -DCMAKE_CXX_FLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer -g1" \
+            -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address,undefined" \
+            -DCMAKE_SHARED_LINKER_FLAGS="-fsanitize=address,undefined"
+          cmake --build alpharune/build --target riftbound -j 2
+      - name: Reproduce exact failing seeds with sanitizer stack traces
+        env:
+          ASAN_OPTIONS: detect_leaks=0:abort_on_error=1:print_stacktrace=1:detect_stack_use_after_return=1
+          UBSAN_OPTIONS: print_stacktrace=1:halt_on_error=1
+        run: |
+          mkdir -p results/sanitizer
+          python3 - <<'PY'
+          import pathlib,sys,subprocess,json
+          sys.path.insert(0,'scripts')
+          from run_actual_games import decode
+          from legal_candidate import make_legal_candidate
+          decks=make_legal_candidate(decode(),pathlib.Path('decks_legal_candidate'))
+          cases=[
+            ('mord_azir','Mordekaiser, Iron Revenant','Azir, Emperor of the Sands',202611556010),
+            ('mord_mirror','Mordekaiser, Iron Revenant','Mordekaiser, Iron Revenant',202611556151),
+            ('convergent','Darius, Hand of Noxus','Seraphine, Starry-Eyed Songstress',202611621040),
+            ('mesmerize','Lux, Lady of Luminosity','Seraphine, Starry-Eyed Songstress',202612593080),
+            ('rocket','Lillia, Bashful Bloom','Seraphine, Starry-Eyed Songstress',202612534022)]
+          records=[]
+          for label,a,b,seed in cases:
+            cmd=['alpharune/build/riftbound','--deck1',str(decks[a]),'--deck2',str(decks[b]),
+                 '--agent1','ismcts:sims=24','--agent2','ismcts:sims=24','--game-mode','match',
+                 '--seed',str(seed),'--web','off','--render-html','off']
+            try:
+              p=subprocess.run(cmd,capture_output=True,text=True,timeout=100)
+              stdout,stderr,rc=p.stdout,p.stderr,p.returncode
+            except subprocess.TimeoutExpired as e:
+              stdout=(e.stdout or b'').decode(errors='replace') if isinstance(e.stdout,bytes) else (e.stdout or '')
+              stderr=(e.stderr or b'').decode(errors='replace') if isinstance(e.stderr,bytes) else (e.stderr or '')
+              rc='TIMEOUT'
+            (pathlib.Path('results/sanitizer')/(label+'.txt')).write_text('STDOUT\n'+stdout+'\nSTDERR\n'+stderr)
+            records.append({'case':label,'seed':seed,'returncode':rc,'stderr_tail':stderr[-3000:]})
+            print('SANITIZER_CASE',label,'RETURN',rc,'TRACE',stderr[-2500:],flush=True)
+          pathlib.Path('results/sanitizer/summary.json').write_text(json.dumps(records,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ismcts-sanitizer-exact-seed-diagnostics
+          path: results/sanitizer/
+          retention-days: 30
+          if-no-files-found: ignore
