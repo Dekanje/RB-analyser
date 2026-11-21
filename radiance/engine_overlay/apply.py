@@ -14,7 +14,10 @@ for src,dest in [
     ("cards/gear/0959_blade_of_the_exile.cpp","src/cards/gear/0959_blade_of_the_exile.cpp"),
     ("cards/legends/0960_pride_of_nazumah.cpp","src/cards/legends/0960_pride_of_nazumah.cpp"),
     ("cards/spells/0961_ntofo_strikes.cpp","src/cards/spells/0961_ntofo_strikes.cpp"),
-    ("cards/spells/0962_last_caress.cpp","src/cards/spells/0962_last_caress.cpp")]:
+    ("cards/spells/0962_last_caress.cpp","src/cards/spells/0962_last_caress.cpp"),
+    ("cards/legends/0963_iron_revenant.cpp","src/cards/legends/0963_iron_revenant.cpp"),
+    ("cards/units/0964_twice_slain.cpp","src/cards/units/0964_twice_slain.cpp"),
+    ("cards/spells/0965_realm_of_death.cpp","src/cards/spells/0965_realm_of_death.cpp")]:
     target=engine/dest
     if target.exists():raise SystemExit("Collision: "+str(target))
     shutil.copyfile(source/src,target)
@@ -24,9 +27,9 @@ def replace_once(path,before,after):
     path.write_text(s.replace(before,after,1))
 init=engine/"src/cards/cards_init.cpp"
 replace_once(init,"void register_card_955(CardRegistry&);",
-"void register_card_955(CardRegistry&);\nvoid register_card_956(CardRegistry&);\nvoid register_card_957(CardRegistry&);\nvoid register_card_958(CardRegistry&);\nvoid register_card_959(CardRegistry&);\nvoid register_card_960(CardRegistry&);\nvoid register_card_961(CardRegistry&);\nvoid register_card_962(CardRegistry&);")
+"void register_card_955(CardRegistry&);\nvoid register_card_956(CardRegistry&);\nvoid register_card_957(CardRegistry&);\nvoid register_card_958(CardRegistry&);\nvoid register_card_959(CardRegistry&);\nvoid register_card_960(CardRegistry&);\nvoid register_card_961(CardRegistry&);\nvoid register_card_962(CardRegistry&);\nvoid register_card_963(CardRegistry&);\nvoid register_card_964(CardRegistry&);\nvoid register_card_965(CardRegistry&);")
 replace_once(init,"    register_card_955(registry);",
-"    register_card_955(registry);\n    register_card_956(registry);\n    register_card_957(registry);\n    register_card_958(registry);\n    register_card_959(registry);\n    register_card_960(registry);\n    register_card_961(registry);\n    register_card_962(registry);")
+"    register_card_955(registry);\n    register_card_956(registry);\n    register_card_957(registry);\n    register_card_958(registry);\n    register_card_959(registry);\n    register_card_960(registry);\n    register_card_961(registry);\n    register_card_962(registry);\n    register_card_963(registry);\n    register_card_964(registry);\n    register_card_965(registry);")
 game=engine/"src/engine/game_engine.cpp"
 original="        if (state_.player(card.controller).otherUnitsEnterReady(card.id)) enters_ready = true;"
 replacement=original+"""
@@ -197,4 +200,30 @@ replace_once(trigger,
         ps.next_unit_any_bf_buff_count = 0;
     std::vector<GameObjectId> watchers;""")
 
-print("OVERLAY_SUCCESS seven C++ cards; includes Last Caress delayed play and K\'Sante Assault")
+
+# Mordekaiser: floating [A] restricted to playing units or gear.
+pool=engine/"src/core/game_state.h"
+replace_once(pool,
+    '    int gear_power = 0;        // [A], "Use only to play gear or use gear abilities."',
+    '    int gear_power = 0;        // [A], "Use only to play gear or use gear abilities."\n'
+    '    int unit_or_gear_power = 0; // Mordekaiser: restricted [A]')
+replace_once(pool, "        gear_power = 0;\n        for (int i = 0;",
+    "        gear_power = 0;\n        unit_or_gear_power = 0;\n        for (int i = 0;")
+replace_once(pool, "        int sum = universal_power + spell_power + gear_power;",
+    "        int sum = universal_power + spell_power + gear_power + unit_or_gear_power;")
+replace_once(pool,
+    "        return (f == SpendFor::Spell ? spell_power : 0) +\n               (f == SpendFor::Gear ? gear_power : 0);",
+    "        return (f == SpendFor::Spell ? spell_power : 0) +\n"
+    "               (f == SpendFor::Gear ? gear_power : 0) +\n"
+    "               ((f == SpendFor::Unit || f == SpendFor::Gear) ? unit_or_gear_power : 0);")
+replace_once(pool,
+    "        if (f == SpendFor::Gear) take(gear_power);",
+    "        if (f == SpendFor::Gear) take(gear_power);\n"
+    "        if (f == SpendFor::Unit || f == SpendFor::Gear) take(unit_or_gear_power);")
+observer=engine/"src/engine/observer_view.cpp"
+replace_once(observer,
+    "        put(out, r.pool.spell_power); put(out, r.pool.gear_power);",
+    "        put(out, r.pool.spell_power); put(out, r.pool.gear_power);\n"
+    "        put(out, r.pool.unit_or_gear_power);")
+
+print("OVERLAY_SUCCESS ten experimental Radiance C++ classes")
