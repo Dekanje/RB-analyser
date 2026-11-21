@@ -106,9 +106,9 @@ payment_new="""    const bool payable_regular = resource::canPay(
 # - payEquip(): pay the activated Equip cost, attach after resolving its chain item.
 # They share the payment logic, but have different return statements.
 payment_deferred = """    if (!ctx.executor.payResources(ctx.controller, cost.energy, cost.power,
-                                    resource::maskOf(cost.power_any_domain ? Domain::Count
-                                                                           : cost.power_domain),
-                                    SpendFor::Gear))
+                                   resource::maskOf(cost.power_any_domain ? Domain::Count
+                                                                          : cost.power_domain),
+                                   SpendFor::Gear))
         return false;
     return payEquipExtraCost(ctx, unit);"""
 payment_deferred_new = """    const bool payable_regular = resource::canPay(
