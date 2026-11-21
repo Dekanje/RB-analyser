@@ -48,6 +48,13 @@ def run(engine, repeats, timeout, output, legal_ornn_candidate=False):
             }
             print(f"VALIDATE {idx + 1}/58 ({iteration + 1}/{repeats}) "
                   f"{name}: {result['status']}", flush=True)
+            if result["status"] != "complete":
+                print("VALIDATION_FAILURE " + json.dumps({
+                    "legend": name, "seat": record["seat"], "seed": seed,
+                    "status": result["status"], "returncode": result["returncode"],
+                    "stderr_tail": result["stderr_tail"][-1200:],
+                    "stdout_tail": result["stdout_tail"][-700:],
+                }, ensure_ascii=False), flush=True)
             records.append(record)
     output.parent.mkdir(parents=True, exist_ok=True)
     summary = {
