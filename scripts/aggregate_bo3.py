@@ -20,6 +20,12 @@ def main(args):
             raise RuntimeError("Unexpected or unsupported format: "+str(file))
         headers.append(data)
         series.extend(data["results"])
+    agent = headers[0].get("agent")
+    source = headers[0].get("source")
+    if not isinstance(agent,str) or not agent.startswith("ismcts:sims="):
+        raise RuntimeError("An ISMCTS-vs-ISMCTS matrix is required, not a random-agent run")
+    if not source or any(h.get("agent") != agent or h.get("source") != source for h in headers):
+        raise RuntimeError("Inconsistent gameplay agent or source deck roster across shards")
     shard_count=headers[0]["shards"]
     expected_instances=headers[0]["series_per_pair"]
     if not all(x["shards"]==shard_count and x["series_per_pair"]==expected_instances
@@ -70,20 +76,23 @@ def main(args):
         leaderboard.append({
            "legend":name,"series_played":m["series"],
            "series_won":m["wins"],"series_lost":m["losses"],
-           "win_rate_random_agent":(round(m["wins"]/m["series"],5) if m["series"] else None),
+           "win_rate_ismcts":(round(m["wins"]/m["series"],5) if m["series"] else None),
            "mc_wilson95_low":low,"mc_wilson95_high":high,
            "opponents_seen":len(m["opponents"]),
         })
-    leaderboard.sort(key=lambda r:(-(r["win_rate_random_agent"] if r["win_rate_random_agent"] is not None else -1),r["legend"]))
-    for i,row in enumerate(leaderboard,1):row["rank_random_agent"]=i
+    leaderboard.sort(key=lambda r:(-(r["win_rate_ismcts"] if r["win_rate_ismcts"] is not None else -1),r["legend"]))
+    for i,row in enumerate(leaderboard,1):row["rank_ismcts"]=i
     full=(len(headers)==shard_count and
           all(x["complete"] and x.get("series_incomplete",0)==0 for x in headers) and
           len(by_matchup)==1711 and len(series)==1711*expected_instances and
           all(x["series_complete"]==expected_instances for x in rows))
     report={
-      "schema":1,
+      "schema":2,
       "engine_based":True,"sideboarding":False,
-      "limitations":"Fixed original decklists; no postgame sideboard choice; exploratory agents; do not interpret as tournament BO3 odds.",
+      "agent":agent,
+      "deck_source":source,
+      "ismcts_search_budget_per_decision":int(agent.split("sims=",1)[1]),
+      "limitations":"ISMCTS against ISMCTS with sampled hidden information; 54 unchanged original lists and four disclosed legal corrections; fixed-deck BO3 without sideboard swaps; provisional rules coverage. Not established tournament odds.",
       "expected_matchups":1711,"observed_matchups":len(by_matchup),
       "expected_series":1711*expected_instances,"observed_series":len(series),
       "complete":full,"shards_expected":shard_count,"shards_found":len(headers),
@@ -106,7 +115,7 @@ def main(args):
             writer.writeheader()
             writer.writerows(leaderboard)
     print("BO3_LEADERBOARD",json.dumps({"legends":len(leaderboard),"top5":leaderboard[:5],
-                                        "agent":"random","sideboarding":False}))
+                                        "agent":agent,"sideboarding":False}))
     print("BO3_AGGREGATE",json.dumps({k:v for k,v in report.items() if k!="matchups"}))
     return 0 if full else 1
 
