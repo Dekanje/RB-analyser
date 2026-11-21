@@ -10,7 +10,8 @@ source=root/"radiance/engine_overlay/source"
 for src,dest in [
     ("cards/legends/0956_the_exile.cpp","src/cards/legends/0956_the_exile.cpp"),
     ("cards/units/0957_ksante_courageous.cpp","src/cards/units/0957_ksante_courageous.cpp"),
-    ("cards/legends/0958_agonys_embrace.cpp","src/cards/legends/0958_agonys_embrace.cpp")]:
+    ("cards/legends/0958_agonys_embrace.cpp","src/cards/legends/0958_agonys_embrace.cpp"),
+    ("cards/gear/0959_blade_of_the_exile.cpp","src/cards/gear/0959_blade_of_the_exile.cpp")]:
     target=engine/dest
     if target.exists():raise SystemExit("Collision: "+str(target))
     shutil.copyfile(source/src,target)
@@ -20,9 +21,9 @@ def replace_once(path,before,after):
     path.write_text(s.replace(before,after,1))
 init=engine/"src/cards/cards_init.cpp"
 replace_once(init,"void register_card_955(CardRegistry&);",
-"void register_card_955(CardRegistry&);\nvoid register_card_956(CardRegistry&);\nvoid register_card_957(CardRegistry&);\nvoid register_card_958(CardRegistry&);")
+"void register_card_955(CardRegistry&);\nvoid register_card_956(CardRegistry&);\nvoid register_card_957(CardRegistry&);\nvoid register_card_958(CardRegistry&);\nvoid register_card_959(CardRegistry&);")
 replace_once(init,"    register_card_955(registry);",
-"    register_card_955(registry);\n    register_card_956(registry);\n    register_card_957(registry);\n    register_card_958(registry);")
+"    register_card_955(registry);\n    register_card_956(registry);\n    register_card_957(registry);\n    register_card_958(registry);\n    register_card_959(registry);")
 game=engine/"src/engine/game_engine.cpp"
 original="        if (state_.player(card.controller).otherUnitsEnterReady(card.id)) enters_ready = true;"
 replacement=original+"""
@@ -56,4 +57,53 @@ newpart=part.replace(needle,'''    }
     fireLegendTrigger(TriggerType::WhenYouPlayFromFacedown, e.player, 0, e.card);
 }''',1)
 trigger.write_text(handler[:start]+newpart+handler[end:])
-print("OVERLAY_SUCCESS three card classes, Riven entry and Evelynn face-down trigger")
+
+# Generalized Equip alternative-payment hook, rather than a hard-coded card ID.
+header=engine/"src/cards/card.h"
+anchor="    virtual bool payEquipExtraCost(CardContext& /*ctx*/, GameObjectId /*unit*/) { return true; }"
+insert="""    virtual bool canPayEquipAlternative(const GameState&, PlayerId,
+                                         GameObjectId, GameObjectId) const { return false; }
+    virtual bool payEquipAlternative(CardContext&, GameObjectId) { return false; }
+"""+anchor
+replace_once(header,anchor,insert)
+card_impl=engine/"src/cards/card.cpp"
+canpay="""    if (!resource::canPay(state, controller, cost.energy, cost.power,
+                          cost.power_any_domain ? Domain::Count : cost.power_domain,
+                          SpendFor::Gear))
+        return false;
+    return canPayEquipExtraCost(state, controller, gear, unit);"""
+canpay_new="""    if (!resource::canPay(state, controller, cost.energy, cost.power,
+                          cost.power_any_domain ? Domain::Count : cost.power_domain,
+                          SpendFor::Gear) &&
+        !canPayEquipAlternative(state, controller, gear, unit))
+        return false;
+    return canPayEquipExtraCost(state, controller, gear, unit);"""
+replace_once(card_impl,canpay,canpay_new)
+payment="""    if (!ctx.executor.payResources(ctx.controller, cost.energy, cost.power,
+                                   resource::maskOf(cost.power_any_domain ? Domain::Count
+                                                                          : cost.power_domain),
+                                   SpendFor::Gear))
+        return false;
+    if (!payEquipExtraCost(ctx, unit)) return false;"""
+payment_new="""    const bool payable_regular = resource::canPay(
+        ctx.state, ctx.controller, cost.energy, cost.power,
+        cost.power_any_domain ? Domain::Count : cost.power_domain, SpendFor::Gear);
+    const bool payable_other = canPayEquipAlternative(
+        ctx.state, ctx.controller, ctx.source, unit);
+    if (!payable_regular && !payable_other) return false;
+    const bool choose_other = payable_other &&
+        (!payable_regular || ctx.executor.confirmNow(ctx.controller,
+            "Pay Equip by exhausting a friendly unit instead of Power?"));
+    if (choose_other) {
+        if (!payEquipAlternative(ctx, unit)) return false;
+    } else if (!ctx.executor.payResources(
+        ctx.controller, cost.energy, cost.power,
+        resource::maskOf(cost.power_any_domain ? Domain::Count : cost.power_domain),
+        SpendFor::Gear)) return false;
+    if (!payEquipExtraCost(ctx, unit)) return false;"""
+s=card_impl.read_text()
+if s.count(payment)!=2:
+    raise SystemExit("Unrecognized AlphaRune Equip payment implementation")
+card_impl.write_text(s.replace(payment,payment_new))
+
+print("OVERLAY_SUCCESS four C++ cards; Riven static, Evelynn Legend and generalized Equip OR cost")

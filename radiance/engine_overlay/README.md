@@ -9,3 +9,5 @@ The workflow compiles the genuine pinned AlphaRune engine and checks its compile
 The overlay checks the exact upstream commit before modifying its temporary checkout. No original deck file or prior result is changed.
 
 Additional candidate: Evelynn, Agony's Embrace (RAD-153/167), with a once-per-turn face-down-play trigger, conditional discard on an opponent's turn, and an explicit Legend event dispatch hook. Its original deck still needs Last Caress and must remain unplayed until the mechanics suite passes.
+
+Added Blade of the Exile (RAD-150/167) with both printed Equip payment options. The upstream alpha version has a single EquipCost hook, so the experimental overlay adds a reusable alternate-payment option to the Equip affordability and payment methods. The original Riven deck is smoke-tested against Kennen. Passing a random game is not enough to certify all effect interactions.
