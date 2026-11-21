@@ -11,7 +11,9 @@ for src,dest in [
     ("cards/legends/0956_the_exile.cpp","src/cards/legends/0956_the_exile.cpp"),
     ("cards/units/0957_ksante_courageous.cpp","src/cards/units/0957_ksante_courageous.cpp"),
     ("cards/legends/0958_agonys_embrace.cpp","src/cards/legends/0958_agonys_embrace.cpp"),
-    ("cards/gear/0959_blade_of_the_exile.cpp","src/cards/gear/0959_blade_of_the_exile.cpp")]:
+    ("cards/gear/0959_blade_of_the_exile.cpp","src/cards/gear/0959_blade_of_the_exile.cpp"),
+    ("cards/legends/0960_pride_of_nazumah.cpp","src/cards/legends/0960_pride_of_nazumah.cpp"),
+    ("cards/spells/0961_ntofo_strikes.cpp","src/cards/spells/0961_ntofo_strikes.cpp")]:
     target=engine/dest
     if target.exists():raise SystemExit("Collision: "+str(target))
     shutil.copyfile(source/src,target)
@@ -21,9 +23,9 @@ def replace_once(path,before,after):
     path.write_text(s.replace(before,after,1))
 init=engine/"src/cards/cards_init.cpp"
 replace_once(init,"void register_card_955(CardRegistry&);",
-"void register_card_955(CardRegistry&);\nvoid register_card_956(CardRegistry&);\nvoid register_card_957(CardRegistry&);\nvoid register_card_958(CardRegistry&);\nvoid register_card_959(CardRegistry&);")
+"void register_card_955(CardRegistry&);\nvoid register_card_956(CardRegistry&);\nvoid register_card_957(CardRegistry&);\nvoid register_card_958(CardRegistry&);\nvoid register_card_959(CardRegistry&);\nvoid register_card_960(CardRegistry&);\nvoid register_card_961(CardRegistry&);")
 replace_once(init,"    register_card_955(registry);",
-"    register_card_955(registry);\n    register_card_956(registry);\n    register_card_957(registry);\n    register_card_958(registry);\n    register_card_959(registry);")
+"    register_card_955(registry);\n    register_card_956(registry);\n    register_card_957(registry);\n    register_card_958(registry);\n    register_card_959(registry);\n    register_card_960(registry);\n    register_card_961(registry);")
 game=engine/"src/engine/game_engine.cpp"
 original="        if (state_.player(card.controller).otherUnitsEnterReady(card.id)) enters_ready = true;"
 replacement=original+"""
@@ -133,4 +135,34 @@ if s.count(payment)!=1 or s.count(payment_deferred)!=1:
 card_impl.write_text(s.replace(payment,payment_new,1)
                       .replace(payment_deferred,payment_deferred_new,1))
 
-print("OVERLAY_SUCCESS four C++ cards; Riven static, Evelynn Legend and generalized Equip OR cost")
+
+# K'Sante's "Assault equal to my Shield" is a temporary dynamic property.
+# Each grant stacks, and it follows Shield changes until expiration.
+object_header=engine/"src/core/game_object.h"
+replace_once(object_header,
+    '    int temp_shield_value = 0;  // temporary shield applied "this turn"',
+    '    int temp_shield_value = 0;  // temporary shield applied "this turn"\\n'
+    '    int temp_assault_shield_multiples = 0; // K\'Sante: dynamic Assault=Shield grants this turn')
+replace_once(object_header,
+    "            current_might += assault_value;",
+    "            current_might += assault_value + temp_assault_shield_multiples * shield_value;")
+board_state=engine/"src/core/board_state.h"
+replace_once(board_state,
+    "    obj.temp_shield_value = 0;\\n    obj.temp_deflect_value = 0;",
+    "    obj.temp_shield_value = 0;\\n    obj.temp_deflect_value = 0;\\n"
+    "    obj.temp_assault_shield_multiples = 0;")
+replace_once(board_state,
+    "obj.temp_assault_value != 0 || obj.temp_shield_value != 0 ||",
+    "obj.temp_assault_value != 0 || obj.temp_shield_value != 0 ||\\n"
+    "           obj.temp_assault_shield_multiples != 0 ||")
+replace_once(game,
+    '    obj.temp_deflect_value = 0;   // [Deflect N] given "this turn"',
+    '    obj.temp_deflect_value = 0;   // [Deflect N] given "this turn"\\n'
+    '    obj.temp_assault_shield_multiples = 0;')
+executor_impl=engine/"src/engine/effect_executor.cpp"
+replace_once(executor_impl,
+    '    mix(static_cast<uint64_t>(static_cast<int64_t>(obj.temp_assault_value)));',
+    '    mix(static_cast<uint64_t>(static_cast<int64_t>(obj.temp_assault_value)));\\n'
+    '    mix(static_cast<uint64_t>(static_cast<int64_t>(obj.temp_assault_shield_multiples)));')
+
+print("OVERLAY_SUCCESS six experimental C++ cards; includes K\'Sante Shield-scaled Assault")
