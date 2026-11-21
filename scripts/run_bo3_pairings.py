@@ -16,6 +16,7 @@ import time
 ROOT=pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/"scripts"))
 from run_actual_games import decode, header, gametest
+from legal_candidate import make_legal_candidate
 
 def atomic_write(path, obj):
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -23,8 +24,12 @@ def atomic_write(path, obj):
     tmp.write_text(json.dumps(obj,indent=2,ensure_ascii=False),encoding="utf-8")
     tmp.replace(path)
 
-def validate_manifest(decks, validation):
+def validate_manifest(decks, validation, legal_ornn_candidate=False):
     data=json.loads(validation.read_text(encoding="utf-8"))
+    expected_mode=("57_original_plus_1_ornn_disclosed_correction_NOT_rules_certification"
+                   if legal_ornn_candidate else "original_deck_compatibility_NOT_rules_certification")
+    if data.get("mode")!=expected_mode:
+        raise RuntimeError("Validation and decklist lineage do not match")
     if data.get("deck_count")!=58 or data.get("failed")!=0:
         raise RuntimeError("Original 58-deck validation not fully passed")
     if data.get("complete")!=data.get("games") or data.get("games",0)<58:
@@ -33,9 +38,10 @@ def validate_manifest(decks, validation):
     for row in data["records"]:
         if row["status"]!="complete":raise RuntimeError(row["legend"]+" failed")
         name=row["legend"]
-        if name in verified and verified[name]!=row["original_sha256"]:
-            raise RuntimeError("SHA disagreement for "+name)
-        verified[name]=row["original_sha256"]
+        digest=row["effective_sha256"]
+        if name in verified and verified[name]!=digest:
+            raise RuntimeError("Effective deck SHA disagreement for "+name)
+        verified[name]=digest
     if set(verified)!=set(decks):raise RuntimeError("58-legend roster mismatch")
     for name,path in decks.items():
         actual=hashlib.sha256(path.read_bytes()).hexdigest()
@@ -75,9 +81,10 @@ def run_series(exe,decks,a,b,index,instance,seconds,agent):
 
 def main(args):
     original=decode()
-    decks={header(p):p for p in original}
+    decks=(make_legal_candidate(original,ROOT/"decks_legal_candidate")
+           if args.ornn_legal_candidate else {header(p):p for p in original})
     if len(decks)!=58:raise RuntimeError(f"Expected 58, got {len(decks)}")
-    validate_manifest(decks,ROOT/args.validation)
+    validate_manifest(decks,ROOT/args.validation,args.ornn_legal_candidate)
     exe=ROOT/args.engine
     if not exe.exists():raise RuntimeError("Missing real C++ executable: "+str(exe))
     if not 0<=args.shard<args.shards:raise RuntimeError("Invalid shard")
@@ -87,7 +94,8 @@ def main(args):
     report={"schema":1,"engine":"pinned_alpha_rune_plus_radiance_overlay",
             "format":"fixed_deck_best_of_three_NO_SIDEBOARD_CHANGES",
             "agent":args.agent,
-            "source":"58 original validated SHA-pinned decks",
+            "source":("57 original SHA-pinned decks plus disclosed legal Ornn candidate"
+                      if args.ornn_legal_candidate else "58 unchanged original SHA-pinned decks"),
             "shard":args.shard,"shards":args.shards,
             "total_pairings":1711,"shard_pairings":len(selected),
             "series_per_pair":args.series_per_pair,"results":[],
@@ -120,6 +128,7 @@ if __name__=="__main__":
     p.add_argument("--shards",type=int,default=16)
     p.add_argument("--shard",type=int,default=0)
     p.add_argument("--series-per-pair",type=int,default=2)
+    p.add_argument("--ornn-legal-candidate",action="store_true")
     p.add_argument("--agent",default="random")
     p.add_argument("--seconds",type=int,default=60)
     p.add_argument("--max-seconds",type=int,default=2300)
