@@ -1,4 +1,4 @@
-name: Export pinned AlphaRune for development review
+name: Export current Radiance overlay for local test
 on:
   push:
     branches: ['radiance/engine-mechanics-development']
@@ -9,21 +9,12 @@ permissions:
 jobs:
   export:
     runs-on: ubuntu-24.04
-    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
-      - name: Download pinned upstream public source
-        run: |
-          git clone --quiet --depth 1 https://github.com/chorlick/alpharune.git alpharune
-          git -C alpharune fetch --depth 1 origin ec90f0fed002aed374d06249fa95e83e3cfbd386
-          git -C alpharune checkout --quiet --detach ec90f0fed002aed374d06249fa95e83e3cfbd386
-          tar -czf alpharune-pinned-src.tgz --exclude=.git -C alpharune .
-          tar -czf branch-overlay-src.tgz radiance/engine_overlay
-      - name: Export source as temporary research artifact
-        uses: actions/upload-artifact@v4
+      - name: Make overlay archive
+        run: tar -czf branch-overlay-src.tgz radiance/engine_overlay
+      - uses: actions/upload-artifact@v4
         with:
-          name: pinned-alpharune-source-temporary
-          path: |
-            alpharune-pinned-src.tgz
-            branch-overlay-src.tgz
+          name: current-radiance-overlay
+          path: branch-overlay-src.tgz
           retention-days: 1
