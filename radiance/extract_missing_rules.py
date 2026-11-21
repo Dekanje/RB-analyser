@@ -32,7 +32,8 @@ def get_source(name,section):
     if not candidates and ", " in name:
         main, subtitle=name.split(", ",1)
         candidates=[x for x in byname.get(subtitle.casefold(),[])
-                    if str(x.get("name") or "").casefold()==main.casefold()
+                    if section=="Legend"
+                    or str(x.get("name") or "").casefold()==main.casefold()
                     or str(x.get("display_name") or "").casefold()==name.casefold()]
     candidates=[x for x in candidates if str(x.get("set",{}).get("id","")).upper()=="RAD"] or candidates
     if not candidates:return None
