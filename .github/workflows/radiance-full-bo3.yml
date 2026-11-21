@@ -61,7 +61,7 @@ jobs:
           fi
       - run: |
           chmod +x alpharune/build/riftbound
-          python3 scripts/run_bo3_pairings.py --legal-candidates --validation results/all_58_legal_candidate_validation.json --shards 16 --shard ${{ matrix.shard }} --series-per-pair 2 --seconds 40 --max-seconds 2300 --output results/bo3_shard_${{ matrix.shard }}.json
+          python3 scripts/run_bo3_pairings.py --legal-candidates --validation results/all_58_legal_candidate_validation.json --shards 16 --shard ${{ matrix.shard }} --series-per-pair 20 --seconds 40 --max-seconds 2300 --output results/bo3_shard_${{ matrix.shard }}.json
       - if: always()
         uses: actions/upload-artifact@v4
         with:
