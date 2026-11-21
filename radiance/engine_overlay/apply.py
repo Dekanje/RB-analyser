@@ -575,4 +575,28 @@ replace_once(types_impl,
     '        case Keyword::Flow:         return "Flow";\n'
     '        case Keyword::Deploy:       return "Deploy";')
 
-print("OVERLAY_SUCCESS 986 definitions and corrected card/regression contracts")
+
+# Source-scan regression counts were pinned to the 955-definition engine.
+# The 988-definition prototype adds six explicit helper call sites.
+perf=engine/"tests/test_review_fix_perf_engine.cpp"
+replace_once(perf,
+    "    EXPECT_EQ(helper, 22);   // + Falling Star (D20: both instructions, then the kills)",
+    "    EXPECT_EQ(helper, 28);   // 22 baseline + 6 explicit Radiance helper call sites")
+
+# Reordering numeric runtime IDs must not change public prompts. Overt
+# Operation asks about each buffed unit. Order by publicly visible card
+# names, not by allocation order; preserves the same game under object-ID
+# relabeling. On indistinguishable copies the choice text is equivalent.
+overt=engine/"src/cards/spells/0153_overt_operation.cpp"
+replace_once(overt,
+    "            std::sort(out.begin(), out.end());",
+    """            std::stable_sort(out.begin(), out.end(), [&](GameObjectId a, GameObjectId b) {
+                const auto& ua=ctx.state.getObject(a);
+                const auto& ub=ctx.state.getObject(b);
+                if(ua.name.get()!=ub.name.get())return ua.name.get()<ub.name.get();
+                if(ua.buff_count!=ub.buff_count)return ua.buff_count<ub.buff_count;
+                if(ua.is_exhausted!=ub.is_exhausted)return ua.is_exhausted<ub.is_exhausted;
+                return ua.current_might<ub.current_might;
+            });""")
+
+print("OVERLAY_SUCCESS 988 definitions, stable visible-unit ordering, regression source count")
