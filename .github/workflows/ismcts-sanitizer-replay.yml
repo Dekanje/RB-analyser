@@ -30,7 +30,7 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: ~/.cache/ccache
-          key: ismcts-sanitizer-v1-${{ runner.os }}-${{ matrix.sanitizer }}
+          key: ismcts-sanitizer-v2-${{ runner.os }}-address-undefined
       - name: Build AddressSanitizer and UndefinedBehaviorSanitizer engine
         run: |
           cmake -S alpharune -B alpharune/build -G Ninja \
