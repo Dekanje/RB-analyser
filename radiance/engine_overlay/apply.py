@@ -631,7 +631,7 @@ replace_once(game,
 sweep=engine/"tests/cards/test_sweep_costs.cpp"
 replace_once(sweep,
     "            const auto src = pushSpellOnChain(P2, 836);   // Dredge Up",
-    "            const auto src = pushSpellOnChain(P2, id.raw()==987 ? 64 : 836);"
+    "            const auto src = pushSpellOnChain(P2, CardDefId::fromRaw(id.raw()==987 ? 64 : 836));"
     "   // Hush: Wind Wall costs [A][A], others: Dredge Up")
 
 # Pin the deterministic generated deck separately for the unmodified 955
