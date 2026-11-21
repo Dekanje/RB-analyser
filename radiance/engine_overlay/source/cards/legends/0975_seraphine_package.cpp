@@ -27,7 +27,9 @@ private:
 class SeraphineInspiring final:public UnitCard {
 public:
  const CardDef& def()const override{return d_;}
- TriggerType triggerType()const override{return TriggerType::WhenThreeFriendsExhausted;}
+ std::vector<TriggerType> triggerTypes()const override{
+  return {TriggerType::WhenIAttack,TriggerType::WhenThreeFriendsExhausted};
+ }
  bool firstTimeEachTurn(TriggerType t)const override {
   return t==TriggerType::WhenThreeFriendsExhausted;
  }
