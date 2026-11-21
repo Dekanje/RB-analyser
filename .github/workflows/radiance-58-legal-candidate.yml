@@ -42,11 +42,14 @@ jobs:
           sys.path.insert(0,'scripts')
           from run_actual_games import decode
           from legal_candidate import make_legal_candidate
-          m=make_legal_candidate(decode(),'decks_legal_candidate','results/ornn_legal_candidate_manifest.json')
+          m=make_legal_candidate(decode(),'decks_legal_candidate','results/four_legal_candidates_manifest.json')
           assert len(m)==58
-          print("ORNN_LEGAL_CANDIDATE_EXACTLY_ONE_DECK_CHANGED")
+          import json
+          manifest=json.load(open('results/four_legal_candidates_manifest.json'))
+          assert len([r for r in manifest['decks'] if r['changed']])==4
+          print("FOUR_DISCLOSED_RULES_LEGAL_CANDIDATES")
           PY
-      - name: Validate 57 unchanged + 1 disclosed legal Ornn both seats
+      - name: Validate 54 unchanged + 4 disclosed legal candidate decks in both seats
         run: |
           python3 scripts/validate_58_originals.py \
             --legal-candidates --engine alpharune/build/riftbound \
@@ -58,7 +61,7 @@ jobs:
         with:
           name: all-58-legal-candidate-validation
           path: |
-            results/ornn_legal_candidate_manifest.json
+            results/four_legal_candidates_manifest.json
             results/all_58_legal_candidate_validation.json
             radiance/engine_overlay/compiled_registry.json
           retention-days: 30
