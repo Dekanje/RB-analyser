@@ -21,6 +21,24 @@ def read_proposals(path):
             by[row['legend']].append(row)
     return by
 
+def engine_bo3(exe, deck, opp, seat, seed, agent, timeout, env):
+    """Best of up to three real ISMCTS-vs-ISMCTS engine games; no sideboarding."""
+    own=other=0;games=[]
+    for game in range(3):
+        own_first=(seat+game)%2==0
+        a,b=(deck,opp) if own_first else (opp,deck)
+        r=benchmark(exe,a,b,stable_seed(seed,'bo3',game),agent,timeout,env)
+        games.append({'game':game+1,'status':r['status'],'winner_seat':r.get('winner'),
+                      'error':r.get('error','')})
+        if r['status']!='complete':
+            return {'status':'incomplete','winner':None,'games':games,
+                    'error':r.get('error','engine game incomplete')}
+        if (r['winner']==1)==own_first:own+=1
+        else:other+=1
+        if own==2 or other==2:break
+    return {'status':'complete','winner':seat+1 if own==2 else 2-seat,
+            'score':{'deck':own,'opponent':other},'games':games}
+
 def paired(exe,candidate,baseline,opponents,agent,seed,phase,samples,timeout,executor,cache):
     schedule=[]
     for opp_name,opp in opponents:
@@ -30,9 +48,9 @@ def paired(exe,candidate,baseline,opponents,agent,seed,phase,samples,timeout,exe
                 schedule.append((opp_name,opp,seat,gameseed))
     def schedule_game(deck,opp,seat,game_seed):
         a,b=(deck,opp) if seat==0 else (opp,deck)
-        k=(sha(a),sha(b),game_seed,agent)
+        k=(sha(deck),sha(opp),seat,game_seed,agent,'BO3')
         if k not in cache:
-            cache[k]=executor.submit(benchmark,exe,a,b,game_seed,agent,timeout,os.environ.copy())
+            cache[k]=executor.submit(engine_bo3,exe,deck,opp,seat,game_seed,agent,timeout,os.environ.copy())
         return cache[k]
     for _,opp,seat,game_seed in schedule:
         schedule_game(baseline,opp,seat,game_seed)
@@ -116,8 +134,8 @@ def main(args):
              'accepted':sum(x['changed'] for x in reports),
              'total_game_attempts':len(cache),
              'no_unsupported_cards_simulated':True,
-             'source':'full 167-card Radiance catalog, executable compiled-name subset only',
-             'limitations':'Pairwise fixed deck games, no between-game sideboarding; exploratory ISMCTS comparisons, not complete BO3 competitive ranking.'}
+             'source':'full 167-card Radiance catalog, executable compiled-name subset only',\n             'format':'fixed-deck best-of-three ISMCTS vs ISMCTS',
+             'limitations':'Fixed-deck BO3, no between-game sideboarding; exploratory ISMCTS comparisons, not a complete all-matchup tournament ranking.'}
     (out/'summary.json').write_text(json.dumps(summary,indent=2))
     print('RAD_ISMCTS_SUMMARY',json.dumps(summary),flush=True)
 
@@ -131,9 +149,9 @@ if __name__=='__main__':
     p.add_argument('--agent',default='ismcts:sims=24')
     p.add_argument('--candidates',type=int,default=2)
     p.add_argument('--opponents',type=int,default=3)
-    p.add_argument('--training-samples',type=int,default=2)
-    p.add_argument('--holdout-samples',type=int,default=2)
-    p.add_argument('--min-delta',type=int,default=3)
+    p.add_argument('--training-samples',type=int,default=1)
+    p.add_argument('--holdout-samples',type=int,default=1)
+    p.add_argument('--min-delta',type=int,default=2)
     p.add_argument('--workers',type=int,default=4)
     p.add_argument('--timeout',type=int,default=75)
     p.add_argument('--seed',type=int,default=2026112321)
