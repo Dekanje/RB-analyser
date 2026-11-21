@@ -5,6 +5,7 @@ import csv
 import glob
 import itertools
 import json
+import math
 import pathlib
 import sys
 from collections import defaultdict
@@ -46,6 +47,35 @@ def main(args):
           "wins_a_side":wins_a,"wins_b_side":wins_b,
           "a_winrate_fixed_decks":None if a==b or not complete else round(wins_a/len(complete),5)
         })
+    # Aggregate each non-mirror pairing equally into exploratory per-legend
+    # rates; mirrors have no distinct opponent and must not affect rankings.
+    totals=defaultdict(lambda:{"wins":0,"losses":0,"series":0,"opponents":set()})
+    for m in rows:
+        if m["mirror"]:continue
+        a,b=m["legend_a"],m["legend_b"]
+        n=m["series_complete"]
+        wa,wb=m["wins_a_side"],m["wins_b_side"]
+        totals[a]["wins"]+=wa;totals[a]["losses"]+=wb;totals[a]["series"]+=n
+        totals[b]["wins"]+=wb;totals[b]["losses"]+=wa;totals[b]["series"]+=n
+        totals[a]["opponents"].add(b);totals[b]["opponents"].add(a)
+    def wilson(w,n):
+        if not n:return (None,None)
+        z=1.959963984540054;p=w/n;z2=z*z
+        centre=(p+z2/(2*n))/(1+z2/n)
+        half=z*math.sqrt(p*(1-p)/n+z2/(4*n*n))/(1+z2/n)
+        return (round(max(0,centre-half),5),round(min(1,centre+half),5))
+    leaderboard=[]
+    for name,m in totals.items():
+        low,high=wilson(m["wins"],m["series"])
+        leaderboard.append({
+           "legend":name,"series_played":m["series"],
+           "series_won":m["wins"],"series_lost":m["losses"],
+           "win_rate_random_agent":(round(m["wins"]/m["series"],5) if m["series"] else None),
+           "mc_wilson95_low":low,"mc_wilson95_high":high,
+           "opponents_seen":len(m["opponents"]),
+        })
+    leaderboard.sort(key=lambda r:(-(r["win_rate_random_agent"] if r["win_rate_random_agent"] is not None else -1),r["legend"]))
+    for i,row in enumerate(leaderboard,1):row["rank_random_agent"]=i
     full=(len(headers)==shard_count and
           all(x["complete"] and x.get("series_incomplete",0)==0 for x in headers) and
           len(by_matchup)==1711 and len(series)==1711*expected_instances and
@@ -57,7 +87,8 @@ def main(args):
       "expected_matchups":1711,"observed_matchups":len(by_matchup),
       "expected_series":1711*expected_instances,"observed_series":len(series),
       "complete":full,"shards_expected":shard_count,"shards_found":len(headers),
-      "matchups":rows
+      "matchups":rows,
+      "legend_rankings":leaderboard
     }
     output=pathlib.Path(args.output)
     output.parent.mkdir(exist_ok=True,parents=True)
@@ -68,6 +99,14 @@ def main(args):
             writer=csv.DictWriter(fp,fieldnames=list(rows[0]))
             writer.writeheader()
             writer.writerows(rows)
+    ranks_path=output.with_name("bo3_legend_rankings.csv")
+    with ranks_path.open("w",newline="",encoding="utf-8") as fp:
+        if leaderboard:
+            writer=csv.DictWriter(fp,fieldnames=list(leaderboard[0]))
+            writer.writeheader()
+            writer.writerows(leaderboard)
+    print("BO3_LEADERBOARD",json.dumps({"legends":len(leaderboard),"top5":leaderboard[:5],
+                                        "agent":"random","sideboarding":False}))
     print("BO3_AGGREGATE",json.dumps({k:v for k,v in report.items() if k!="matchups"}))
     return 0 if full else 1
 
