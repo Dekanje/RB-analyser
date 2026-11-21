@@ -3,6 +3,7 @@ on:
   push:
     branches: ['radiance/engine-mechanics-development']
     paths:
+      - 'scripts/legal_candidate.py'
       - '.github/workflows/radiance-58-legal-candidate.yml'
       - 'radiance/validation/legal-candidate-requests/**'
   workflow_dispatch:
