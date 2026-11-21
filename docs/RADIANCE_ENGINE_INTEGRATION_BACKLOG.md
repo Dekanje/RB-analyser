@@ -24,6 +24,21 @@ Nine Radiance legends cannot currently be simulated accurately in this AlphaRune
 
 These names refer to the exact source decklists; more in-game dependencies may emerge once the first missing definition is implemented.
 
+## Verified Radiance catalog coverage (November 21, 2026)
+
+The first authoritative-card-data import passed on [GitHub Actions](https://github.com/Dekanje/RB-analyser/actions/runs/44840980483).
+
+- **167 / 167** standard numbered Radiance cards were found (no missing base collector numbers).
+- **219 gallery printings** were present in the October 26 pinned normalized Riot snapshot.
+- **206** gameplay fingerprints were detected; this is a provisional count based on combined name/type/stats/text, not a vetted unique-rules count.
+- **207 printings** have no compiled AlphaRune definition; **12 printings** matched only by name, all corresponding to the six standard Rune types and alternate Rune printings.
+- The compiled engine has **955** hand-authored C++ card definitions, pinned at commit `ec90f0f`. The new set's specialized effects, all nine Legends and Radiance-specific mechanics still need code.
+- **0 Radiance mechanical implementations certified**. A matching name, card ID, art or catalog row is not a passing rules test.
+
+The version-controlled `radiance/data/radiance_catalog.json` adds collector and gameplay metadata with hashes of source text, but it does **not** replace C++ rules definitions. The catalog updater and live Riot refresh workflow are under `radiance/` and `.github/workflows/`.
+
+**New keyword/rule gaps:** Deploy (§830), Disarm (§831), Show Off (§832), Bomb-token interactions, and special deckbuilding behaviors must be implemented and tested against the October 16 Radiance core rules before qualifying a deck as simulatable.
+
 ## Required implementation work
 
 1. Verify each printed card and its effective text against Riot's official gallery and errata. Store a provenance record, set/number, revision and relevant core-rules section. Do not infer effects from names.
