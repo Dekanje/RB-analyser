@@ -1,4 +1,4 @@
-name: Validate 57 unchanged originals plus disclosed legal Ornn candidate
+name: Validate 54 unchanged originals plus four disclosed legal optimized candidates
 on:
   push:
     branches: ['radiance/engine-mechanics-development']
@@ -49,7 +49,7 @@ jobs:
       - name: Validate 57 unchanged + 1 disclosed legal Ornn both seats
         run: |
           python3 scripts/validate_58_originals.py \
-            --ornn-legal-candidate --engine alpharune/build/riftbound \
+            --legal-candidates --engine alpharune/build/riftbound \
             --repetitions 2 --seconds 50 \
             --output results/all_58_legal_candidate_validation.json
       - name: Upload source/effective SHA receipts and game outcomes

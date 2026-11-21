@@ -1,4 +1,4 @@
-name: Riftbound 57 original plus disclosed Ornn candidate fixed-deck BO3
+name: Riftbound 54 originals plus four disclosed legal candidates fixed-deck BO3
 on:
   push:
     branches: ['radiance/engine-mechanics-development']
@@ -27,7 +27,7 @@ jobs:
           cmake -S alpharune -B alpharune/build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
           cmake --build alpharune/build --target riftbound -j 2
           python3 radiance/engine_overlay/verify.py
-          python3 scripts/validate_58_originals.py --ornn-legal-candidate --repetitions 2 --seconds 50 --output results/all_58_legal_candidate_validation.json
+          python3 scripts/validate_58_originals.py --legal-candidates --repetitions 2 --seconds 50 --output results/all_58_legal_candidate_validation.json
       - uses: actions/upload-artifact@v4
         with:
           name: validated-engine
@@ -52,7 +52,7 @@ jobs:
           path: .
       - run: |
           chmod +x alpharune/build/riftbound
-          python3 scripts/run_bo3_pairings.py --ornn-legal-candidate --validation results/all_58_legal_candidate_validation.json --shards 16 --shard ${{ matrix.shard }} --series-per-pair 2 --seconds 40 --max-seconds 2300 --output results/bo3_shard_${{ matrix.shard }}.json
+          python3 scripts/run_bo3_pairings.py --legal-candidates --validation results/all_58_legal_candidate_validation.json --shards 16 --shard ${{ matrix.shard }} --series-per-pair 2 --seconds 40 --max-seconds 2300 --output results/bo3_shard_${{ matrix.shard }}.json
       - if: always()
         uses: actions/upload-artifact@v4
         with:

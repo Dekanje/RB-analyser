@@ -26,7 +26,7 @@ def atomic_write(path, obj):
 
 def validate_manifest(decks, validation, legal_ornn_candidate=False):
     data=json.loads(validation.read_text(encoding="utf-8"))
-    expected_mode=("57_original_plus_1_ornn_disclosed_correction_NOT_rules_certification"
+    expected_mode=("54_original_plus_4_disclosed_legal_corrections_NOT_rules_certification"
                    if legal_ornn_candidate else "original_deck_compatibility_NOT_rules_certification")
     if data.get("mode")!=expected_mode:
         raise RuntimeError("Validation and decklist lineage do not match")
@@ -94,7 +94,7 @@ def main(args):
     report={"schema":1,"engine":"pinned_alpha_rune_plus_radiance_overlay",
             "format":"fixed_deck_best_of_three_NO_SIDEBOARD_CHANGES",
             "agent":args.agent,
-            "source":("57 original SHA-pinned decks plus disclosed legal Ornn candidate"
+            "source":("54 unchanged original SHA-pinned decks plus four disclosed rules-legal candidates"
                       if args.ornn_legal_candidate else "58 unchanged original SHA-pinned decks"),
             "shard":args.shard,"shards":args.shards,
             "total_pairings":1711,"shard_pairings":len(selected),
@@ -128,7 +128,7 @@ if __name__=="__main__":
     p.add_argument("--shards",type=int,default=16)
     p.add_argument("--shard",type=int,default=0)
     p.add_argument("--series-per-pair",type=int,default=2)
-    p.add_argument("--ornn-legal-candidate",action="store_true")
+    p.add_argument("--ornn-legal-candidate","--legal-candidates",dest="ornn_legal_candidate",action="store_true")
     p.add_argument("--agent",default="random")
     p.add_argument("--seconds",type=int,default=60)
     p.add_argument("--max-seconds",type=int,default=2300)

@@ -40,7 +40,7 @@ def run(engine, repeats, timeout, output, legal_ornn_candidate=False):
             record = {
                 "legend": name, "original_filename": path.name,
                 "original_sha256": digest, "effective_sha256": effective,
-                "ornn_legal_candidate": legal_ornn_candidate and name=="Ornn, Fire Below the Mountain",
+                "candidate_corrected": legal_ornn_candidate and digest != effective,
                 "seat": 1 if iteration % 2 == 0 else 2,
                 "seed": seed, "status": result["status"], "winner": result["winner"],
                 "elapsed_sec": round(time.monotonic() - start, 3),
@@ -59,7 +59,7 @@ def run(engine, repeats, timeout, output, legal_ornn_candidate=False):
     output.parent.mkdir(parents=True, exist_ok=True)
     summary = {
         "schema": 1,
-        "mode": ("57_original_plus_1_ornn_disclosed_correction_NOT_rules_certification"
+        "mode": ("54_original_plus_4_disclosed_legal_corrections_NOT_rules_certification"
                  if legal_ornn_candidate else
                  "original_deck_compatibility_NOT_rules_certification"),
         "unchanged_originals": not legal_ornn_candidate,
@@ -72,7 +72,7 @@ def run(engine, repeats, timeout, output, legal_ornn_candidate=False):
     }
     output.write_text(json.dumps(summary, indent=2), encoding="utf-8")
     print("ORIGINAL_58_VALIDATION", {k:v for k,v in summary.items() if k != "records"})
-    print("ORNN_DECK_CORRECTION_DISCLOSED" if legal_ornn_candidate else
+    print("FOUR_LEGAL_DECK_CORRECTIONS_DISCLOSED" if legal_ornn_candidate else
           "NO_SUBSTITUTIONS_ORIGINAL_LISTS", flush=True)
     print("No synthetic wins and no sideboard swaps.", flush=True)
     return 0 if summary["failed"] == 0 else 1
@@ -83,7 +83,7 @@ if __name__ == "__main__":
     p.add_argument("--repetitions", type=int, default=2)
     p.add_argument("--seconds", type=int, default=60)
     p.add_argument("--output", default="results/all_58_engine_validation.json")
-    p.add_argument("--ornn-legal-candidate", action="store_true",
+    p.add_argument("--ornn-legal-candidate","--legal-candidates",dest="ornn_legal_candidate", action="store_true",
                    help="Use 57 unchanged decks and a separately disclosed legal Ornn candidate")
     args = p.parse_args()
     if not 1 <= args.repetitions <= 20 or args.seconds < 1:
