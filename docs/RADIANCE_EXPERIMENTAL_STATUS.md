@@ -1,68 +1,48 @@
-# Radiance — experimental original-deck integration
+# RB-analyser — Radiance integration and complete-roster simulation
 
-**Updated:** 2026-11-21. **Upstream:** `chorlick/alpharune@ec90f0fed002aed374d06249fa95e83e3cfbd386`.
+**Evidence checkpoint: 21 November 2026.** This document records observed GitHub Actions outcomes, not assumed completion.
 
-## Card inventory
+## Engine and card coverage
 
-- **26/26** source-audited previously missing Radiance cards now have hand-authored C++ implementations on `radiance/engine-mechanics-development`.
-- **1** additional Bomb token definition was implemented for Ziggs.
-- Together with the 955 pinned upstream definitions, the experimental registry compiles **982 cards**. Evidence: [run #44882395508](https://github.com/Dekanje/RB-analyser/actions/runs/44882395508).
-- The source was compiled and compared with card codes/names/types; **compilation is not proof of rules correctness**.
-- Original source decklists are not edited, substituted, or modified. Previous 49-deck reports and `main` remain unchanged.
+- Pinned upstream: `chorlick/alpharune@ec90f0fed002aed374d06249fa95e83e3cfbd386`.
+- Compiled source: **988** definitions = 955 pinned upstream + 33 new entries.
+- The new entries cover all **26 cards** missing from the nine exact original Radiance decks, six additional Radiance cards required by other optimized decks (Battle Preparations, An Offer You Can't Refuse, Detonation Amplifier, Elnuk Herd, Hush, Shimmering Swimmer), and the Bomb token.
+- [C++ compilation and original-deck smoke tests passed](https://github.com/Dekanje/RB-analyser/actions/runs/44887968248). All nine formerly excluded Radiance legends (Riven, K'Sante, Evelynn, Mordekaiser, Jarvan IV, Orianna, Ziggs, Ekko and Seraphine) completed real seeded games against Kennen. Original Azir and Renekton decks also completed tests after implementation of Hush and Shimmering Swimmer.
+- **Do not infer card-rule certification from successful compile, registry import, or one game.** Deterministic mechanic-specific test coverage and end-to-end tournament sideboarding remain separate requirements.
 
-## Game compatibility
+## 58-deck compatibility
 
-| Original Radiance deck | Audited missing cards | Source definitions | Original game vs Kennen |
-|---|---:|---:|---|
-| Riven | 2 | 2 | Completed |
-| K'Sante | 3 | 3 | Completed |
-| Evelynn | 2 | 2 | Completed |
-| Mordekaiser | 3 | 3 | Completed |
-| Jarvan IV | 3 | 3 | Completed |
-| Orianna | 3 | 3 | Completed |
-| Ziggs | 4 | 4 (+ Bomb) | Completed |
-| Ekko | 3 | 3 | Completed |
-| Seraphine | 3 | 3 | Completed |
+[Validation run #44888101645](https://github.com/Dekanje/RB-analyser/actions/runs/44888101645) **passed**: 58 decks × two seeded games in both seating orders = **116/116 completed**, zero failed.
 
-**All nine** original Radiance decks completed engine-resolved games against Kennen with no substitutions in [successful run #44882736908](https://github.com/Dekanje/RB-analyser/actions/runs/44882736908). This proves game compatibility, not full effect/competitive accuracy. The subsequent broader **58-deck, both-seat validation** was triggered in [run #44883114325](https://github.com/Dekanje/RB-analyser/actions/runs/44883114325); its results are pending.
+The original optimized roster is stored separately, with SHA-256 fingerprints and no in-place edits.
 
-## Engine changes
+The legally playable simulation roster contains **54 unchanged original decks plus four disclosed corrections**:
 
-- Added initial implementations for Riven's ready-entry, K'Sante's Shield-scaled Assault and signature spell, Evelynn's hidden-play trigger and Last Caress, Mordekaiser's restricted Power, death replacement and signature spell.
-- Added initial Deploy battlefield placement, attack and hold interactions, Orianna's unit-gear transformation, Ziggs Bomb creation/death and gear damage, Ekko's next-unit cost reduction, replay and turn-end destruction, Seraphine's alternative spell cost with simultaneous exhaustion and Disarm.
-- All are **experimental** until deterministic per-mechanic scenario tests, rules cross-checks, and a broader engine regression suite pass. The smoke games alone do not certify the 26 card texts.
+| Legend | Original issue | Disclosed candidate correction |
+|---|---|---|
+| Ornn, Fire Below the Mountain | 3 copies of Unique Forgefire Cape | 3→1 Forgefire Cape; Doran's Shield 2→3; Sterak's Gage 2→3 |
+| Lucian, Purifier | Off-domain Chaos Detonation Amplifier | Remove 1 Detonation Amplifier; Crackshot Corsair 1→2 |
+| Miss Fortune, Bounty Hunter | Off-domain Fury Elnuk Herd | Remove 1 Elnuk Herd; Scryer's Bloom 2→3 |
+| Rengar, Pridestalker | Off-domain Chaos Detonation Amplifier | Remove 1 Detonation Amplifier; Petricite Monument 2→3 |
 
-## Simulation tooling
+See `scripts/legal_candidate.py` and the `four_legal_candidates_manifest.json` in the validation artifact for exact original/effective SHA-256 values and each replacement. Each derived main deck preserves 39 cards plus its chosen champion, and the unchanged sideboard. These four decks **must not** be described as unmodified originals.
 
-- `scripts/validate_58_originals.py`: strict deterministic original-deck validation (58 legends, both seats, deck SHA receipts, no substitution, no fabricated results).
-- `scripts/run_bo3_pairings.py`: 1,711 unique pairings including mirrors, sharded and seeded, actual game results, no fictitious wins.
-- `scripts/aggregate_bo3.py`: validates shard completeness and aggregates only completed real matches.
-- `.github/workflows/radiance-58-compatibility.yml`: full 58 original-deck compatibility gate, activated by an explicit request file.
-- `.github/workflows/radiance-full-bo3.yml`: on-demand 16-shard original-deck fixed-list series, gated by all 58 validation receipts.
+[Independent fast preflight](https://github.com/Dekanje/RB-analyser/actions/runs/44888585865) passed source SHA checks, correction count, and Python syntax checks.
 
-**Important:** BO3 tooling uses independent real games on fixed original lists, but does **not** implement post-game sideboard swaps. It must not be labeled a fully tournament-accurate best-of-three simulator without sideboarding and comprehensive rules tests. A completed single-game compatibility test does not establish match win probability.
+## 58-deck matrix
 
-## Remaining acceptance conditions
+[Full fixed-deck BO3 workflow #44888474847](https://github.com/Dekanje/RB-analyser/actions/runs/44888474847) launched after validation. The plan is 58 legends, **1,711 pairings including 58 mirrors**, **two series per pair**, or **3,422 best-of-three series**, sharded across 16 GitHub Actions jobs.
 
-1. **Passed:** All nine original Radiance smoke tests (run #44882736908).
-2. **In progress:** Run all 58 original decks in both seats, preserving source SHA manifests (run #44883114325).
-3. Build and execute deterministic card-by-card mechanics tests, including replacement events, targeting/Deflect, Deploy timing, Bomb chains, source-zone changes, simultaneous exhaustion, and end-of-turn effects.
-4. Execute broad upstream regression tests and analyze any failed test before merging.
-5. Run and label BO3 results with real outcomes and observed statistical uncertainty. Do not merge experimental win rates into verified results prematurely.
+This format does **not** swap main-deck and sideboard cards between games. It is not a complete competitive tournament BO3 model; treat resulting rates as exploratory, particularly with only two series per pairing. Matchups that fail or time out must remain marked incomplete, never assigned synthetic wins.
 
-No auto notifications or periodic monitoring are enabled.
+## Regression gate
 
+The initial extended engine passed 3,633/3,638 tests. The untouched upstream control passed all five suspect tests ([control run](https://github.com/Dekanje/RB-analyser/actions/runs/44887775766)), showing that the discrepancies came from the integration.
 
-## Expanded compatibility and rules-legal Ornn candidate (21 November 2026)
+Follow-up changes repaired the Demacian Standard no-op trigger, the Back to Back pair-offer validation, source-scan counts, object-ID-dependent Overt Operation prompt ordering, and seeded-deck fixture calibration. Hush's new stricter counter target requires a qualifying `[A][A]` spell in the sweep test.
 
-The first strict original-58 run [#44883114325](https://github.com/Dekanje/RB-analyser/actions/runs/44883114325) completed **100/116** unchanged-deck engine games. Eight original legends failed due to four additional Radiance cards absent from the old engine (Battle Preparations, An Offer You Can't Refuse, Detonation Amplifier, Elnuk Herd) and an illegal original Ornn list. **All nine Radiance original legends passed both player seats.**
+**Latest patch still requires a green complete regression run.** See [current suite](https://github.com/Dekanje/RB-analyser/actions/runs/44888797193); do not assume it passed before checking the workflow result.
 
-The four extra cards (RAD-032, RAD-101, RAD-017, RAD-081) have now been implemented on this experimental branch; compile/gameplay verification remains subject to [experimental build #44883988842](https://github.com/Dekanje/RB-analyser/actions/runs/44883988842).
+## Change isolation
 
-**Illegal original Ornn (do not silently weaken rules):** the SHA-pinned original `Ornn, Fire Below the Mountain` deck has 3 copies of Forgefire Cape, a Unique one-copy-per-deck signature card. Exact original SHA256: `a579f4781f1ed38f0dc439383cdbaf81df43aa3a73c840b78fc005fb646d72e6`. The original is unchanged. A separate, explicitly disclosed candidate at `scripts/legal_candidate.py` reduces Forgefire Cape from 3 to 1 and increases Doran's Shield from 2 to 3 and Sterak's Gage from 2 to 3, preserving 39 main-deck cards and legal Calm-domain gear slots. It writes separate source/effective SHA256 receipts and changes **only this one deck**. [Candidate compatibility workflow #44884117616](https://github.com/Dekanje/RB-analyser/actions/runs/44884117616) is separate from the strict-original audit.
-
-The BO3 workflow has been explicitly relabeled as **57 unchanged originals plus one disclosed legal Ornn candidate**, and its source validation requires the corresponding SHA lineage before running. It is **not** a tournament-accurate sideboarding simulator; no such full match results have yet been published.
-
-The first broad engine regression [#44883195092](https://github.com/Dekanje/RB-analyser/actions/runs/44883195092) ran **3,638 tests: 3,632 passed, six failed**. Failures included native choice-finalization and a no-op Bomb trigger (actual gameplay defects), an integer-encoded Orianna object reference, an omitted Deploy keyword-name mapping, and two pinned-count/hash assertions affected by the expanded card pool. The first four classes of source issues were patched and the full suite re-triggered in [run #44884223776](https://github.com/Dekanje/RB-analyser/actions/runs/44884223776). Pinned tests must not be silently ignored or treated as gameplay certification.
-
-**Acceptance remains gated** on legal 58-deck validation, deterministic card-effect scenarios, broad regression review, and actual completed game data. These steps cannot be replaced by a gallery import or a smoke-game completion.
+All changes are on `radiance/engine-mechanics-development`. They overlay a disposable pinned source checkout. The `main` branch, original 58 decklists, and existing 49-deck reports are preserved. Verify official Radiance rulings/errata and sideboard transitions separately before publishing competitive interpretations.
