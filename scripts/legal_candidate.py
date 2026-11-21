@@ -71,8 +71,8 @@ def make_legal_candidate(paths, target_dir, manifest=None):
             ms=parts.index("MainDeck:")+1
             me=parts.index("Battlefields:")
             counts=[int(line.split(" ",1)[0]) for line in parts[ms:me] if line.strip()]
-            if sum(counts)!=40:
-                raise RuntimeError("Main-deck count not 40 after correction: "+legend)
+            if sum(counts)!=39:
+                raise RuntimeError("Main-deck count not 39 (plus chosen champion) after correction: "+legend)
         dest=target_dir/path.name
         dest.write_text(body,encoding="utf-8")
         derived[legend]=dest
