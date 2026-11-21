@@ -47,8 +47,18 @@ retains failed series and exact seeds.
   localized the Mordekaiser–Azir crash to Mordekaiser controlling the ISMCTS
   searching seat in this test.
 - [GDB #44933693367](https://github.com/Dekanje/RB-analyser/actions/runs/44933693367)
-  reaches `boost::context::jump_fcontext` with a null-looking continuation;
-  no proven memory root cause yet.
+  reaches `boost::context::jump_fcontext` with a null-looking continuation.
+- [AddressSanitizer #44934287276](https://github.com/Dekanje/RB-analyser/actions/runs/44934287276)
+  independently reproduces stack-overflow diagnostics at `jump_fcontext` for Mordekaiser;
+  the sanitizer does not establish whether invalid continuation, recursion, or
+  an abandoned-fiber unwinding violation originated the problem.
+- **Concrete source defect identified:** `StepDriver::~StepDriver` requires
+  `boost::context::detail::forced_unwind` to propagate when destroying an
+  abandoned search clone. Two catch-all handlers in `GameEngine::probeAdds`
+  suppressed that very exception, potentially resuming a dead fiber. Patch
+  `e191491e` rethrows `forced_unwind` in both handlers, keeping regular error
+  handling unchanged. Exact-seed replay and regression validation on that
+  version are pending; do not claim the crash cured before they pass.
 - [Trace #44935091188](https://github.com/Dekanje/RB-analyser/actions/runs/44935091188)
   records gameplay before the failure, not a definitive causal frame.
 
