@@ -1,0 +1,164 @@
+name: Experimental optimize all 58 at ISMCTS-48 (compiled pool only)
+on:
+  push:
+    branches: ['experiment/optimizer-48-58-2026-11-21']
+    paths:
+      - '.github/workflows/optimizer-58-ismcts48.yml'
+      - 'scripts/aggregate_optimized_58_shards.py'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: optimizer-58-48-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  preflight:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Require actual deck optimizer and strict aggregator to compile
+        run: |
+          python3 -m py_compile scripts/optimize_58.py scripts/aggregate_optimized_58_shards.py
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 44936484425
+          github-token: ${{ github.token }}
+          name: repaired-ismcts-engine-preflight
+          path: .
+      - name: Restore repaired AlphaRune source executable (same as complete baseline)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libboost-all-dev
+          chmod +x alpharune/build/riftbound
+          if ldd alpharune/build/riftbound | grep -q 'not found'; then exit 1; fi
+          alpharune/build/riftbound --dump-registry radiance_registry_preflight.json
+          python3 - <<'PY'
+          import json
+          cards=json.load(open('radiance_registry_preflight.json'))['cards']
+          assert len(cards)==988,len(cards)
+          assert sum(c.get('set_code')=='RAD' for c in cards)>=25
+          print('OPTIMIZER_58_PREFLIGHT_PASS',len(cards),flush=True)
+          PY
+  optimize:
+    needs: preflight
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 58
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 44936484425
+          github-token: ${{ github.token }}
+          name: repaired-ismcts-engine-preflight
+          path: .
+      - name: Install pinned binary dependencies and derive compiled registry
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libboost-all-dev
+          chmod +x alpharune/build/riftbound
+          mkdir -p radiance/engine_overlay
+          alpharune/build/riftbound --dump-registry radiance/engine_overlay/compiled_registry.json
+          python3 - <<'PY'
+          import json
+          cards=json.load(open('radiance/engine_overlay/compiled_registry.json'))['cards']
+          assert len(cards)==988
+          PY
+      - name: Optimize designated shard using paired ISMCTS-48 training and holdout
+        env:
+          SHARD: ${{ matrix.shard }}
+        run: |
+          python3 -u - <<'PY'
+          import os,pathlib,subprocess,sys
+          sys.path.insert(0,'scripts')
+          from run_actual_games import decode,header
+          names=sorted(header(p) for p in decode())
+          shard=int(os.environ['SHARD'])
+          selected=[name for i,name in enumerate(names) if i%16==shard]
+          assert len(selected) in (3,4),(shard,selected)
+          print('OPTIMIZER_SHARD',shard,'LEGENDS',selected,flush=True)
+          cmd=[sys.executable,'scripts/optimize_58.py',
+               '--engine','alpharune/build/riftbound',
+               '--registry','radiance/engine_overlay/compiled_registry.json',
+               '--output',f'results/optimizer_shard_{shard}',
+               '--agent','ismcts:sims=48',
+               '--legends',*selected,
+               '--candidates','6','--shortlist','2',
+               '--opponents','3','--prefilter-samples','2',
+               '--samples','4','--holdout','6',
+               '--min-gain','3','--rounds','2',
+               '--workers','4','--timeout','100',
+               '--seed','2026112348']
+          subprocess.run(cmd,check=True)
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: optimizer-shard-${{ matrix.shard }}
+          path: results/optimizer_shard_${{ matrix.shard }}/
+          retention-days: 30
+          if-no-files-found: ignore
+  aggregate:
+    if: always()
+    needs: [preflight, optimize]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: optimizer-shard-*
+          path: results/optimization_shards
+      - name: Require 58 distinct confirmed optimized or unchanged deck outcomes
+        run: |
+          python3 scripts/aggregate_optimized_58_shards.py \
+            --source results/optimization_shards \
+            --output results/optimized_58_compiled_pool \
+            --shards 16 --agent ismcts:sims=48
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 44936484425
+          github-token: ${{ github.token }}
+          name: repaired-ismcts-engine-preflight
+          path: .
+      - name: Restore runtime dependencies and validate each selected deck in game
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libboost-all-dev
+          chmod +x alpharune/build/riftbound
+          python3 - <<'PY'
+          import hashlib,json,pathlib,sys
+          sys.path.insert(0,'scripts')
+          from run_actual_games import gametest,header
+          from optimize_58 import parse_deck,key,BAN_KEYS
+          root=pathlib.Path('results/optimized_58_compiled_pool')
+          paths=sorted((root/'selected_decks').glob('*.txt'))
+          manifest=json.load(open(root/'optimization_manifest.json'))
+          assert len(paths)==len(manifest['decks'])==58
+          known={r['legend']:r['effective_sha256'] for r in manifest['decks']}
+          decks={header(p):p for p in paths}
+          assert set(decks)==set(known)
+          anchor=decks['Kennen, Heart of the Tempest']
+          for i,(name,path) in enumerate(sorted(decks.items())):
+              assert hashlib.sha256(path.read_bytes()).hexdigest()==known[name]
+              _,main,side=parse_deck(path)
+              assert not any(key(card) in BAN_KEYS for card in main.keys()|side.keys())
+              assert sum(main.values())==39 and sum(side.values())<=10
+              result=gametest(pathlib.Path('alpharune/build/riftbound'),path,anchor,
+                              202612484800+i,100,'random')
+              if result['status']!='complete' or result['winner'] not in (1,2):
+                  raise RuntimeError(f'Postoptimization engine validation failed {name}: {result}')
+          print('OPTIMIZED_58_ENGINE_VALIDATION_PASS',len(decks),flush=True)
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: optimized-58-ISMCTS48-compiled-pool-NOT-full-Radiance
+          path: results/optimized_58_compiled_pool/
+          if-no-files-found: ignore
+          retention-days: 30
