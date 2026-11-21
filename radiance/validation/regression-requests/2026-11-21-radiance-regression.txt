@@ -1,0 +1,3 @@
+Run the full pinned upstream engine test suite with experimental Radiance overlay.
+Commit c4829e9a27e7883176737922bfe27b3688abd854
+Record XML results. Do not merge on failure.
