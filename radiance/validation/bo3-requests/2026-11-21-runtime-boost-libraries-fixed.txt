@@ -1,0 +1,1 @@
+Restart all 16 shard workers after installing Boost runtime dependencies. Previous complete grid had 3422 records but zero completed due missing libboost_program_options.so.1.83.0 on shard runners. Require ldd clean before running; preserve actual engine failures, no fabricated results; 58 decks with 54 unchanged and 4 openly corrected candidates.
