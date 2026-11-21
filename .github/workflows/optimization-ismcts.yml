@@ -1,0 +1,92 @@
+name: Optimize 58 Riftbound decks with hidden-information ISMCTS
+on:
+  push:
+    branches: ['optimization/ismcts-2026-11-21']
+    paths:
+      - '.github/workflows/optimization-ismcts.yml'
+      - 'scripts/optimize_58.py'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: optimize-58-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  optimize:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pinned-engine build prerequisites
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq cmake ninja-build g++ ccache libboost-all-dev nlohmann-json3-dev
+          python3 -m py_compile scripts/optimize_58.py scripts/legal_candidate.py scripts/run_actual_games.py
+      - name: Checkout pinned AlphaRune and apply 33-card Radiance overlay
+        run: |
+          git clone --quiet https://github.com/chorlick/alpharune.git alpharune
+          git -C alpharune checkout --quiet --detach ec90f0fed002aed374d06249fa95e83e3cfbd386
+          python3 radiance/engine_overlay/apply.py
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/ccache
+          key: optimization-ccache-ubuntu2404-${{ github.sha }}
+          restore-keys: |
+            radiance-ccache-ubuntu2404-
+      - name: Compile real rules engine
+        run: |
+          cmake -S alpharune -B alpharune/build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release -DRIFTBOUND_BUILD_JOBS=2 \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+          cmake --build alpharune/build --target riftbound -j 2
+          python3 radiance/engine_overlay/verify.py
+      - name: Evaluate candidate swaps against paired baseline and holdout games
+        run: |
+          python3 scripts/optimize_58.py \
+            --engine alpharune/build/riftbound \
+            --registry radiance/engine_overlay/compiled_registry.json \
+            --output optimization/results \
+            --agent ismcts:sims=24 \
+            --candidates 10 --shortlist 2 --opponents 3 \
+            --prefilter-samples 2 --samples 2 --holdout 4 \
+            --min-gain 2 --rounds 2 --workers 4 --timeout 45 \
+            --seed 20261121 | tee optimization_run.log
+      - name: Revalidate all selected lists using real engine games
+        run: |
+          python3 - <<'PY'
+          import pathlib,sys,hashlib
+          sys.path.insert(0,'scripts')
+          from run_actual_games import decode,header,gametest
+          from legal_candidate import make_legal_candidate
+          from optimize_58 import parse_deck,key,BAN_KEYS
+          original=decode()
+          baseline=make_legal_candidate(original,pathlib.Path('optimization/check_baseline'))
+          selected=pathlib.Path('optimization/results/selected_decks')
+          assert len(list(selected.glob('*.txt')))==58
+          keep=baseline['Kennen, Heart of the Tempest']
+          for i,(legend,path) in enumerate(sorted(baseline.items())):
+              candidate=selected/path.name
+              assert candidate.exists(),legend
+              _,main,side=parse_deck(candidate)
+              assert sum(main.values())==39,legend
+              assert not any(key(card) in BAN_KEYS for card in main.keys()|side.keys()),legend
+              game=gametest(pathlib.Path('alpharune/build/riftbound'),candidate,keep,220261121+i,50,'random')
+              if game['status']!='complete':
+                  raise RuntimeError(f'{legend}: {game["status"]}: {game["stderr_tail"][-400:]}')
+          print('OPTIMIZED_ROSTER_ENGINE_VALIDATION_PASS 58 of 58; originals untouched')
+          PY
+      - name: Produce summary and SHA manifests
+        if: always()
+        run: |
+          mkdir -p optimization/results
+          sha256sum scripts/optimize_58.py > optimization/results/source_sha256.txt
+          find optimization/results/selected_decks -name '*.txt' -type f -print0 | sort -z | xargs -0 -r sha256sum > optimization/results/selected_sha256.txt || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: optimized-58-decks-ismcts-evidence
+          path: |
+            optimization/results/
+            optimization_run.log
+          retention-days: 30
+          if-no-files-found: ignore
