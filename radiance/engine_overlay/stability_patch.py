@@ -82,4 +82,86 @@ replace_once(
     "    ? FinalizeChoice::Yes : FinalizeChoice::No;"
 )
 
+
+# Convergent Mutation has TWO chosen friendly units. The old engine used
+# one play-intent target and another finalize target, leaving target payment
+# validation split across paths. Use the same complete *pair* selection
+# machinery used for other two-target spells (all choices before cost).
+mutation = ENGINE / "src/cards/spells/0108_convergent_mutation.cpp"
+replace_once(
+    mutation,
+    """    void onResolve(CardContext& ctx, const std::vector<GameObjectId>& targets) override {
+        const GameObjectId chosen = targets.empty() ? kInvalidId : targets[0];
+        const auto other = selectTargetOrNone(*this, ctx, "Convergent Mutation (copy Might from)",
+                                              friendlyUnits(ctx.state, ctx.controller, chosen),
+                                              7, /*allow_none=*/false);
+        if (!other.has_value()) return;          // waiting for the agent
+        if (finalizingChoices(ctx)) return;      // choices end here (CR 355)
+        // Either target no longer legal: that instruction is ignored (CR
+        // 359.3.e.5), and it has nothing else to do.
+        if (chosen == kInvalidId || *other == kInvalidId) return;
+        if (!ctx.state.objectExists(chosen) || !ctx.state.objectExists(*other)) return;
+        const int target_might = ctx.state.getObject(*other).current_might;""",
+    """    bool needsPlayTimeTargetPair() const override { return true; }
+    void onResolve(CardContext& ctx, const std::vector<GameObjectId>&) override {
+        const auto own = friendlyUnits(ctx.state, ctx.controller, kInvalidId);
+        const auto options = [&](GameObjectId chosen) {
+            return friendlyUnits(ctx.state, ctx.controller, chosen);
+        };
+        auto [chosen, other] = pickTargetPair(ctx, "Convergent Mutation", own, options);
+        if (finalizingChoices(ctx)) return;
+        if (chosen == kInvalidId || other == kInvalidId) return;
+        if (!ctx.state.objectExists(chosen) || !ctx.state.objectExists(other)) return;
+        const int target_might = ctx.state.getObject(other).current_might;"""
+)
+replace_once(mutation,
+    "return TargetRequirements{.count = 1, .must_be_unit = true, .must_be_friendly = true};",
+    "return TargetRequirements{.count = 2, .must_be_unit = true, .must_be_friendly = true};")
+
+# For two-mode spells, an affordable printed cost alone does not guarantee
+# any complete payable target sequence. Use the engine's exact pre-play probe
+# before offering such cards rather than allowing impossible moves that crash.
+replace_once(
+    engine,
+    """        if (req.count == 0) {
+            // No play-time target. A spell that chooses in its finalize pass""",
+    """        if (req.count == 0) {
+            // Multi-mode spells must have at least one complete payable mode
+            // and target before the action is offered. Use the pre-existing
+            // exact choice probe (not a guessed victory, and never a bypass).
+            // A chain-resuming context cannot be probed by this engine; its
+            // normal finalization legality path remains in place there.
+            const auto& n = card.name.get();
+            if ((n == "Mesmerize" || n == "Rocket Barrage") &&
+                !state_.chain.resuming.has_value() &&
+                !payableThroughAFinalizeChoice(player, card_id, nullptr, true))
+                continue;
+            // No play-time target. A spell that chooses in its finalize pass""")
+
+# Prevent deep or cyclic information-set search paths from recursing into
+# a host stack fault. A horizon cutoff estimates the value of the genuine
+# reached engine position using the existing ISMCTS evaluator; it does not
+# assign a fabricated match winner or classify failed games as completed.
+search = ENGINE / "src/agents/mcts_agent.cpp"
+replace_once(search, "const std::vector<double> returns = simulate(world);",
+             "const std::vector<double> returns = simulate(world, 0);")
+replace_once(search,
+    """    std::vector<double> simulate(::open_spiel::State& state) {
+        if (state.IsTerminal()) return state.Returns();
+
+        const std::vector<::open_spiel::Action> legal = state.LegalActions();""",
+    """    std::vector<double> simulate(::open_spiel::State& state, int depth) {
+        if (state.IsTerminal()) return state.Returns();
+        // Search cutoff only: real games continue and determine all wins.
+        if (depth >= 128) return evaluator_->Evaluate(state);
+
+        const std::vector<::open_spiel::Action> legal = state.LegalActions();""")
+replace_once(search,
+    """        state.ApplyAction(chosen);
+        std::vector<double> returns = simulate(state);
+        node.children[chosen].return_sum += returns[player];""",
+    """        state.ApplyAction(chosen);
+        std::vector<double> returns = simulate(state, depth + 1);
+        node.children[chosen].return_sum += returns[player];""")
+
 print("PINNED_ISMCTS_STABILITY_PATCH_APPLIED", EXPECTED)
