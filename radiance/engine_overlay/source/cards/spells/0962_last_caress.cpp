@@ -36,6 +36,7 @@ private:
   d.set_code="RAD";d.set_name="Radiance";d.public_code="RAD-154/167";
   d.collector_number=154;d.card_type=CardType::Spell;
   d.super_type=SuperType::Signature;d.domains={Domain::Body,Domain::Chaos};
+  d.tags={"Evelynn"};
   d.energy_cost=2;d.rarity=Rarity::Epic;d.keywords.set(Keyword::Reaction);
   d.ability_text="[Reaction] The next unit you play this turn (even from face down) can be played to any battlefield. When you play it, [Buff] it.";
   return d;
