@@ -17,6 +17,10 @@ public:
   if(!obj.isUnit()||!obj.location||obj.controller!=controller)return Applies::No;
   const auto it=obj.card_counters.find("__twice_slain_save_turn");
   if(it!=obj.card_counters.end()&&it->second==state.turn.turn_number)return Applies::No;
+  // Nested sacrifice can kill another Twice Slain and recursively target this
+  // unit again. A death replacement already resolving cannot re-enter itself.
+  const auto processing=obj.card_counters.find("__twice_slain_processing");
+  if(processing!=obj.card_counters.end()&&processing->second>0)return Applies::No;
   for(const auto& [id,c]:state.objects.onBoard())
    if(id!=self&&c.isUnit()&&c.location&&c.controller==controller)return Applies::Yes;
   return Applies::No;
@@ -32,7 +36,19 @@ public:
   GameObjectId sacrifice=ctx.executor.chooseObjectNow(ctx.controller,sacrifices,
      "Mordekaiser, Twice Slain: choose friendly unit to kill as cost");
   if(sacrifice==kInvalidId||!ctx.state.objectExists(sacrifice))return false;
+  // Mark the original replacement as active *before* recursively killing its
+  // sacrifice. Otherwise two Twice Slain can choose each other indefinitely,
+  // overflowing Boost fiber/context stacks during ISMCTS simulation.
+  auto& counters=ctx.state.getObject(dying).card_counters;
+  counters["__twice_slain_processing"] += 1;
   ctx.executor.killObject(sacrifice);
+  if(ctx.state.objectExists(dying)) {
+    auto& after=ctx.state.getObject(dying).card_counters;
+    auto it=after.find("__twice_slain_processing");
+    if(it!=after.end()) {
+      if(--it->second<=0)after.erase(it);
+    }
+  }
   if(!ctx.state.objectExists(sacrifice)||!ctx.state.getObject(sacrifice).last_known.died)return false;
   if(!ctx.state.objectExists(dying))return false;
   ctx.state.getObject(dying).card_counters["__twice_slain_save_turn"]=ctx.state.turn.turn_number;
