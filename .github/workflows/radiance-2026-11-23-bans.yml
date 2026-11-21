@@ -1,0 +1,57 @@
+name: Audit 58 original decks against November 23 post-ban Standard
+on:
+  push:
+    branches: ['radiance/engine-mechanics-development']
+    paths: ['.github/workflows/radiance-2026-11-23-bans.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Audit all 58 original optimized lists and positions of banned cards
+        run: |
+          python3 - <<'PY'
+          import sys,re,collections,json,hashlib
+          sys.path.insert(0,'scripts')
+          from run_actual_games import decode,header
+          bans_20261123={
+              "Riven, Broken Blade","Zhonya's Hourglass","Stellacorn Herder",
+              "Nocturne, Horrifying","Rhasa the Sunderer","Brynhir Thundersong",
+              "Dazzling Aurora","Baited Hook","Emperor's Dais","Star Spring"}
+          prior={"Called Shot","Ekko, Recurrent","Draven, Vanquisher","Fight or Flight",
+                 "Scrapheap","Stealthy Pursuer","Stacked Deck","The Arena's Greatest",
+                 "Aspirant's Climb","Dreaming Tree","Obelisk of Power","Reaver's Row"}
+          issues=[]
+          for path in decode():
+              name=header(path)
+              section=''
+              for line in path.read_text().splitlines():
+                  if line.endswith(':'):
+                      section=line[:-1];continue
+                  m=re.fullmatch(r'\s*(\d+) (.+)',line)
+                  if not m:continue
+                  count,card=int(m.group(1)),m.group(2)
+                  if card in bans_20261123 or card in prior:
+                      issues.append({"legend":name,"section":section,"card":card,"copies":count,
+                           "ban_wave":"effective_2026_11_23" if card in bans_20261123 else "preexisting",
+                           "sha256":hashlib.sha256(path.read_bytes()).hexdigest()})
+          bydeck=collections.Counter(i['legend'] for i in issues)
+          summary={"schema":1,"circuit":"Standard excluding Korean and Traditional Chinese regional exceptions",
+                   "effective_utc_date":"2026-11-23","source":"https://playriftbound.com/en-us/news/announcements/radiance-ban-list-updates-effective-november-23-2026/",
+                   "deck_count":58,"affected_decks":len(bydeck),
+                   "new_ban_affected_decks":len({i['legend'] for i in issues if i['ban_wave']=='effective_2026_11_23'}),
+                   "issues":issues}
+          with open('ban_audit_2026_11_23.json','w') as f:json.dump(summary,f,indent=2)
+          print("POST_BAN_58_AUDIT",json.dumps({k:v for k,v in summary.items() if k!='issues'}),flush=True)
+          for issue in issues:print("BANNED_CARD_IN_OPTIMIZED_DECK",json.dumps(issue),flush=True)
+          print("Audit is informational; no original decks modified.",flush=True)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: 58-deck-nov23-ban-impact
+          path: ban_audit_2026_11_23.json
+          retention-days: 30
