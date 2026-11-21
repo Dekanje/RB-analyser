@@ -43,6 +43,13 @@ public:
  void onTrigger(CardContext& ctx,const std::vector<GameObjectId>&)override{
   if(!ctx.state.chain.resuming)return;
   const auto unit=ctx.state.chain.resuming->triggering_subject;
+  if(ctx.firing_trigger==TriggerType::AtEndOfTurn){
+   if(unit!=kInvalidId && ctx.state.objectExists(unit) &&
+      ctx.state.getObject(unit).isUnit() &&
+      ctx.state.getObject(unit).location)
+     ctx.executor.killObject(unit);
+   return;
+  }
   if(unit==kInvalidId||!ctx.state.objectExists(unit))return;
   auto& src=ctx.state.getObject(ctx.source);
   const auto it=src.card_counters.find("__ekko_next_unit");
