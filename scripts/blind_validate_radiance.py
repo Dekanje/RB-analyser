@@ -40,10 +40,13 @@ def mcnemar_two_sided(candidate_only,baseline_only):
 def main(args):
     chosen=json.loads((args.selected/'full_trials.json').read_text(encoding='utf8'))
     changed=[x for x in chosen if x['changed']]
+    if args.legend_prefix:
+        changed=[x for x in changed if x['legend'].casefold().startswith(args.legend_prefix.casefold())]
     if not changed:raise RuntimeError('No selected upgrades to verify')
     originals={header(p):p for p in (args.baselines/'baselines').glob('*.txt')}
     selected={header(p):p for p in (args.selected/'selected_decks').glob('*.txt')}
     assert len(originals)==len(selected)==58
+    opponents=sorted(originals) if args.all_opponents else OPPONENTS
     scenarios=[]
     for entry in changed:
         legend=entry['legend']
@@ -51,7 +54,7 @@ def main(args):
         assert digest(base)==entry['original_sha256']
         assert digest(candidate)==entry['selected_sha256']
         assert digest(base)!=digest(candidate)
-        for op_name in OPPONENTS:
+        for op_name in opponents:
             if op_name==legend:continue
             for seat in (0,1):
                 for repeat in range(args.repetitions):
@@ -103,7 +106,7 @@ def main(args):
     (args.output/'blind_scenarios.json').write_text(json.dumps(results,indent=2))
     (args.output/'blind_summary.json').write_text(json.dumps({
         'schema':1,'seed':args.seed,'agent':args.agent,'mode':'NO_SIDEBOARD_FIXED_DECK_BO3',
-        'opponents':OPPONENTS,'multiple_testing_adjusted':False,
+        'opponents':opponents,'multiple_testing_adjusted':False,
         'all_scenarios_complete':all(x['incomplete_paired_scenarios']==0 for x in summary),
         'decisions':summary},indent=2))
     with (args.output/'blind_summary.csv').open('w',newline='') as f:
@@ -121,6 +124,8 @@ if __name__=='__main__':
     p.add_argument('--timeout',type=int,default=75)
     p.add_argument('--workers',type=int,default=4)
     p.add_argument('--repetitions',type=int,default=2)
+    p.add_argument('--all-opponents',action='store_true',help='Cover every other legend (57)')
+    p.add_argument('--legend-prefix',default='',help='Optional single tested legend name prefix')
     args=p.parse_args()
     if args.workers not in range(1,9) or args.repetitions not in range(1,11):
         p.error('Invalid workers or repetitions')
