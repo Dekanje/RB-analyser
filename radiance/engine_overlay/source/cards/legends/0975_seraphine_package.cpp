@@ -34,6 +34,19 @@ public:
   return t==TriggerType::WhenThreeFriendsExhausted;
  }
  void onTrigger(CardContext& ctx,const std::vector<GameObjectId>&)override {
+  if(ctx.firing_trigger==TriggerType::WhenIAttack){
+   if(!ctx.state.objectExists(ctx.source))return;
+   const auto bf=ctx.state.getObject(ctx.source).battlefieldId();
+   if(!bf)return;
+   std::vector<GameObjectId> enemies;
+   for(const auto& [id,obj]:ctx.state.objects.onBoard())
+    if(obj.isUnit()&&obj.controller!=ctx.controller&&obj.battlefieldId()&&
+       *obj.battlefieldId()==*bf)enemies.push_back(id);
+   auto target=pickTarget(ctx,"Seraphine [Disarm 2]: choose an enemy unit here",enemies);
+   if(finalizingChoices(ctx)||target==kInvalidId)return;
+   if(ctx.state.objectExists(target))ctx.executor.giveTemporaryMight(target,-2);
+   return;
+  }
   const int answer=confirmOptional(ctx,
     "Seraphine, Inspiring: draw 1 for exhausting at least three friendly units?",
     [](){return true;});
