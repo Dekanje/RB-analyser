@@ -1,0 +1,50 @@
+name: Export verified 58-legend Radiance-era deckbook
+on:
+  push:
+    branches: ['optimization/full-radiance-2026-11-21']
+    paths:
+      - '.github/workflows/export-58-deckbook.yml'
+      - 'scripts/export_58_deckbook.py'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  export-deckbook:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Syntax-check deterministic deckbook exporter
+        run: python3 -m py_compile scripts/export_58_deckbook.py scripts/legal_candidate.py
+      - name: Fetch actual compiled AlphaRune 988-card registry
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 44930292556
+          github-token: ${{ github.token }}
+          name: radiance-optimizer-compiled-988-card-registry
+          path: results/export_registry
+      - name: Export all 58 decks without promoting unverified Radiance swaps
+        run: |
+          test -s results/export_registry/card_registry_988.json
+          python3 scripts/export_58_deckbook.py --registry results/export_registry/card_registry_988.json --output results/deckbook_58
+          python3 - <<'PY'
+          import csv,json,pathlib,zipfile
+          root=pathlib.Path('results/deckbook_58')
+          rows=list(csv.DictReader((root/'roster_58.csv').open()))
+          out=json.loads((root/'summary.json').read_text())
+          assert len(rows)==58 and len({r['legend'] for r in rows})==58
+          assert len([r for r in rows if r['legality_correction']=='True'])==4
+          assert all(r['main_cards']=='39' for r in rows)
+          assert all(r['selection']=='LEGAL_BASELINE_NO_BLIND_VERIFIED_RADIANCE_UPGRADE' for r in rows)
+          assert out['no_global_optimum_claim'] and out['source_immutable']
+          with zipfile.ZipFile(root/'ALL_58_LEGAL_DECKS.zip') as z:
+            assert len(z.namelist())==58
+          print('58_LEGAL_DECKS_AND_SOURCE_SHA_QA_PASS')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: riftbound-58-legal-baseline-deckbook
+          path: results/deckbook_58/
+          if-no-files-found: error
+          retention-days: 60
