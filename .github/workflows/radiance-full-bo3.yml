@@ -1,0 +1,79 @@
+name: Riftbound 58 real fixed-deck BO3
+on:
+  push:
+    branches: ['radiance/engine-mechanics-development']
+    paths: ['radiance/validation/bo3-requests/**']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq cmake ninja-build g++ ccache libboost-all-dev nlohmann-json3-dev
+          git clone --quiet https://github.com/chorlick/alpharune.git alpharune
+          git -C alpharune checkout --quiet --detach ec90f0fed002aed374d06249fa95e83e3cfbd386
+          python3 radiance/engine_overlay/apply.py
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/ccache
+          key: radiance-bo3-${{ runner.os }}-${{ github.sha }}
+          restore-keys: radiance-ccache-ubuntu2404-
+      - run: |
+          cmake -S alpharune -B alpharune/build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+          cmake --build alpharune/build --target riftbound -j 2
+          python3 radiance/engine_overlay/verify.py
+          python3 scripts/validate_58_originals.py --repetitions 2 --seconds 50
+      - uses: actions/upload-artifact@v4
+        with:
+          name: validated-engine
+          path: |
+            alpharune/build/riftbound
+            results/all_58_engine_validation.json
+          compression-level: 0
+  simulate:
+    needs: prepare
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: validated-engine
+          path: .
+      - run: |
+          chmod +x alpharune/build/riftbound
+          python3 scripts/run_bo3_pairings.py --shards 16 --shard ${{ matrix.shard }} --series-per-pair 2 --seconds 40 --max-seconds 2300 --output results/bo3_shard_${{ matrix.shard }}.json
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bo3-shard-${{ matrix.shard }}
+          path: results/bo3_shard_${{ matrix.shard }}.json
+          if-no-files-found: ignore
+  aggregate:
+    if: always()
+    needs: [simulate]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: bo3-shard-*
+          path: results/shards
+      - run: python3 scripts/aggregate_bo3.py --inputs 'results/shards/bo3-shard-*/bo3_shard_*.json'
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: all-58-fixed-deck-bo3
+          path: |
+            results/bo3_all_matchups.json
+            results/bo3_all_matchups.csv
+          if-no-files-found: ignore
