@@ -29,11 +29,17 @@ See `scripts/legal_candidate.py` and the `four_legal_candidates_manifest.json` i
 
 [Independent fast preflight](https://github.com/Dekanje/RB-analyser/actions/runs/44888585865) passed source SHA checks, correction count, and Python syntax checks.
 
+## Post-ban compliance
+
+[Riot's official November 13 announcement](https://playriftbound.com/en-us/news/announcements/radiance-ban-list-updates-effective-november-23-2026/) adds eight cards and two battlefields to Standard and Constructed 2v2 bans effective **November 23, 2026** (with Korean and Traditional Chinese regional exceptions). [The 58-original-deck normalized audit](https://github.com/Dekanje/RB-analyser/actions/runs/44889419421) checked all new bans plus earlier Standard prohibitions: **0/58 original decklists contain a banned entry**. The four corrections above concern ordinary domain/Unique deck construction, not this ban wave.
+
 ## 58-deck matrix
 
-[Full fixed-deck BO3 workflow #44888474847](https://github.com/Dekanje/RB-analyser/actions/runs/44888474847) launched after validation. The plan is 58 legends, **1,711 pairings including 58 mirrors**, **two series per pair**, or **3,422 best-of-three series**, sharded across 16 GitHub Actions jobs.
+**Verified completed baseline:** [fixed-deck BO3 workflow #44888994166](https://github.com/Dekanje/RB-analyser/actions/runs/44888994166) finished across all 16 shards plus aggregation: **1,711/1,711 pairings and 3,422/3,422 series**, zero incomplete. [Download original JSON/CSV artifact](https://github.com/Dekanje/RB-analyser/actions/runs/44888994166/artifacts/14701577239).
 
-This format does **not** swap main-deck and sideboard cards between games. It is not a complete competitive tournament BO3 model; treat resulting rates as exploratory, particularly with only two series per pairing. Matchups that fail or time out must remain marked incomplete, never assigned synthetic wins.
+**Higher-sample study:** [workflow #44889654359](https://github.com/Dekanje/RB-analyser/actions/runs/44889654359) was submitted for **20 seeded series per pairing = 34,220 planned series**; it is not a result until all shards and aggregation pass. Its aggregator also exports per-legend Wilson-sampling intervals and complete-matchup CSV.
+
+The engine agents use **uniform random legal actions**, not trained, optimized or information-set-search play. These results do **not** support competitive tier/rank predictions. In addition, this format does **not** swap main-deck and sideboard cards between games; it is NOT a full tournament-sideboarding BO3 model. Incomplete games must stay incomplete, never assigned synthetic wins.
 
 ## Regression gate
 
@@ -41,7 +47,7 @@ The initial extended engine passed 3,633/3,638 tests. The untouched upstream con
 
 Follow-up changes repaired the Demacian Standard no-op trigger, the Back to Back pair-offer validation, source-scan counts, object-ID-dependent Overt Operation prompt ordering, and seeded-deck fixture calibration. Hush's new stricter counter target requires a qualifying `[A][A]` spell in the sweep test.
 
-**Latest patch still requires a green complete regression run.** See [current suite](https://github.com/Dekanje/RB-analyser/actions/runs/44888797193); do not assume it passed before checking the workflow result.
+**Full regression PASS:** [workflow #44889338601](https://github.com/Dekanje/RB-analyser/actions/runs/44889338601) completed **3,638/3,638 enabled tests**, with one additional test already disabled upstream. The fixes were confirmed against the 988-definition overlay; passing historical regression tests is not independent per-card rules certification.
 
 ## Change isolation
 
