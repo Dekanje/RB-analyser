@@ -1,0 +1,57 @@
+name: Audit all 167 Radiance cards against 58 decks
+on:
+  push:
+    branches: ['optimization/full-radiance-2026-11-21']
+    paths:
+      - '.github/workflows/radiance-full-pool-audit.yml'
+      - 'scripts/radiance_full_pool.py'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  full-pool-audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pin Riot-gallery mirror source and parse the 167 numbered cards
+        run: |
+          git clone --quiet https://github.com/Dystorted888/riftbound-card-data.git source-gallery
+          git -C source-gallery checkout --quiet --detach 8a10812968506363a373f36a8bb7cf4d94d02694
+          test "$(git -C source-gallery rev-parse HEAD)" = "8a10812968506363a373f36a8bb7cf4d94d02694"
+          python3 -m py_compile scripts/radiance_full_pool.py scripts/optimize_58.py
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 44900171748
+          github-token: ${{ github.token }}
+          name: verified-ismcts-engine-58
+          path: .
+      - name: Recover real compiled engine registry
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libboost-all-dev
+          chmod +x alpharune/build/riftbound
+          mkdir -p radiance/engine_overlay
+          alpharune/build/riftbound --dump-registry radiance/engine_overlay/compiled_registry.json
+          python3 - <<'PY'
+          import json
+          d=json.load(open('radiance/engine_overlay/compiled_registry.json'))
+          assert len(d['cards'])==988,len(d['cards'])
+          print('ENGINE_REGISTRY_988_PASS')
+          PY
+      - name: Analyze every Radiance numbered card and all 58 legality-corrected decks
+        run: |
+          python3 scripts/radiance_full_pool.py \
+            --gallery source-gallery/data/cards.json \
+            --registry radiance/engine_overlay/compiled_registry.json \
+            --output results/full_radiance_pool \
+            --candidates 50
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: radiance-full-catalog-58-legends-coverage
+          path: |
+            results/full_radiance_pool/
+          retention-days: 30
+          if-no-files-found: ignore
