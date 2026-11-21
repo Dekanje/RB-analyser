@@ -16,6 +16,19 @@ public:
    ps.next_unit_any_bf_buff_count=0;
   }
   ++ps.next_unit_any_bf_buff_count;
+  DelayedAbility da;
+  da.source=ctx.source;da.card_def_id=cardDefId();da.controller=ctx.controller;
+  da.trigger=TriggerType::WhenYouPlayAUnit;
+  da.expires_on_turn=ctx.state.turn.turn_number;
+  ctx.state.delayed_abilities.push_back(da);
+ }
+ void onTrigger(CardContext& ctx,const std::vector<GameObjectId>&)override{
+  if(!ctx.state.chain.resuming)return;
+  const GameObjectId unit=ctx.state.chain.resuming->triggering_subject;
+  if(unit==kInvalidId||!ctx.state.objectExists(unit))return;
+  const auto& u=ctx.state.getObject(unit);
+  if(!u.isUnit()||!u.location||u.controller!=ctx.controller)return;
+  ctx.executor.buffUnit(unit);
  }
 private:
  const CardDef def_=[] {
