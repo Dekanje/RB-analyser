@@ -200,4 +200,28 @@ replace_once(search,
         std::vector<double> returns = simulate(state, depth + 1);
         node.children[chosen].return_sum += returns[player];""")
 
+# Fail closed with a descriptive engine error if a Boost fiber continuation is
+# invalid, instead of jumping through a null stack/context pointer (SIGSEGV).
+# These checks do not produce or alter results from successful game actions.
+replace_once(step,
+    """    yield_target_ = std::move(yield_target_).resume();
+
+    at_decision_ = false;""",
+    """    if (!yield_target_)
+        throw std::logic_error("StepDriver::selectActionFor: no caller fiber continuation");
+    yield_target_ = std::move(yield_target_).resume();
+
+    at_decision_ = false;""")
+replace_once(step,
+    """    engine_fiber_ = std::move(engine_fiber_).resume();
+}
+
+void StepDriver::markDone()""",
+    """    if (!engine_fiber_)
+        throw std::logic_error("StepDriver::provideChoice: engine fiber continuation missing");
+    engine_fiber_ = std::move(engine_fiber_).resume();
+}
+
+void StepDriver::markDone()""")
+
 print("PINNED_ISMCTS_STABILITY_PATCH_APPLIED", EXPECTED)
