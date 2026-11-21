@@ -7,7 +7,7 @@ out=root/"radiance/engine_overlay/compiled_registry.json"
 subprocess.run([str(exe),"--dump-registry",str(out)],check=True)
 cards=json.loads(out.read_text())["cards"]
 bycode={c["public_code"]:c for c in cards}
-assert len(cards)==965,len(cards)
+assert len(cards)==968,len(cards)
 assert bycode["RAD-149/167"]["name"]=="The Exile"
 assert bycode["RAD-149/167"]["card_type"]=="legend"
 assert bycode["RAD-086/167"]["name"]=="K'Sante, Courageous"
@@ -30,7 +30,10 @@ assert bycode["RAD-143/167"]["card_type"]=="legend"
 assert bycode["RAD-020/167"]["name"]=="Mordekaiser, Twice Slain"
 assert bycode["RAD-144/167"]["name"]=="Realm of Death"
 assert bycode["RAD-144/167"]["super_type"]=="signature"
-print("REGISTRY_PASS: 965 compiled, includes 10 experimental Radiance classes")
+assert bycode["RAD-155/167"]["card_type"]=="legend"
+assert bycode["RAD-133/167"]["name"]=="Jarvan IV, Royal Heir"
+assert bycode["RAD-156/167"]["card_type"]=="gear"
+print("REGISTRY_PASS: 968 compiled, includes 13 experimental Radiance classes")
 # Real original Riven deck smoke; status is NOT a full semantic certification.
 import sys
 sys.path.insert(0,str(root/"scripts"))
@@ -52,4 +55,8 @@ m=gametest(exe,decks["Mordekaiser, Iron Revenant"],
            decks["Kennen, Heart of the Tempest"],20261121421,90,"random")
 print("ORIGINAL_MORDEKAISER_VS_KENNEN "+str(m["status"])+" "+m["stderr_tail"][-250:])
 assert m["status"]=="complete",m["stderr_tail"][-1000:]
+j=gametest(exe,decks["Jarvan IV, Exemplar of Demacia"],
+           decks["Kennen, Heart of the Tempest"],20261121651,90,"random")
+print("ORIGINAL_JARVAN_VS_KENNEN "+str(j["status"])+" "+j["stderr_tail"][-250:])
+assert j["status"]=="complete",j["stderr_tail"][-1000:]
 print("FULL_NINE_DECKS_CERTIFIED: false")

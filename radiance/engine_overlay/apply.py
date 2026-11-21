@@ -17,7 +17,8 @@ for src,dest in [
     ("cards/spells/0962_last_caress.cpp","src/cards/spells/0962_last_caress.cpp"),
     ("cards/legends/0963_iron_revenant.cpp","src/cards/legends/0963_iron_revenant.cpp"),
     ("cards/units/0964_twice_slain.cpp","src/cards/units/0964_twice_slain.cpp"),
-    ("cards/spells/0965_realm_of_death.cpp","src/cards/spells/0965_realm_of_death.cpp")]:
+    ("cards/spells/0965_realm_of_death.cpp","src/cards/spells/0965_realm_of_death.cpp"),
+    ("cards/legends/0969_jarvan_package.cpp","src/cards/legends/0969_jarvan_package.cpp")]:
     target=engine/dest
     if target.exists():raise SystemExit("Collision: "+str(target))
     shutil.copyfile(source/src,target)
@@ -27,9 +28,9 @@ def replace_once(path,before,after):
     path.write_text(s.replace(before,after,1))
 init=engine/"src/cards/cards_init.cpp"
 replace_once(init,"void register_card_955(CardRegistry&);",
-"void register_card_955(CardRegistry&);\nvoid register_card_956(CardRegistry&);\nvoid register_card_957(CardRegistry&);\nvoid register_card_958(CardRegistry&);\nvoid register_card_959(CardRegistry&);\nvoid register_card_960(CardRegistry&);\nvoid register_card_961(CardRegistry&);\nvoid register_card_962(CardRegistry&);\nvoid register_card_963(CardRegistry&);\nvoid register_card_964(CardRegistry&);\nvoid register_card_965(CardRegistry&);")
+"void register_card_955(CardRegistry&);\nvoid register_card_956(CardRegistry&);\nvoid register_card_957(CardRegistry&);\nvoid register_card_958(CardRegistry&);\nvoid register_card_959(CardRegistry&);\nvoid register_card_960(CardRegistry&);\nvoid register_card_961(CardRegistry&);\nvoid register_card_962(CardRegistry&);\nvoid register_card_963(CardRegistry&);\nvoid register_card_964(CardRegistry&);\nvoid register_card_965(CardRegistry&);\nvoid register_card_969(CardRegistry&);\nvoid register_card_970(CardRegistry&);\nvoid register_card_971(CardRegistry&);")
 replace_once(init,"    register_card_955(registry);",
-"    register_card_955(registry);\n    register_card_956(registry);\n    register_card_957(registry);\n    register_card_958(registry);\n    register_card_959(registry);\n    register_card_960(registry);\n    register_card_961(registry);\n    register_card_962(registry);\n    register_card_963(registry);\n    register_card_964(registry);\n    register_card_965(registry);")
+"    register_card_955(registry);\n    register_card_956(registry);\n    register_card_957(registry);\n    register_card_958(registry);\n    register_card_959(registry);\n    register_card_960(registry);\n    register_card_961(registry);\n    register_card_962(registry);\n    register_card_963(registry);\n    register_card_964(registry);\n    register_card_965(registry);\n    register_card_969(registry);\n    register_card_970(registry);\n    register_card_971(registry);")
 game=engine/"src/engine/game_engine.cpp"
 original="        if (state_.player(card.controller).otherUnitsEnterReady(card.id)) enters_ready = true;"
 replacement=original+"""
@@ -264,4 +265,97 @@ replace_once(game,
     "        spendForObject(state_.getObject(source)));",
     "        spendForActivation(state_.getObject(source)));")
 
-print("OVERLAY_SUCCESS ten experimental Radiance C++ classes")
+
+# Radiance Deploy — Gear is played to a battlefield, never the base.
+# A Deploy permanent is killed when the other player holds its battlefield.
+types=engine/"src/core/types.h"
+replace_once(types,
+    "    Flow         = 24,  // Vendetta: spell may be played from trash for its Flow cost, then banished\n    Count        = 25,",
+    "    Flow         = 24,  // Vendetta: spell may be played from trash for its Flow cost, then banished\n"
+    "    Deploy       = 25,  // Radiance: gear played to battlefield; dies on enemy hold\n"
+    "    Count        = 26,")
+replace_once(game,
+    """        play_intent.play_location = BaseLocation{player};
+        actions.push_back(play_intent);
+    }
+
+    // Play spells from hand — Neutral Open allows any spell""",
+    """        if (card.hasKeyword(Keyword::Deploy)) {
+            for (const auto& bf : state_.battlefields) {
+                Intent battlefield_play = play_intent;
+                battlefield_play.play_location = BattlefieldLocation{bf.id};
+                actions.push_back(battlefield_play);
+            }
+        } else {
+            play_intent.play_location = BaseLocation{player};
+            actions.push_back(play_intent);
+        }
+    }
+
+    // Play spells from hand — Neutral Open allows any spell""")
+replace_once(game,
+    """            make(IntentType::PlayCard, {}, LocationId{BaseLocation{player}});
+            if (!card.isUnit() || ps.units_play_base_only) continue;""",
+    """            if (card.isGear() && card.hasKeyword(Keyword::Deploy)) {
+                for (const auto& bf : state_.battlefields)
+                    make(IntentType::PlayCard, {},
+                         LocationId{BattlefieldLocation{bf.id}});
+                continue;
+            }
+            make(IntentType::PlayCard, {}, LocationId{BaseLocation{player}});
+            if (!card.isUnit() || ps.units_play_base_only) continue;""")
+trigger=engine/"src/engine/trigger_manager.cpp"
+replace_once(trigger,
+    """        for (auto wid : watchers)
+            fireTrigger(wid, e.player, 0, TriggerType::WhenYouPlayAGear, /*subject=*/e.object);
+    }
+
+    // "When you play a unit" and its relatives.""",
+    """        for (auto wid : watchers)
+            fireTrigger(wid, e.player, 0, TriggerType::WhenYouPlayAGear, /*subject=*/e.object);
+        fireLegendTrigger(TriggerType::WhenYouPlayAGear,e.player,0,e.object);
+    }
+
+    // "When you play a unit" and its relatives.""")
+replace_once(trigger,
+    """    // Battlefield triggers
+    for (auto& bf : state_.battlefields) {""",
+    """    // Deploy gear stays in a battlefield. Its score triggers work from there
+    // just as unit triggers do. An opponent's hold kills Deploy after scoring.
+    std::vector<GameObjectId> deploy_to_kill;
+    for (auto& [gid, gear] : state_.objects.onBoard()) {
+        if (!gear.isGear() || !gear.isAtBattlefield() ||
+            !gear.hasKeyword(Keyword::Deploy) ||
+            !gear.battlefieldId() || *gear.battlefieldId() != e.battlefield)
+            continue;
+        if (gear.controller == e.player && e.method == ScoreMethod::Hold &&
+            cardFiresOn(card_registry_, gear.card_def_id, TriggerType::WhenIHold))
+            fireTrigger(gid, e.player, 0, TriggerType::WhenIHold, scored_bf_card);
+        if (gear.controller != e.player && e.method == ScoreMethod::Hold)
+            deploy_to_kill.push_back(gid);
+    }
+    if (effect_executor_) {
+        for (auto gid : deploy_to_kill)
+            if (state_.objectExists(gid) && state_.getObject(gid).isAtBattlefield())
+                effect_executor_->killObject(gid);
+    }
+
+    // Battlefield triggers
+    for (auto& bf : state_.battlefields) {""")
+replace_once(trigger,
+    """    // Battlefield cards: "When combat starts here," (Threshold of the Gray).
+    fireBattlefieldTriggers(TriggerType::WhenCombatStartsHere, e.attacker, e.battlefield);""",
+    """    // Gear with Deploy can have "When one or more friendly units attack here".
+    // One trigger per combat event, not per attacker.
+    for (const auto& [gid, gear] : state_.objects.onBoard()) {
+        if (!gear.isGear() || !gear.hasKeyword(Keyword::Deploy) ||
+            !gear.battlefieldId() || *gear.battlefieldId() != e.battlefield ||
+            gear.controller != e.attacker)
+            continue;
+        if (cardFiresOn(card_registry_,gear.card_def_id,TriggerType::WhenIAttack))
+            fireTrigger(gid,e.attacker,0,TriggerType::WhenIAttack);
+    }
+    // Battlefield cards: "When combat starts here," (Threshold of the Gray).
+    fireBattlefieldTriggers(TriggerType::WhenCombatStartsHere, e.attacker, e.battlefield);""")
+
+print("OVERLAY_SUCCESS thirteen Radiance classes; Deploy enabled")
