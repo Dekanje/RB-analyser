@@ -56,7 +56,7 @@ def run_series(exe,decks,a,b,index,instance,seconds,agent):
         second=b if second_side=="B" else a
         # Both competitors remain distinct even in same-legend mirror games.
         # Mirrored first-game seat in instance 2, deterministic distinct seeds.
-        seed=202611300000 + index*100 + instance*10 + n
+        seed=202611300000 + index*1000 + instance*10 + n
         result=gametest(exe,decks[first],decks[second],seed,seconds,agent)
         entry={"number":n+1,"seed":seed,"seat1":first,"seat2":second,
                "status":result["status"],"winner_seat":result["winner"],
@@ -112,7 +112,7 @@ def main(args):
             print(f"PAIR {index+1:04d}/1711 [{instance+1}/{args.series_per_pair}] "
                   f"{a} vs {b}: {row['status']}"
                   + (" winner "+row["winner"] if row["status"]=="complete" else ""),flush=True)
-            atomic_write(output,report)
+            if len(report["results"])%25==0: atomic_write(output,report)
     report["complete"]=len(report["results"])==len(selected)*args.series_per_pair
     report["series_complete"]=sum(x["status"]=="complete" for x in report["results"])
     report["series_incomplete"]=len(report["results"])-report["series_complete"]
@@ -133,6 +133,6 @@ if __name__=="__main__":
     p.add_argument("--seconds",type=int,default=60)
     p.add_argument("--max-seconds",type=int,default=2300)
     a=p.parse_args()
-    if a.shards<1 or a.series_per_pair not in (1,2) or a.seconds<1:
-        p.error("shards >=1, series-per-pair 1 or 2, seconds >=1")
+    if a.shards<1 or not 1 <= a.series_per_pair <= 20 or a.seconds<1:
+        p.error("shards >=1, series-per-pair 1-20, seconds >=1")
     sys.exit(main(a))
