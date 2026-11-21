@@ -17,17 +17,27 @@ jobs:
       - name: Install compiler
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq cmake ninja-build g++ libboost-all-dev nlohmann-json3-dev
+          sudo apt-get install -y -qq cmake ninja-build g++ ccache libboost-all-dev nlohmann-json3-dev
       - name: Checkout pinned AlphaRune source
         run: |
           git clone --quiet https://github.com/chorlick/alpharune.git alpharune
           git -C alpharune checkout --quiet --detach ec90f0fed002aed374d06249fa95e83e3cfbd386
       - name: Apply Radiance source overlay
         run: python3 radiance/engine_overlay/apply.py
+      - name: Reuse C++ compilation cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ccache
+          key: radiance-ccache-ubuntu2404-${{ github.sha }}
+          restore-keys: |
+            radiance-ccache-ubuntu2404-
       - name: Compile actual engine
+        env:
+          CCACHE_MAXSIZE: 1200M
         run: |
-          cmake -S alpharune -B alpharune/build -G Ninja -DCMAKE_BUILD_TYPE=Release -DRIFTBOUND_BUILD_JOBS=2
+          cmake -S alpharune -B alpharune/build -G Ninja -DCMAKE_BUILD_TYPE=Release -DRIFTBOUND_BUILD_JOBS=2 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
           cmake --build alpharune/build --target riftbound -j 2
+          ccache --show-stats
       - name: Check compiled card definitions
         run: python3 radiance/engine_overlay/verify.py
       - name: Upload compiled registry
