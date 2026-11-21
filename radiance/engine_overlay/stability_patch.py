@@ -51,7 +51,7 @@ replace_once(
     "// the existing exact viable-sequence filtering for this spell.\n"
     "const bool requires_complete_viability =\n"
     "    state_.objectExists(what) &&\n"
-    "    state_.getObject(what).name == \"Convergent Mutation\";\n"
+    "    state_.getObject(what).name.get() == \"Convergent Mutation\";\n"
     "done = (too_dear || requires_complete_viability)\n"
     "           ? choosePrePlayViable(pre, payable)\n"
     "           : collectFinalizeChoices(std::move(pre));"
