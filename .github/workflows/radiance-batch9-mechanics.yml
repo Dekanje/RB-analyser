@@ -1,6 +1,7 @@
 name: Radiance Batch 9 - mechanics-based C++ implementation
 # Batch 9: 15 unique identities, including eight new battlefield cards (IDs 1040-1047).
 # Batch 9 staged CI, 15 authored cards. Full regression mandatory for acceptance.
+# Full regression requested after 95/95 focused tests and strict 83/167 registry PASS.
 # Targeted 36/36 pass; run strict 83-card registry and catalog verification.
 on:
   push:
