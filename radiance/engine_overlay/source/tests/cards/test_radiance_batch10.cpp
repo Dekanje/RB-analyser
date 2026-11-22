@@ -24,7 +24,7 @@ TEST_F(RadianceBatch10Test, TwentyNewUniqueCardsHaveCanonicalPrintedMetadata) {
   {1056,106,3,1,0,"The Good Stuff",CardType::Gear},
   {1057,107,2,0,2,"Bedeviling Stranger",CardType::Unit},
   {1058,5,2,0,2,"Lingering Animus",CardType::Unit},
-  {1059,21,5,1,4,"Ekko, Revolutionary",CardType::Unit},
+  {1059,1,2,1,1,"Amateur Demolitionist",CardType::Unit},
   {1060,28,1,0,0,"Ki Burst",CardType::Spell},
   {1061,29,1,0,0,"Life from Stone",CardType::Spell},
   {1062,40,7,1,7,"Heartening Soul",CardType::Unit},
@@ -63,10 +63,19 @@ TEST_F(RadianceBatch10Test, PrintedKeywordsAreRegistered) {
  EXPECT_TRUE(card_db.get(CardDefId{1065}).keywords.has(Keyword::Deflect));
  EXPECT_TRUE(card_db.get(CardDefId{1066}).keywords.has(Keyword::Deploy));
 }
-TEST_F(RadianceBatch10Test, EkkoRevolutionaryEntersReady) {
- const auto card=addToHand(P1,CardDefId{1059});
+TEST_F(RadianceBatch10Test, OriginalEkkoRemainsRegisteredWithActivatedAbility) {
+ const auto& ekko=card_db.get(CardDefId{967});
+ EXPECT_EQ(ekko.name,"Ekko, Revolutionary");
+ EXPECT_EQ(ekko.public_code,"RAD-021/167");
+}
+TEST_F(RadianceBatch10Test, AmateurDemolitionistCreatesBombAtBattlefield) {
+ auto card=addToHand(P1,CardDefId{1059});
  playThroughEngine(card);
- EXPECT_FALSE(state.getObject(card).is_exhausted);
+ int bombs=0;
+ for(const auto& [id,o]:state.objects.onBoard())
+   if(o.controller==P1&&o.isGear()&&o.name=="Bomb"&&o.isAtBattlefield())
+     ++bombs;
+ EXPECT_EQ(bombs,1);
 }
 TEST_F(RadianceBatch10Test, HoldEmGrantsThreeMightToChosenUnit) {
  auto unit=addUnit(P1,kInvalidId,2,0);
