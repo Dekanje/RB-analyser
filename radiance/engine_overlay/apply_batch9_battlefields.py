@@ -10,6 +10,8 @@ for src,dst in [
   "src/cards/battlefields/1040_radiance_batch9_battlefields_a.cpp"),
  ("cards/battlefields/1044_radiance_batch9_battlefields_b.cpp",
   "src/cards/battlefields/1044_radiance_batch9_battlefields_b.cpp"),
+ ("tests/cards/test_radiance_batch9_battlefields.cpp",
+  "tests/cards/test_radiance_batch9_battlefields.cpp"),
 ]:
     target=engine/dst
     assert not target.exists(),f"Collision {target}"
