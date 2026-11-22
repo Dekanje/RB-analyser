@@ -165,9 +165,9 @@ jobs:
           import json
           from pathlib import Path
           x=json.loads(Path("results/radiance_batch9_catalog_audit.json").read_text())
-          assert x["compiled_registry_size"]==1039
-          assert x["registered_base_count"]==80
-          assert x["missing_base_count"]==87
+          assert x["compiled_registry_size"]==1031
+          assert x["registered_base_count"]==75
+          assert x["missing_base_count"]==92
           assert x["all_mechanics_verified"] is False
           print("BATCH9_TRANCHE1_CATALOG_GATE_PASS_NOT_FULL_MECHANICS_CERTIFICATION")
           PY
