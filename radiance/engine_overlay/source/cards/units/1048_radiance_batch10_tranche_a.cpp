@@ -352,7 +352,10 @@ public:
  unsigned choicesAtFinalization()const override{return kFinalizeTrigger;}
  TriggerType triggerType()const override{return TriggerType::WhenYouPlayMe;}
  void onTrigger(CardContext& c,const std::vector<GameObjectId>&)override {
-   if(c.state.battlefields.empty())return;
+   if(c.state.battlefields.empty()){
+     if(finalizingChoices(c))return;
+     return;
+   }
    std::vector<std::string> labels;
    for(const auto& bf:c.state.battlefields)
      labels.push_back("Battlefield #"+std::to_string(bf.id.raw()));
@@ -373,7 +376,11 @@ public:
    std::sort(enemies.begin(),enemies.end());
    const int yes=confirmOptional(c,"Bedeviling Stranger: return an enemy unit at chosen battlefield?",
       [&](){return units>=4&&!enemies.empty();});
-   if(yes<1)return;
+   if(yes<0)return;
+   if(yes==0){
+     if(finalizingChoices(c))return;
+     return;
+   }
    const auto id=pickTarget(c,"Bedeviling Stranger: enemy unit to bounce",enemies);
    if(finalizingChoices(c))return;
    if(id!=kInvalidId)c.executor.bounceToHand(id);
