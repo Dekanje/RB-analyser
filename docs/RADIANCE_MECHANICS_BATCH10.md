@@ -20,8 +20,8 @@ Pinned upstream AlphaRune engine: `ec90f0fed002aed374d06249fa95e83e3cfbd386`.
 | 1057 | RAD-107 | Bedeviling Stranger | Hidden and conditional bounce; battlefield-choice locking pending |
 | 1058 | RAD-005 | Lingering Animus | Conditional enter-ready death history pending |
 | 1059 | RAD-001 | Amateur Demolitionist | Play-time Bomb gear token using existing token effect; targeted gameplay test added |
-| 1060 | RAD-028 | Ki Burst | Initial exhaust/stun; true additional-cost timing pending |
-| 1061 | RAD-029 | Life from Stone | Initial exhaust/draw/channel; true additional-cost timing pending |
+| 1060 | RAD-028 | Ki Burst | Exhaust-friendly-unit as cast-time additional cost; target/stun integration tests added, validation pending |
+| 1061 | RAD-029 | Life from Stone | Exhaust-friendly-unit as cast-time additional cost; draw/channel integration test added, validation pending |
 | 1062 | RAD-040 | Heartening Soul | Ready legend; legend activated-ability grant pending |
 | 1063 | RAD-047 | Fanfare | Delayed next-three-unit trigger pending |
 | 1064 | RAD-061 | Ekko, Ingenious | Ganking; return-unit-as-cost pending |
@@ -42,7 +42,9 @@ RAD-021 at ID 967, including its activated ability. The duplicate definition
 was replaced with RAD-001 (Amateur Demolitionist), keeping the 20-card
 unique-identity goal. RAD-001 uses printed Fury, 2 Energy, 1 Power and 1 Might,
 with its existing Bomb token defined at engine ID 982. Its Bomb play trigger
-now has a dedicated gameplay test. The compiled registry, all twenty intended
+now has a dedicated gameplay test. Ki Burst and Life from Stone also use
+play-time unit-exhaust additional costs instead of incorrectly paying during
+resolution, with dedicated tests. These tests must still pass in compiled CI. The compiled registry, all twenty intended
 base identities, and the full regression still require GitHub Actions proof.
 
 ## Planned gates
