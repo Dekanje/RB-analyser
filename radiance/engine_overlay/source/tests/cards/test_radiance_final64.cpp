@@ -146,6 +146,32 @@ TEST_F(RadianceFinal64Test, PitilessStalkerExhaustsToStunEnemy){
  EXPECT_TRUE(state.getObject(stalker).is_exhausted);
  EXPECT_TRUE(state.getObject(enemy).is_stunned);
 }
+TEST_F(RadianceFinal64Test, FirebrandRaiderEntersReadyAndReadiesEnemiesOnPlay){
+ auto enemy=addUnit(P2,kInvalidId,2,0);
+ state.getObject(enemy).is_exhausted=true;
+ auto raider=addToHand(P1,CardDefId{1075});
+ playThroughEngine(raider);
+ EXPECT_FALSE(state.getObject(raider).is_exhausted);
+ EXPECT_FALSE(state.getObject(enemy).is_exhausted);
+}
+TEST_F(RadianceFinal64Test, FerrymanMovesAnotherUnitFromItsBattlefieldToBase){
+ auto ally=addUnit(P1,kInvalidId,2,0);
+ auto ferryman=addToHand(P1,CardDefId{1077});
+ EnginePathAgent accept(EnginePathAgent::accepting());
+ playThroughEngine(ferryman,&accept,LocationId{BattlefieldLocation{state.battlefields[0].id}});
+ EXPECT_TRUE(state.getObject(ally).isAtBase());
+ EXPECT_TRUE(state.getObject(ferryman).isAtBattlefield());
+}
+TEST_F(RadianceFinal64Test, HuntingBlindGrantsShieldToFriendsAndMovesOpponentHere){
+ auto ally=addUnit(P1,kInvalidId,3,0);
+ auto enemy=addUnit(P2,kInvalidId,3,-1);
+ auto gear=addToHand(P1,CardDefId{1080});
+ EnginePathAgent agent(EnginePathAgent::accepting());
+ playThroughEngine(gear,&agent,LocationId{BattlefieldLocation{state.battlefields[0].id}});
+ withEngine([&](GameEngine& e){e.testHook_recalculateAuras();});
+ EXPECT_TRUE(state.getObject(enemy).isAtBattlefield());
+ EXPECT_TRUE(state.getObject(ally).hasKeyword(Keyword::Shield));
+}
 TEST_F(RadianceFinal64Test, SixtyFourUniqueCardDefinitionsHaveCanonicalMetadata){
  ASSERT_EQ(expected.size(),64u);
  std::set<int> ids,numbers;std::set<std::string> public_codes;
