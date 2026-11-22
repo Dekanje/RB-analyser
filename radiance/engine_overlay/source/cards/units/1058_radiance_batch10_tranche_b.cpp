@@ -47,9 +47,8 @@ class Radiance10_1058 final:public UnitCard {
 public:
  const CardDef& def()const override{return d_;}
     bool entersReadyOnPlay(const GameState& state,PlayerId player)const override {
-       return state.player(player).unit_died_this_turn;
+       return state.player(player).unit_died_this_turn || state.player(player).gear_died_this_turn;
     }
-    // Friendly gear-death tracking is not yet available in this version.
 private:
  const CardDef d_=rad10b(1058,5,"Lingering Animus",CardType::Unit,2,0,2,{Domain::Fury},Rarity::Common,"I enter ready if a friendly unit or gear died this turn.",{});
 };
