@@ -41,6 +41,18 @@ std::vector<GameObjectId> r10gear(const GameState& s) {
 class Radiance10_1048 final:public SpellCard {
 public:
  const CardDef& def()const override{return d_;}
+ static bool canChoose(const GameState& s,GameObjectId id) {
+   if(!s.objectExists(id))return false;
+   const auto& o=s.getObject(id);
+   return o.location&&(o.isGear()||(o.isUnit()&&o.isAtBattlefield()));
+ }
+ bool canBePlayed(const GameState& s,PlayerId)const override {
+   for(const auto& [id,o]:s.objects.onBoard())if(canChoose(s,id))return true;
+   return false;
+ }
+ FinalizeChoice mayChooseAtFinalization(const GameState& s,PlayerId,GameObjectId id)const override {
+   return canChoose(s,id)?FinalizeChoice::Yes:FinalizeChoice::No;
+ }
  unsigned choicesAtFinalization()const override{return kFinalizeResolve;}
     void onResolve(CardContext& c,const std::vector<GameObjectId>&)override {
       auto v=r10gear(c.state);auto units=r10units(c.state,c.controller);
@@ -57,7 +69,7 @@ public:
       else if(c.state.getObject(id).isAtBattlefield())c.executor.dealDamage(id,4,c.source);
     }
 private:
- const CardDef d_=rad10a(1048,13,"Lost to the Sands",CardType::Spell,3,1,0,{Domain::Fury},Rarity::Uncommon,"[Action] (Play on your turn or in showdowns.)\nChoose one —\nDeal 4 to a unit at a battlefield.Kill a gear.",{Keyword::Action});
+ const CardDef d_=rad10a(1048,13,"Lost to the Sands",CardType::Spell,3,1,0,{Domain::Fury},Rarity::Uncommon,"[Action] (Play on your turn or in showdowns.)\nChoose one —\nDeal 4 to a unit at a battlefield.\nKill a gear.",{Keyword::Action});
 };
 class Radiance10_1049 final:public GearCard {
 public:
@@ -121,7 +133,20 @@ class Radiance10_1051 final:public SpellCard {
 public:
  const CardDef& def()const override{return d_;}
  bool canBePlayed(const GameState& state,PlayerId p)const override {
-   return !r10units(state,p).empty();
+   auto friends=r10units(state,p);
+   if(friends.empty())return false;
+   int unitsAtBF=0;
+   for(const auto& [id,o]:state.objects.onBoard())
+     if(o.isUnit()&&o.isAtBattlefield())++unitsAtBF;
+   if(unitsAtBF==0)return false;
+   if(unitsAtBF==1&&friends.size()==1&&state.getObject(friends.front()).isAtBattlefield())
+     return false;
+   return true;
+ }
+ FinalizeChoice mayChooseAtFinalization(const GameState& s,PlayerId,GameObjectId id)const override {
+   if(!s.objectExists(id))return FinalizeChoice::No;
+   const auto& o=s.getObject(id);
+   return o.isUnit()&&o.isAtBattlefield()?FinalizeChoice::Yes:FinalizeChoice::No;
  }
  AdditionalPlayCost additionalPlayCost(const GameState& s,const CardDB&,PlayerId p,GameObjectId)const override {
    return {.exists=true,.mandatory=true,.payable=!r10units(s,p).empty()};
@@ -235,6 +260,12 @@ private:
 class Radiance10_1055 final:public SpellCard {
 public:
  const CardDef& def()const override{return d_;}
+ FinalizeChoice mayChooseAtFinalization(const GameState& s,PlayerId p,GameObjectId id)const override {
+   if(!s.objectExists(id))return FinalizeChoice::No;
+   const auto& o=s.getObject(id);
+   return o.isUnit()&&o.controller==p&&o.location&&!moveDests(s,o).empty()
+     ?FinalizeChoice::Yes:FinalizeChoice::No;
+ }
  bool canBePlayed(const GameState& state,PlayerId controller)const override {
    for(auto id:r10units(state,controller)){
      if(state.objectExists(id)&&!moveDests(state,state.getObject(id)).empty())return true;
@@ -248,6 +279,18 @@ public:
    if(!c.state.chain.resuming)return;
    auto& ri=*c.state.chain.resuming;
    auto friends=r10units(c.state,c.controller);
+   friends.erase(std::remove_if(friends.begin(),friends.end(),[&](GameObjectId id){
+     return moveDests(c.state,c.state.getObject(id)).empty();
+   }),friends.end());
+   // Keep default policy choices stable under game-object ID renumbering.
+   // First differentiate public locations, then printed identity and stats.
+   std::sort(friends.begin(),friends.end(),[&](GameObjectId lhs,GameObjectId rhs){
+     const auto& a=c.state.getObject(lhs);const auto& b=c.state.getObject(rhs);
+     const int aloc=a.isAtBase()?0:1+static_cast<int>(a.battlefieldId()->raw());
+     const int bloc=b.isAtBase()?0:1+static_cast<int>(b.battlefieldId()->raw());
+     return std::tuple(aloc,a.card_def_id.raw(),a.name.get(),a.current_might,a.is_exhausted)<
+            std::tuple(bloc,b.card_def_id.raw(),b.name.get(),b.current_might,b.is_exhausted);
+   });
    const auto unit=pickTarget(c,"Satchel Charge: move a friendly unit",friends);
    if(ri.resume_data.size()<=kBombSlot||ri.resume_data[kMoveSlot]==0) {
      std::vector<int> dests;
@@ -322,7 +365,10 @@ public:
      ++units;
      if(o.controller!=c.controller)enemies.push_back(id);
    }
-   if(units<4||enemies.empty())return;
+   if(units<4||enemies.empty()){
+     if(finalizingChoices(c))return;
+     return;
+   }
    std::sort(enemies.begin(),enemies.end());
    const int yes=confirmOptional(c,"Bedeviling Stranger: return an enemy unit at chosen battlefield?",
       [&](){return units>=4&&!enemies.empty();});
