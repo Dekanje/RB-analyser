@@ -213,11 +213,15 @@ public:
    const auto& eve=c.state.getObject(c.source);
    if(!eve.isAtBattlefield())return;
    const auto bf=eve.battlefieldId();
-   for(const auto& [id,o]:c.state.objects.inPlay()) {
-     if(o.controller!=c.controller||!o.is_hidden)continue;
-     if(o.hidden_at==*bf) {
-       c.executor.scorePoints(c.controller,1);
-       return;
+   for(const auto& slot:c.state.battlefields){
+     if(slot.id!=*bf)continue;
+     for(const auto id:slot.facedown){
+       if(!c.state.objectExists(id))continue;
+       const auto& card=c.state.getObject(id);
+       if(card.controller==c.controller&&card.is_hidden&&card.hidden_at==*bf){
+         c.executor.scorePoints(c.controller,1);
+         return;
+       }
      }
    }
  }
