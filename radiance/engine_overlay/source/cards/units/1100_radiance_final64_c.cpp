@@ -282,7 +282,16 @@ private:
 class R64_1113 final : public UnitCard {
 public:
  const CardDef& def() const override { return d_; }
- // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
+
+ TriggerType triggerType()const override{
+   return TriggerType::WhenAnotherFriendlyUnitBecomesExhausted;
+ }
+ void onTrigger(CardContext& c,const std::vector<GameObjectId>&)override{
+   if(c.state.objectExists(c.source)&&c.state.getObject(c.source).location)
+     c.executor.giveTemporaryMight(c.source,1);
+ }
+ // MECHANICS_INCOMPLETE: Once-per-turn "exhaust friendly unit to ready a unit" activation pending.
+
 private:
  const CardDef d_=[] {
   auto d=mkFinal64_c(1113,114,R"RB(Riven, Deserter)RB",CardType::Unit,5,1,5,{Domain::Chaos},Rarity::Epic,R"RB(When another friendly unit becomes exhausted, give me +1 [M] this turn.
