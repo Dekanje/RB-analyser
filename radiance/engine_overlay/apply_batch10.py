@@ -32,6 +32,12 @@ reset="        played_nontoken_gear_this_turn = false;"
 assert game.count(decl)==1 and game.count(reset)==1, "Batch 10 play-tracking anchors changed"
 game=game.replace(decl,decl+"\n    bool played_unit_or_gear_to_battlefield_this_turn = false;",1)
 game=game.replace(reset,reset+"\n        played_unit_or_gear_to_battlefield_this_turn = false;",1)
+# A gear that was killed (but not bounced/recycled) satisfies RAD-005.
+gear_decl="    bool unit_died_this_turn = false;"
+gear_reset="        unit_died_this_turn = false;"
+assert game.count(gear_decl)==1 and game.count(gear_reset)==1, "Gear-death flag anchor changed"
+game=game.replace(gear_decl,gear_decl+"\n    bool gear_died_this_turn = false;",1)
+game=game.replace(gear_reset,gear_reset+"\n        gear_died_this_turn = false;",1)
 state_file.write_text(game)
 
 trigger=engine/"src/engine/trigger_manager.cpp"
@@ -44,7 +50,16 @@ event_replace="""        auto& pps = state_.player(e.player);
             pps.played_unit_or_gear_to_battlefield_this_turn = true;
         if (e.card_type == CardType::Spell)"""
 assert tr.count(event_anchor)==1, "Batch 10 CardPlayedEvent anchor changed"
-trigger.write_text(tr.replace(event_anchor,event_replace,1))
+tr=tr.replace(event_anchor,event_replace,1)
+left_anchor="""void TriggerManager::onLeftBoard(const LeftBoardEvent& e) {
+    const TriggerEventScope event_scope(state_.chain);"""
+left_replace="""void TriggerManager::onLeftBoard(const LeftBoardEvent& e) {
+    const TriggerEventScope event_scope(state_.chain);
+    if (e.card_type == CardType::Gear && e.was_killed &&
+        e.controller != PlayerId::None)
+        state_.player(e.controller).gear_died_this_turn = true;"""
+assert tr.count(left_anchor)==1, "Gear death event anchor changed"
+trigger.write_text(tr.replace(left_anchor,left_replace,1))
 
 init=engine/"src/cards/cards_init.cpp"
 s=init.read_text()
