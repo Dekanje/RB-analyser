@@ -6,6 +6,7 @@ on:
       - '.github/workflows/radiance-wave1-implementations.yml'
       - 'radiance/engine_overlay/**'
       - 'radiance/verify_wave1_registry.py'
+      - 'radiance/coverage_ledger.py'
       - 'radiance/validation/wave1/**'
   workflow_dispatch:
 permissions:
@@ -52,6 +53,7 @@ jobs:
         run: |
           alpharune/build/riftbound --dump-registry results/radiance_wave1_registry.json
           python3 radiance/verify_wave1_registry.py results/radiance_wave1_registry.json --output results/radiance_wave1_coverage.json
+          python3 radiance/coverage_ledger.py results/radiance_wave1_registry.json --output results/radiance_coverage_ledger.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:
