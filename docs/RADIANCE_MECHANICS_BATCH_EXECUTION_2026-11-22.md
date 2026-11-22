@@ -25,7 +25,7 @@ The list is intentionally illustrative: check each official printing and current
 **During development / on each push** — quick review without cloning and rebuilding AlphaRune:
 1. Python syntax and catalog/compiled-registry schema tests, duplicate-ID and unknown-code negative tests.
 2. Source code, exact printed card texts and game-mechanics mapping review; compile issues are resolved during a separately requested targeted C++ build if needed.
-3. Reuse cached engine compilation where possible; avoid redundant independent full-workflow jobs for each source-file commit.
+3. Reuse cached engine compilation where possible; avoid redundant independent full-workflow jobs for each source-file commit. When a useful intermediate group of card effects is ready for real C++ checking, start a commit message with `[check-cards]` to compile and run **only focused card GTests** without a full regression suite.
 
 **At batch finalization** — the only acceptance gate:
 1. Commit with message **starting with** `[batch-ready]` to enable the full GitHub Actions build; or explicitly dispatch the full validation workflow.
@@ -37,7 +37,7 @@ The list is intentionally illustrative: check each official printing and current
 ## Cost controls
 
 - Each batch's workflow should have a fast preflight job on every development push and a full validation job gated behind `startsWith(github.event.head_commit.message, '[batch-ready]')` (or explicit workflow dispatch).
-- Add per-branch `concurrency` with `cancel-in-progress: true`. This avoids work on superseded commits; note that jobs launched under older workflows might still finish.
+- Use an intermediate commit starting with `[check-cards]` for targeted C++ gameplay tests; only the final batch commit starts with `[batch-ready]`. Add per-branch `concurrency` with `cancel-in-progress: true`. This avoids work on superseded commits; note that jobs launched under older workflows might still finish.
 - Reuse `ccache` with restore keys keyed by the pinned upstream SHA, compiler family/version and build mode; do not use a commit-SHA-only key with no shared restore prefix.
 - Keep one cumulative branch and draft PR per mechanics group. Commit intermediate work without the full gate prefix. A skipped full job is NOT a successful batch validation.
 - Cache misses, fresh runner provisioning, and compiled large-source C++ tests still incur material runtime. No claimed guaranteed speedup or delivery date.
