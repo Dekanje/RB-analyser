@@ -35,4 +35,16 @@ newcalls="\n".join(f"    register_card_{i}(registry);" for i in range(998,1001))
 s=s.replace(declaration,declaration+"\n"+newdeclaration,1)
 s=s.replace(call,call+"\n"+newcalls,1)
 init.write_text(s)
+# The full Batch 6 CI run 45040092801 measured the 1000-card
+# deterministic seed-1 deck hash. Preserve earlier pool-dependent snapshots.
+decktest=engine/"tests/test_deck_fuzz.cpp"
+p=decktest.read_text()
+before="""    constexpr uint64_t kRadiance997DeckOfSeedOne = 17916410112993108747ull;
+    const uint64_t expected = registry_->size()==997 ? kRadiance997DeckOfSeedOne"""
+after="""    constexpr uint64_t kRadiance997DeckOfSeedOne = 17916410112993108747ull;
+    constexpr uint64_t kRadiance1000DeckOfSeedOne = 16217678500199303007ull;
+    const uint64_t expected = registry_->size()==1000 ? kRadiance1000DeckOfSeedOne
+                             : registry_->size()==997 ? kRadiance997DeckOfSeedOne"""
+assert p.count(before)==1, "Batch 6 deterministic deck test anchor changed"
+decktest.write_text(p.replace(before,after,1))
 print("RADIANCE_BATCH6_APPLIED: 998 RAD-009; 999 RAD-119; 1000 RAD-083")
