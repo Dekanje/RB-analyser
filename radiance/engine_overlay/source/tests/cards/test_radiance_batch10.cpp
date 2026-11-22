@@ -24,7 +24,7 @@ TEST_F(RadianceBatch10Test, TwentyNewUniqueCardsHaveCanonicalPrintedMetadata) {
   {1056,106,3,1,0,"The Good Stuff",CardType::Gear},
   {1057,107,2,0,2,"Bedeviling Stranger",CardType::Unit},
   {1058,5,2,0,2,"Lingering Animus",CardType::Unit},
-  {1059,1,2,1,1,"Amateur Demolitionist",CardType::Unit},
+  {1059,1,2,0,1,"Amateur Demolitionist",CardType::Unit},
   {1060,28,1,0,0,"Ki Burst",CardType::Spell},
   {1061,29,1,0,0,"Life from Stone",CardType::Spell},
   {1062,40,7,1,7,"Heartening Soul",CardType::Unit},
