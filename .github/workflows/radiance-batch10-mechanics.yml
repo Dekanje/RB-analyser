@@ -83,7 +83,10 @@ jobs:
           grep -F '[1025,1026,1027,1029,1030,1034,1035]' radiance/engine_overlay/apply_batch9.py
           grep -F 'range(1040,1048)' radiance/engine_overlay/apply_batch9_battlefields.py
           test -f radiance/engine_overlay/apply_batch9_disarm_chain.py
-          test -f radiance/engine_overlay/source/cards/units/1048_radiance_batch10_tranche_a.cpp\n          test -f radiance/engine_overlay/source/cards/units/1058_radiance_batch10_tranche_b.cpp\n          test -f radiance/engine_overlay/source/tests/cards/test_radiance_batch10.cpp\n          test -f radiance/engine_overlay/source/cards/units/1010_radiance_batch8.cpp
+          test -f radiance/engine_overlay/source/cards/units/1048_radiance_batch10_tranche_a.cpp
+          test -f radiance/engine_overlay/source/cards/units/1058_radiance_batch10_tranche_b.cpp
+          test -f radiance/engine_overlay/source/tests/cards/test_radiance_batch10.cpp
+          test -f radiance/engine_overlay/source/cards/units/1010_radiance_batch8.cpp
           test -f radiance/engine_overlay/source/tests/cards/test_radiance_batch9.cpp
           test -f radiance/engine_overlay/source/tests/cards/test_radiance_batch9_battlefields.cpp
           test -f radiance/engine_overlay/source/cards/battlefields/1040_radiance_batch9_battlefields_a.cpp
