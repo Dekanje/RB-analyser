@@ -29,6 +29,13 @@ std::vector<GameObjectId> units10b(const GameState& s,PlayerId p,bool friendly) 
     if(o.location&&o.isUnit()&&((o.controller==p)==friendly))v.push_back(id);
   std::sort(v.begin(),v.end());return v;
 }
+std::vector<GameObjectId> readyFriendly10b(const GameState& s,PlayerId p) {
+  std::vector<GameObjectId> v;
+  for(const auto& [id,o]:s.objects.onBoard())
+    if(o.isUnit()&&o.controller==p&&o.location&&!o.is_exhausted)
+      v.push_back(id);
+  std::sort(v.begin(),v.end());return v;
+}
 class Radiance10_1058 final:public UnitCard {
 public:
  const CardDef& def()const override{return d_;}
@@ -62,33 +69,48 @@ private:
 class Radiance10_1060 final:public SpellCard {
 public:
  const CardDef& def()const override{return d_;}
-    void onResolve(CardContext& c,const std::vector<GameObjectId>&)override {
-       auto friendly=units10b(c.state,c.controller,true);
-       auto cost=pickTarget(c,"Ki Burst: exhaust a friendly unit as cost",friendly);
-       if(finalizingChoices(c)||cost==kInvalidId)return;
-       c.executor.exhaustObject(cost);
-       auto enemy=units10b(c.state,c.controller,false);
-       auto target=pickTarget(c,"Ki Burst: stun a unit",enemy);
-       if(target!=kInvalidId)c.executor.stunUnitBy(target,c.source);
-    }
-    // Cost timing and targeting during cast remain unverified.
+ AdditionalPlayCost additionalPlayCost(const GameState& state,const CardDB&,PlayerId player,GameObjectId)const override {
+   return {.exists=true,.mandatory=true,.payable=!readyFriendly10b(state,player).empty()};
+ }
+ PlayCostAdjust payAdditionalPlayCost(CardContext& c,
+   const std::function<bool(const PlayCostAdjust&)>&)override {
+   auto v=readyFriendly10b(c.state,c.controller);
+   if(v.empty())return {};
+   auto id=c.executor.chooseObjectNow(c.controller,v,"Ki Burst: exhaust a friendly unit as an additional play cost");
+   if(id!=kInvalidId)c.executor.exhaustObject(id);
+   return {};
+ }
+ void onResolve(CardContext& c,const std::vector<GameObjectId>&)override {
+   auto v=units10b(c.state,c.controller,true);
+   auto enemies=units10b(c.state,c.controller,false);
+   v.insert(v.end(),enemies.begin(),enemies.end());
+   std::sort(v.begin(),v.end());
+   auto target=pickTarget(c,"Ki Burst: stun a unit",v);
+   if(!finalizingChoices(c)&&target!=kInvalidId)c.executor.stunUnitBy(target,c.source);
+ }
 private:
- const CardDef d_=rad10b(1060,28,"Ki Burst",CardType::Spell,1,0,0,{Domain::Calm},Rarity::Common,"[Action] (Play on your turn or in showdowns.)\nAs an additional cost to play this, exhaust a friendly unit.\n[Stun] a unit. (It doesn't deal combat damage this turn.)",{Keyword::Action});
+ const CardDef d_=rad10b(1060,28,"Ki Burst",CardType::Spell,1,0,0,{Domain::Calm},Rarity::Common,"[Action] (Play on your turn or in showdowns.)\\nAs an additional cost to play this, exhaust a friendly unit.\\n[Stun] a unit. (It doesn't deal combat damage this turn.)",{Keyword::Action});
 };
 class Radiance10_1061 final:public SpellCard {
 public:
  const CardDef& def()const override{return d_;}
-    void onResolve(CardContext& c,const std::vector<GameObjectId>&)override {
-       auto friendly=units10b(c.state,c.controller,true);
-       auto cost=pickTarget(c,"Life from Stone: exhaust a friendly unit as cost",friendly);
-       if(finalizingChoices(c)||cost==kInvalidId)return;
-       c.executor.exhaustObject(cost);
-       c.executor.drawCards(c.controller,1);
-       c.executor.channelRunes(c.controller,1,true);
-    }
-    // Cost must ultimately be paid as the spell is played, not on resolution.
+ AdditionalPlayCost additionalPlayCost(const GameState& state,const CardDB&,PlayerId player,GameObjectId)const override {
+   return {.exists=true,.mandatory=true,.payable=!readyFriendly10b(state,player).empty()};
+ }
+ PlayCostAdjust payAdditionalPlayCost(CardContext& c,
+   const std::function<bool(const PlayCostAdjust&)>&)override {
+   auto v=readyFriendly10b(c.state,c.controller);
+   if(v.empty())return {};
+   auto id=c.executor.chooseObjectNow(c.controller,v,"Life from Stone: exhaust a friendly unit as an additional play cost");
+   if(id!=kInvalidId)c.executor.exhaustObject(id);
+   return {};
+ }
+ void onResolve(CardContext& c,const std::vector<GameObjectId>&)override {
+   c.executor.drawCards(c.controller,1);
+   c.executor.channelRunes(c.controller,1,true);
+ }
 private:
- const CardDef d_=rad10b(1061,29,"Life from Stone",CardType::Spell,1,0,0,{Domain::Calm},Rarity::Common,"[Reaction] (Play any time, even before spells and abilities resolve.)\nAs an additional cost to play this, exhaust a friendly unit.\nDraw 1 and channel 1 rune exhausted.",{Keyword::Reaction});
+ const CardDef d_=rad10b(1061,29,"Life from Stone",CardType::Spell,1,0,0,{Domain::Calm},Rarity::Common,"[Reaction] (Play any time, even before spells and abilities resolve.)\\nAs an additional cost to play this, exhaust a friendly unit.\\nDraw 1 and channel 1 rune exhausted.",{Keyword::Reaction});
 };
 class Radiance10_1062 final:public UnitCard {
 public:
