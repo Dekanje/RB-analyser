@@ -189,7 +189,25 @@ private:
 class R64_1074 final : public UnitCard {
 public:
  const CardDef& def() const override { return d_; }
- // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
+
+ TriggerType triggerType()const override{return TriggerType::WhenYouPlayMe;}
+ void onTrigger(CardContext& c,const std::vector<GameObjectId>&)override{
+   const auto owner=opponent(c.controller);
+   const auto stolen=f64RevealTop(c,owner);
+   if(stolen==kInvalidId)return;
+   c.executor.banishObject(stolen,c.controller);
+   if(!c.state.objectExists(stolen))return;
+   const auto& card=c.state.getObject(stolen);
+   std::optional<LocationId> place=std::nullopt;
+   if(card.isUnit()||card.isGear()){
+     const auto choices=playLocations(c.state,c.controller);
+     if(!choices.locations.empty())
+       place=c.executor.chooseLocationNow(c.controller,choices.locations,
+             "Drakehound Packmaster: play banished opponent card");
+   }
+   (void)c.executor.playIgnoringCost(c.controller,stolen,place);
+ }
+
 private:
  const CardDef d_=[] {
   auto d=mkFinal64_a(1074,18,R"RB(Drakehound Packmaster)RB",CardType::Unit,9,2,9,{Domain::Fury},Rarity::Rare,R"RB(When you play me, reveal the top card of each opponent's Main Deck. Choose one and banish it, then play it, ignoring its cost. Recycle the rest.)RB");
