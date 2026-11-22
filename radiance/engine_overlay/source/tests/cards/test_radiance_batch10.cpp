@@ -11,6 +11,16 @@ class RadianceBatch10Test:public CardTestFixture {};
 struct Printed {
  int id,number,energy,power,might; const char* name; CardType type;
 };
+TEST_F(RadianceBatch10Test, AhriGainsOneMightWhenHerDisarmReducesEnemyHere) {
+ auto ahri=addUnit(P1,CardDefId{1050},4,0);
+ auto enemy=addUnit(P2,kInvalidId,5,0);
+ EnginePathAgent choice(EnginePathAgent::choosing(enemy));
+ resolveThroughEngine([&](EffectExecutor&,GameState&){
+    events.emit(CombatStartedEvent{state.battlefields[0].id,P1,P2});
+ },&choice);
+ EXPECT_EQ(state.getObject(enemy).temp_might_bonus,-1);
+ EXPECT_EQ(state.getObject(ahri).temp_might_bonus,1);
+}
 TEST_F(RadianceBatch10Test, GoodStuffPlayDiscardsOneAndDrawsThree) {
  auto extra=addToHand(P1,CardDefId{1058});
  for(int i=0;i<3;i++)addToDeck(P1,CardDefId{1058});
