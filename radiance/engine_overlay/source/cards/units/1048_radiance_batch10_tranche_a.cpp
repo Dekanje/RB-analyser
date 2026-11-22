@@ -96,8 +96,18 @@ private:
 class Radiance10_1050 final:public UnitCard {
 public:
  const CardDef& def()const override{return d_;}
-    // [Disarm] is executed by the shared Batch 9 attack trigger dispatcher.
-    // Bonus for an enemy's reduced Might still needs a dedicated event hook.
+ TriggerType triggerType()const override{return TriggerType::WhenEnemyMightReducedHere;}
+ void onTrigger(CardContext& c,const std::vector<GameObjectId>&)override {
+   if(!c.state.objectExists(c.source)||!c.state.chain.resuming)return;
+   const auto enemy=c.state.chain.resuming->triggering_subject;
+   if(!c.state.objectExists(enemy))return;
+   const auto& self=c.state.getObject(c.source);
+   const auto& target=c.state.getObject(enemy);
+   if(!self.isAtBattlefield()||!target.isAtBattlefield()||
+      self.battlefieldId()!=target.battlefieldId()||
+      self.controller==target.controller)return;
+   c.executor.giveTemporaryMight(c.source,1);
+ }
 private:
  const CardDef d_=rad10a(1050,38,"Ahri, Confident",CardType::Unit,4,1,4,{Domain::Calm},Rarity::Rare,"[Disarm] (When I attack, give an enemy unit here -1 [M] this turn.)\nWhen you reduce the Might of an enemy unit here by 1 or more, give me +1 [M] this turn.",{Keyword::Disarm});
 };
