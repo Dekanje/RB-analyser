@@ -155,9 +155,83 @@ TEST_F(RadianceBatch9Test, OverloadedTravelerGainsMightOnlyWithFriendlyDeployGea
 }
 TEST_F(RadianceBatch9Test, SneakyZeeblesConquerAddsOneFloatingUniversalPower) {
     auto zeebles=addUnit(P1,CardDefId{1032},1,0);
-    const auto before=state.player(P1).rune_pool.universal;
+    const auto before=state.player(P1).rune_pool.universal_power;
     fireTriggerThroughEngine(zeebles,TriggerType::WhenIConquer);
-    EXPECT_EQ(state.player(P1).rune_pool.universal,before+1);
+    EXPECT_EQ(state.player(P1).rune_pool.universal_power,before+1);
+}
+
+
+TEST_F(RadianceBatch9Test, StalwartGoatherdHasShieldTwoAndMayKillLowCostGear) {
+    auto target=addToHand(P1,CardDefId{1010}); // printed Energy 1
+    playThroughEngine(target,nullptr,LocationId{BattlefieldLocation{state.battlefields[0].id}});
+    auto goatherd=addToHand(P1,CardDefId{1033});
+    EnginePathAgent agent(EnginePathAgent::accepting());
+    playThroughEngine(goatherd,&agent);
+    EXPECT_TRUE(state.getObject(goatherd).hasKeyword(Keyword::Shield));
+    EXPECT_EQ(state.getObject(goatherd).shield_value,2);
+    EXPECT_EQ(state.getObject(target).zone,ZoneType::Trash);
+}
+TEST_F(RadianceBatch9Test, DisposalExpertEntersReadyOnlyWithoutOtherFriendlyUnits) {
+    auto first=addToHand(P1,CardDefId{1034});
+    playThroughEngine(first);
+    EXPECT_FALSE(state.getObject(first).is_exhausted);
+    EXPECT_TRUE(state.getObject(first).hasKeyword(Keyword::Disarm));
+    auto second=addToHand(P1,CardDefId{1034});
+    playThroughEngine(second);
+    EXPECT_TRUE(state.getObject(second).is_exhausted);
+}
+TEST_F(RadianceBatch9Test, SirenHasGankingAndDisarmOnTheBattlefield) {
+    auto siren=addUnit(P1,CardDefId{1035},1,0);
+    EXPECT_TRUE(state.getObject(siren).hasKeyword(Keyword::Ganking));
+    EXPECT_TRUE(state.getObject(siren).hasKeyword(Keyword::Disarm));
+}
+TEST_F(RadianceBatch9Test, SuaveNegotiatorDrawsForBothPlayersOnPlay) {
+    addToDeck(P1,CardDefId{1012});
+    addToDeck(P2,CardDefId{1012});
+    auto before1=state.player(P1).hand.size();
+    auto before2=state.player(P2).hand.size();
+    auto negotiator=addToHand(P1,CardDefId{1036});
+    playThroughEngine(negotiator);
+    EXPECT_EQ(state.player(P1).hand.size(),before1+1);
+    EXPECT_EQ(state.player(P2).hand.size(),before2+1);
+}
+TEST_F(RadianceBatch9Test, ForDemaciaShieldsOnlyFriendlyUnitsAtChosenBattlefield) {
+    auto ally=addUnit(P1,kInvalidId,3,0);
+    auto other=addUnit(P1,kInvalidId,3,1);
+    auto enemy=addUnit(P2,kInvalidId,3,0);
+    auto spell=addToHand(P1,CardDefId{1037});
+    playThroughEngine(spell);
+    EXPECT_TRUE(state.getObject(ally).hasKeyword(Keyword::Shield));
+    EXPECT_EQ(state.getObject(ally).shield_value,2);
+    EXPECT_FALSE(state.getObject(other).hasKeyword(Keyword::Shield));
+    EXPECT_FALSE(state.getObject(enemy).hasKeyword(Keyword::Shield));
+}
+TEST_F(RadianceBatch9Test, HuntingDogDeathknellCreatesDeflectBirdAtBase) {
+    auto dog=addUnit(P1,CardDefId{1038},3,0);
+    resolveThroughEngine([&](EffectExecutor& e,GameState&){e.killObject(dog);});
+    int birds=0;
+    for(const auto& [id,u]:state.objects.onBoard())
+        if(u.isUnit()&&u.name=="Bird"&&u.controller==P1&&u.isToken()){
+            ++birds;
+            EXPECT_TRUE(u.hasKeyword(Keyword::Deflect));
+            EXPECT_EQ(u.base_might,1);
+            EXPECT_FALSE(u.isAtBattlefield());
+        }
+    EXPECT_EQ(birds,1);
+}
+TEST_F(RadianceBatch9Test, SteadfastOutriderRequiresTwoOtherFriendsHereForTwoMight) {
+    auto outrider=addUnit(P1,CardDefId{1039},3,0);
+    auto friend1=addUnit(P1,kInvalidId,2,0);
+    withEngine([&](GameEngine& e){e.testHook_recalculateAuras();});
+    EXPECT_EQ(state.getObject(outrider).current_might,3);
+    auto gear=addToHand(P1,CardDefId{1010});
+    playThroughEngine(gear,nullptr,LocationId{BattlefieldLocation{state.battlefields[0].id}});
+    withEngine([&](GameEngine& e){e.testHook_recalculateAuras();});
+    EXPECT_EQ(state.getObject(outrider).current_might,5);
+    resolveThroughEngine([&](EffectExecutor& e,GameState&){e.killObject(gear);});
+    withEngine([&](GameEngine& e){e.testHook_recalculateAuras();});
+    EXPECT_EQ(state.getObject(outrider).current_might,3);
+    EXPECT_TRUE(state.getObject(friend1).location.has_value());
 }
 
 } // namespace riftbound::test::radiance_batch9
