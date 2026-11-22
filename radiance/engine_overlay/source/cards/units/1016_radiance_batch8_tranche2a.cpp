@@ -31,6 +31,10 @@ class RallyForWar8 final:public SpellCard {
 public:
     const CardDef& def()const override{return d_;}
     unsigned choicesAtFinalization()const override{return kFinalizeResolve;}
+    // Rally chooses a battlefield index, never an object that could receive an object discount.
+    FinalizeChoice mayChooseAtFinalization(const GameState&,PlayerId,GameObjectId)const override{
+        return FinalizeChoice::No;
+    }
     bool hasLegalTargets(const GameState& s,PlayerId p)const override{
         for(const auto& b:s.battlefields)if(enemyOccupied8(s,p,b.id))return true;
         return false;
