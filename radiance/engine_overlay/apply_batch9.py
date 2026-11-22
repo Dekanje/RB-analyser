@@ -138,3 +138,20 @@ assert src.count(before)==1, "Disarm attack hook anchor changed"
 trigger_source.write_text(src.replace(before,insert,1))
 
 print("RADIANCE_BATCH9_IMPLEMENTATIONS_APPLIED: 7 distinct new cards; existing Radiance identities not re-registered, Disarm keyword and attack dispatcher")
+
+
+# Keep deterministic deck-fuzz snapshots for each accepted compiled card pool.
+# The 1039-entry pool changes seed-1's deck; the hash below is measured
+# from the full 2026-11-22 Batch 9 CI failure (not an arbitrary replacement).
+# Preserve old 1009/1024 expectations, and never disable DeckOfSeedOneIsPinned.
+decktest=engine/"tests/test_deck_fuzz.cpp"
+t=decktest.read_text()
+before="""    constexpr uint64_t kRadiance1024DeckOfSeedOne = 7489794038716556845ull;
+    const uint64_t expected = registry_->size()==1024 ? kRadiance1024DeckOfSeedOne"""
+after="""    constexpr uint64_t kRadiance1024DeckOfSeedOne = 7489794038716556845ull;
+    constexpr uint64_t kRadiance1039DeckOfSeedOne = 9407362350736305228ull;
+    const uint64_t expected = registry_->size()==1039 ? kRadiance1039DeckOfSeedOne
+                             : registry_->size()==1024 ? kRadiance1024DeckOfSeedOne"""
+assert t.count(before)==1, "Batch 9 seed-1 deck fingerprint anchor changed"
+decktest.write_text(t.replace(before,after,1))
+print("RADIANCE_BATCH9_SEED_PIN_UPDATED: deterministic 1039-card seed-1 hash")
