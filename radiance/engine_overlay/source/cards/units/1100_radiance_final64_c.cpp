@@ -57,7 +57,20 @@ private:
 class R64_1102 final : public UnitCard {
 public:
  const CardDef& def() const override { return d_; }
- // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
+
+ TriggerType triggerType()const override{return TriggerType::WhenIHold;}
+ void onTrigger(CardContext& c,const std::vector<GameObjectId>&)override {
+   if(c.state.battlefields.empty())return;
+   std::vector<LocationId> locations;
+   for(const auto& b:c.state.battlefields)locations.push_back(BattlefieldLocation{b.id});
+   const auto destination=c.executor.chooseLocationNow(c.controller,locations,
+      "Explosimian: play three Bombs to one battlefield");
+   KeywordSet kws;kws.set(Keyword::Deploy);
+   for(int i=0;i<3;i++)
+     c.executor.createToken(c.controller,CardType::Gear,"Bomb",0,{"Bomb"},
+                            kws,destination,false,{},CardDefId{982});
+ }
+
 private:
  const CardDef d_=[] {
   auto d=mkFinal64_c(1102,94,R"RB(Explosimian)RB",CardType::Unit,6,0,6,{Domain::Chaos},Rarity::Common,R"RB(When I hold, play three Bomb gear tokens to a single battlefield. (They have [Deploy]. When each dies, deal 2 to an enemy there and kill your other Bombs there.))RB");
@@ -113,7 +126,27 @@ When you play me, if you showed off, [Add] [A].)RB");
 class R64_1106 final : public UnitCard {
 public:
  const CardDef& def() const override { return d_; }
- // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
+
+ std::vector<ActivatedAbility> activatedAbilities()const override {
+   ActivatedAbility a;a.cost.exhaust=true;
+   return {a};
+ }
+ unsigned choicesAtFinalization()const override{return kFinalizeActivate;}
+ bool canActivateAbility(const GameState& s,PlayerId p)const override{
+   for(const auto& [id,o]:s.objects.onBoard())
+     if(o.isUnit()&&o.controller!=p&&o.location)return true;
+   return false;
+ }
+ void onActivate(CardContext& c,int,const std::vector<GameObjectId>&)override {
+   std::vector<GameObjectId> enemies;
+   for(const auto& [id,o]:c.state.objects.onBoard())
+     if(o.isUnit()&&o.controller!=c.controller&&o.location)enemies.push_back(id);
+   std::sort(enemies.begin(),enemies.end());
+   const auto target=pickTarget(c,"Pitiless Stalker: stun enemy unit",enemies);
+   if(finalizingChoices(c))return;
+   if(target!=kInvalidId)c.executor.stunUnitBy(target,c.source);
+ }
+
 private:
  const CardDef d_=[] {
   auto d=mkFinal64_c(1106,104,R"RB(Pitiless Stalker)RB",CardType::Unit,5,1,5,{Domain::Chaos},Rarity::Uncommon,R"RB([E]: [Stun] an enemy unit. (It doesn't deal combat damage this turn.))RB");
@@ -140,7 +173,22 @@ While you or an ally control this battlefield, that player may hide an additiona
 class R64_1108 final : public UnitCard {
 public:
  const CardDef& def() const override { return d_; }
- // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
+
+ TriggerType triggerType()const override{return TriggerType::WhenIHold;}
+ void onTrigger(CardContext& c,const std::vector<GameObjectId>&)override {
+   if(!c.state.objectExists(c.source))return;
+   const auto& eve=c.state.getObject(c.source);
+   if(!eve.isAtBattlefield())return;
+   const auto bf=eve.battlefieldId();
+   for(const auto& [id,o]:c.state.objects.inPlay()) {
+     if(o.controller!=c.controller||!o.is_hidden)continue;
+     if(o.hidden_at==*bf) {
+       c.executor.scorePoints(c.controller,1);
+       return;
+     }
+   }
+ }
+
 private:
  const CardDef d_=[] {
   auto d=mkFinal64_c(1108,109,R"RB(Evelynn, In Control)RB",CardType::Unit,4,1,4,{Domain::Chaos},Rarity::Rare,R"RB([Disarm] (When I attack, give an enemy unit here -1 [M] this turn.)
