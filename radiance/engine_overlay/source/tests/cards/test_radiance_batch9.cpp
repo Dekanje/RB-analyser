@@ -84,18 +84,18 @@ TEST_F(RadianceBatch9Test, DeployGearDiesWhenOpponentHoldsAtItsBattlefield) {
 TEST_F(RadianceBatch9Test, AdditionalTwelveCardsHaveCorrectPinnedIdentitiesAndCosts) {
     struct Row {int id;const char* code;const char* name;int energy;int power;};
     const Row expected[]={
-        {1028,"RAD-049/167","Industrious Mechsmith",4,0},
+        {996,"RAD-049/167","Industrious Mechsmith",4,0},
         {1029,"RAD-050/167","Mysterious Chronomancer",5,0},
         {1030,"RAD-055/167","Clanging Sentry",3,0},
-        {1031,"RAD-072/167","Overloaded Traveler",2,0},
-        {1032,"RAD-076/167","Sneaky Zeebles",2,0},
-        {1033,"RAD-083/167","Stalwart Goatherd",4,0},
+        {1004,"RAD-072/167","Overloaded Traveler",2,0},
+        {1008,"RAD-076/167","Sneaky Zeebles",2,0},
+        {1000,"RAD-083/167","Stalwart Goatherd",4,0},
         {1034,"RAD-093/167","Disposal Expert",4,0},
         {1035,"RAD-097/167","Siren of the Shallows",2,0},
-        {1036,"RAD-099/167","Suave Negotiator",3,0},
-        {1037,"RAD-117/167","For Demacia!",3,0},
-        {1038,"RAD-119/167","Hunting Dog",3,0},
-        {1039,"RAD-128/167","Steadfast Outrider",4,0},
+        {993,"RAD-099/167","Suave Negotiator",3,0},
+        {1009,"RAD-117/167","For Demacia!",3,0},
+        {999,"RAD-119/167","Hunting Dog",3,0},
+        {1006,"RAD-128/167","Steadfast Outrider",4,0},
     };
     for(const auto& e:expected){
         const auto& card=card_db.get(CardDefId::fromRaw(e.id));
@@ -108,13 +108,13 @@ TEST_F(RadianceBatch9Test, AdditionalTwelveCardsHaveCorrectPinnedIdentitiesAndCo
     EXPECT_TRUE(card_db.get(CardDefId{1034}).keywords.has(Keyword::Disarm));
     EXPECT_TRUE(card_db.get(CardDefId{1035}).keywords.has(Keyword::Disarm));
     EXPECT_TRUE(card_db.get(CardDefId{1035}).keywords.has(Keyword::Ganking));
-    EXPECT_TRUE(card_db.get(CardDefId{1033}).keywords.has(Keyword::Shield));
-    EXPECT_TRUE(card_db.get(CardDefId{1037}).keywords.has(Keyword::Reaction));
-    EXPECT_TRUE(card_db.get(CardDefId{1038}).keywords.has(Keyword::Deathknell));
-    EXPECT_TRUE(card_db.get(CardDefId{1039}).keywords.has(Keyword::Tank));
+    EXPECT_TRUE(card_db.get(CardDefId{1000}).keywords.has(Keyword::Shield));
+    EXPECT_TRUE(card_db.get(CardDefId{1009}).keywords.has(Keyword::Reaction));
+    EXPECT_TRUE(card_db.get(CardDefId{999}).keywords.has(Keyword::Deathknell));
+    EXPECT_TRUE(card_db.get(CardDefId{1006}).keywords.has(Keyword::Tank));
 }
 TEST_F(RadianceBatch9Test, IndustriousMechsmithPlaysThreeMightMechTokenAtSameBattlefield) {
-    auto smith=addToHand(P1,CardDefId{1028});
+    auto smith=addToHand(P1,CardDefId{996});
     playThroughEngine(smith,nullptr,LocationId{BattlefieldLocation{state.battlefields[0].id}});
     int mechs=0;
     for(const auto& [id,o]:state.objects.onBoard())
@@ -144,7 +144,7 @@ TEST_F(RadianceBatch9Test, ClangingSentryGrantsDisarmToFriendlyMechAndNotEnemy) 
     EXPECT_FALSE(state.getObject(sentry).hasKeyword(Keyword::Disarm));
 }
 TEST_F(RadianceBatch9Test, OverloadedTravelerGainsMightOnlyWithFriendlyDeployGearHere) {
-    auto traveler=addUnit(P1,CardDefId{1031},2,0);
+    auto traveler=addUnit(P1,CardDefId{1004},2,0);
     auto banner=addToHand(P1,CardDefId{1010});
     playThroughEngine(banner,nullptr,LocationId{BattlefieldLocation{state.battlefields[0].id}});
     withEngine([&](GameEngine& engine){engine.testHook_recalculateAuras();});
@@ -154,7 +154,7 @@ TEST_F(RadianceBatch9Test, OverloadedTravelerGainsMightOnlyWithFriendlyDeployGea
     EXPECT_EQ(state.getObject(traveler).current_might,2);
 }
 TEST_F(RadianceBatch9Test, SneakyZeeblesConquerAddsOneFloatingUniversalPower) {
-    auto zeebles=addUnit(P1,CardDefId{1032},1,0);
+    auto zeebles=addUnit(P1,CardDefId{1008},1,0);
     const auto before=state.player(P1).rune_pool.universal_power;
     fireTriggerThroughEngine(zeebles,TriggerType::WhenIConquer);
     EXPECT_EQ(state.player(P1).rune_pool.universal_power,before+1);
@@ -164,7 +164,7 @@ TEST_F(RadianceBatch9Test, SneakyZeeblesConquerAddsOneFloatingUniversalPower) {
 TEST_F(RadianceBatch9Test, StalwartGoatherdHasShieldTwoAndMayKillLowCostGear) {
     auto target=addToHand(P1,CardDefId{1010}); // printed Energy 1
     playThroughEngine(target,nullptr,LocationId{BattlefieldLocation{state.battlefields[0].id}});
-    auto goatherd=addToHand(P1,CardDefId{1033});
+    auto goatherd=addToHand(P1,CardDefId{1000});
     EnginePathAgent agent(EnginePathAgent::accepting());
     playThroughEngine(goatherd,&agent);
     EXPECT_TRUE(state.getObject(goatherd).hasKeyword(Keyword::Shield));
@@ -190,7 +190,7 @@ TEST_F(RadianceBatch9Test, SuaveNegotiatorDrawsForBothPlayersOnPlay) {
     addToDeck(P2,CardDefId{1012});
     auto before1=state.player(P1).hand.size();
     auto before2=state.player(P2).hand.size();
-    auto negotiator=addToHand(P1,CardDefId{1036});
+    auto negotiator=addToHand(P1,CardDefId{993});
     playThroughEngine(negotiator);
     EXPECT_EQ(state.player(P1).hand.size(),before1+1);
     EXPECT_EQ(state.player(P2).hand.size(),before2+1);
@@ -199,7 +199,7 @@ TEST_F(RadianceBatch9Test, ForDemaciaShieldsOnlyFriendlyUnitsAtChosenBattlefield
     auto ally=addUnit(P1,kInvalidId,3,0);
     auto other=addUnit(P1,kInvalidId,3,1);
     auto enemy=addUnit(P2,kInvalidId,3,0);
-    auto spell=addToHand(P1,CardDefId{1037});
+    auto spell=addToHand(P1,CardDefId{1009});
     playThroughEngine(spell);
     EXPECT_TRUE(state.getObject(ally).hasKeyword(Keyword::Shield));
     EXPECT_EQ(state.getObject(ally).shield_value,2);
@@ -207,7 +207,7 @@ TEST_F(RadianceBatch9Test, ForDemaciaShieldsOnlyFriendlyUnitsAtChosenBattlefield
     EXPECT_FALSE(state.getObject(enemy).hasKeyword(Keyword::Shield));
 }
 TEST_F(RadianceBatch9Test, HuntingDogDeathknellCreatesDeflectBirdAtBase) {
-    auto dog=addUnit(P1,CardDefId{1038},3,0);
+    auto dog=addUnit(P1,CardDefId{999},3,0);
     resolveThroughEngine([&](EffectExecutor& e,GameState&){e.killObject(dog);});
     int birds=0;
     for(const auto& [id,u]:state.objects.onBoard())
@@ -220,7 +220,7 @@ TEST_F(RadianceBatch9Test, HuntingDogDeathknellCreatesDeflectBirdAtBase) {
     EXPECT_EQ(birds,1);
 }
 TEST_F(RadianceBatch9Test, SteadfastOutriderRequiresTwoOtherFriendsHereForTwoMight) {
-    auto outrider=addUnit(P1,CardDefId{1039},3,0);
+    auto outrider=addUnit(P1,CardDefId{1006},3,0);
     auto friend1=addUnit(P1,kInvalidId,2,0);
     withEngine([&](GameEngine& e){e.testHook_recalculateAuras();});
     EXPECT_EQ(state.getObject(outrider).current_might,3);
