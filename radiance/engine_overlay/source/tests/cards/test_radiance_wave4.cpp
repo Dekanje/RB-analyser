@@ -41,7 +41,7 @@ TEST_F(RadianceWave4Test, IndustriousMechsmithCreatesThreeMightMechInBase) {
     EXPECT_EQ(mech.controller,P1);
     EXPECT_TRUE(mech.isAtBase());
     EXPECT_TRUE(mech.is_exhausted);
-    EXPECT_FALSE(state.getObject(smith).is_exhausted);
+    EXPECT_TRUE(state.getObject(smith).is_exhausted); // played to base normally
 }
 
 TEST_F(RadianceWave4Test, IndustriousMechsmithCreatesTokenAtSameBattlefield) {
