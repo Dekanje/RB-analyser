@@ -89,3 +89,14 @@ full upstream AlphaRune regression are mandatory acceptance gates. This is a
 **candidate only** until the GitHub Actions full job succeeds and its output
 has been inspected. A successful run does not certify unrelated, still-missing
 Radiance cards or every possible card interaction.
+
+## Focused failure corrections before full gate
+
+The previous compiled 123-test run passed 120 tests and exposed exactly three
+failures. Invigorating Bloom rechecked the cost-exhausted unit at resolution;
+now its paid-cost continuation draws without reevaluating the ready-only list.
+Portable Portal paid Body Power before collecting its unit target; it now
+collects the target before paying, with payment immediately before the finalize
+marker. The Good Stuff hold test had an empty deck and could encounter Burnout
+from its mandatory three-card draw; the corrected test supplies three cards and
+keeps battlefield control. These fixes are **unverified until full CI**.
