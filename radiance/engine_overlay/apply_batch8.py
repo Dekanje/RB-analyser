@@ -37,4 +37,25 @@ after="if (obj.isGear() && !obj.attached_to.has_value() && obj.isAtBattlefield()
 assert g.count(before)==1, "Batch 8 Deploy cleanup anchor changed"
 game.write_text(g.replace(before,after,1))
 
-print("RADIANCE_BATCH8_TRANCHE1_APPLIED: engine IDs 1010..1015; Deploy recall exception")
+# Dreamroot observes a winning combat at its own Deploy battlefield.
+tpath=engine/"src/engine/trigger_manager.cpp"
+t=tpath.read_text()
+before="    // Snapshot the surviving winner-side units at this BF. We snapshot first"
+after="""    // Deployed gear watching its owner's combat win at this battlefield.
+    std::vector<GameObjectId> winning_deploy_gear;
+    for (auto& [id, gear] : state_.objects.onBoard()) {
+        if (!gear.isGear() || !gear.isAtBattlefield() ||
+            !gear.hasKeyword(Keyword::Deploy) || gear.controller != winner ||
+            !gear.battlefieldId() || *gear.battlefieldId() != e.battlefield)
+            continue;
+        if (cardFiresOn(card_registry_, gear.card_def_id, TriggerType::WhenIWinCombat))
+            winning_deploy_gear.push_back(id);
+    }
+    for (auto id : winning_deploy_gear)
+        fireTrigger(id, winner, 0, TriggerType::WhenIWinCombat);
+
+""" + before
+assert t.count(before)==1, "CombatResult hook changed"
+tpath.write_text(t.replace(before,after,1))
+
+print("RADIANCE_BATCH8_APPLIED: 15 cards, IDs 1010-1024")
