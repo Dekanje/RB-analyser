@@ -207,6 +207,102 @@ private:
         return d;
     }();
 };
+
+class RadianceSneakyZeebles final : public UnitCard {
+public:
+    const CardDef& def() const override {return d_;}
+    TriggerType triggerType() const override {return TriggerType::WhenIConquer;}
+    // [Add] abilities cannot be reacted to (CR 430.2).
+    bool triggeredAbilityAdds(TriggerType t) const override {return t==TriggerType::WhenIConquer;}
+    void onTrigger(CardContext& ctx,const std::vector<GameObjectId>&) override {
+        ctx.executor.addFloatingUniversalPower(ctx.controller,1);
+    }
+private:
+    const CardDef d_=[]{
+        CardDef d;
+        d.id=1008;d.def_id="rad-076-167";d.public_code="RAD-076/167";
+        d.name="Sneaky Zeebles";d.set_code="RAD";d.set_name="Radiance";
+        d.collector_number=76;d.card_type=CardType::Unit;
+        d.domains={Domain::Body};d.energy_cost=2;d.might=1;
+        d.rarity=Rarity::Common;
+        d.ability_text="When I conquer, [Add] [A]. (Abilities that add resources can't be reacted to.)";
+        return d;
+    }();
+};
+
+class RadianceForDemacia final : public SpellCard {
+public:
+    const CardDef& def() const override {return d_;}
+    unsigned choicesAtFinalization() const override{return kFinalizeResolve;}
+    FinalizeChoice mayChooseAtFinalization(const GameState&,PlayerId,GameObjectId) const override {
+        return FinalizeChoice::No; // battlefield is the chosen object, not a unit
+    }
+    void onResolve(CardContext& ctx,const std::vector<GameObjectId>&) override {
+        const int mode=pickBattlefield(*this,ctx,"For Demacia!: choose battlefield");
+        if(mode==-1)return;             // waiting for decision
+        if(finalizingChoices(ctx))return;
+        if(mode<0 || static_cast<size_t>(mode)>=ctx.state.battlefields.size())return;
+        const auto bf=ctx.state.battlefields[static_cast<size_t>(mode)].id;
+        for(const auto& [id,u]:ctx.state.objects.onBoard()){
+            if(!u.isUnit() || u.controller!=ctx.controller ||
+               u.battlefieldId()!=std::optional<BattlefieldId>{bf})continue;
+            ctx.executor.giveTemporaryKeyword(id,Keyword::Shield,2);
+        }
+    }
+private:
+    const CardDef d_=[]{
+        CardDef d;
+        d.id=1009;d.def_id="rad-117-167";d.public_code="RAD-117/167";
+        d.name="For Demacia!";d.set_code="RAD";d.set_name="Radiance";
+        d.collector_number=117;d.card_type=CardType::Spell;
+        d.domains={Domain::Order};d.energy_cost=3;d.rarity=Rarity::Common;
+        d.keywords.set(Keyword::Reaction);
+        d.ability_text="[Reaction] (Play any time, even before spells and abilities resolve.)\\nChoose a battlefield. Give friendly units there [Shield 2] this turn.";
+        return d;
+    }();
+};
+
+class RadianceAnOfferYouCantRefuse final : public SpellCard {
+public:
+    const CardDef& def() const override{return d_;}
+    unsigned choicesAtFinalization() const override{return kFinalizeResolve;}
+    bool hasLegalTargets(const GameState& state,PlayerId controller) const override {
+        for(const auto& [id,g]:state.objects.onBoard())
+            if(g.isGear() && g.location.has_value() &&
+               (g.controller==controller || !g.untargetable_by_enemy))return true;
+        return false;
+    }
+    void onResolve(CardContext& ctx,const std::vector<GameObjectId>&) override {
+        std::vector<GameObjectId> options;
+        for(const auto& [id,g]:ctx.state.objects.onBoard())
+            if(g.isGear() && g.location.has_value() &&
+               (g.controller==ctx.controller || !g.untargetable_by_enemy))
+                options.push_back(id);
+        std::sort(options.begin(),options.end());
+        const auto chosen=pickTarget(ctx,"An Offer You Can't Refuse: kill a gear",options);
+        if(finalizingChoices(ctx))return;
+        if(chosen==kInvalidId || !ctx.state.objectExists(chosen))return;
+        const auto beneficiary=ctx.state.getObject(chosen).controller;
+        ctx.executor.killObject(chosen);
+        // An actual token tied to the pinned engine Gold card definition:
+        // enters exhausted; its own reaction is registered on token card 326.
+        ctx.executor.createToken(beneficiary,CardType::Gear,"Gold",0,{},
+             KeywordSet{},LocationId{BaseLocation{beneficiary}},false,{},
+             kGoldGearCardDefId,/*enters_exhausted=*/true);
+    }
+private:
+    const CardDef d_=[]{
+        CardDef d;
+        d.id=1010;d.def_id="rad-101-167";d.public_code="RAD-101/167";
+        d.name="An Offer You Can't Refuse";d.set_code="RAD";d.set_name="Radiance";
+        d.collector_number=101;d.card_type=CardType::Spell;
+        d.domains={Domain::Chaos};d.energy_cost=2;d.rarity=Rarity::Uncommon;
+        d.keywords.set(Keyword::Action);
+        d.ability_text="[Action] (Play on your turn or in showdowns.)\\nKill a gear. Its controller plays a Gold gear token exhausted.";
+        return d;
+    }();
+};
+
 } // namespace
 void register_card_1001(CardRegistry& r){r.registerCard(1001,std::make_unique<RadianceRiptideMage>());}
 void register_card_1002(CardRegistry& r){r.registerCard(1002,std::make_unique<RadianceHighNote>());}
@@ -215,4 +311,7 @@ void register_card_1004(CardRegistry& r){r.registerCard(1004,std::make_unique<Ra
 void register_card_1005(CardRegistry& r){r.registerCard(1005,std::make_unique<RadiancePartyCrasher>());}
 void register_card_1006(CardRegistry& r){r.registerCard(1006,std::make_unique<RadianceSteadfastOutrider>());}
 void register_card_1007(CardRegistry& r){r.registerCard(1007,std::make_unique<RadianceWatchfulCurator>());}
+void register_card_1008(CardRegistry& r){r.registerCard(1008,std::make_unique<RadianceSneakyZeebles>());}
+void register_card_1009(CardRegistry& r){r.registerCard(1009,std::make_unique<RadianceForDemacia>());}
+void register_card_1010(CardRegistry& r){r.registerCard(1010,std::make_unique<RadianceAnOfferYouCantRefuse>());}
 } // namespace riftbound
