@@ -40,7 +40,7 @@ Batch 10 originally attempted to re-register RAD-021 (Ekko, Revolutionary) at
 engine ID 1059, even though the earlier Ekko package already implements
 RAD-021 at ID 967, including its activated ability. The duplicate definition
 was replaced with RAD-001 (Amateur Demolitionist), keeping the 20-card
-unique-identity goal. RAD-001 uses printed Fury, 2 Energy, 1 Power and 1 Might,
+unique-identity goal. RAD-001 uses printed Fury, 2 Energy, 0 Power and 1 Might,
 with its existing Bomb token defined at engine ID 982. Its Bomb play trigger
 now has a dedicated gameplay test. Ki Burst and Life from Stone also use
 play-time unit-exhaust additional costs instead of incorrectly paying during
