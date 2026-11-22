@@ -1,0 +1,85 @@
+name: Radiance Wave 5 compiled catalog reconciliation
+on:
+  push:
+    branches: ['radiance/full-card-implementation-wave5-2026-11-22']
+    paths:
+      - '.github/workflows/radiance-wave5-audit.yml'
+      - 'radiance/audit_wave5_catalog_registry.py'
+      - 'radiance/coverage_ledger.py'
+      - 'radiance/engine_overlay/**'
+      - 'radiance/data/radiance_catalog.json'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  compiled-reconciliation:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 59
+    steps:
+      - uses: actions/checkout@v4
+      - name: Syntax and catalog integrity
+        run: |
+          python3 -m py_compile radiance/audit_wave5_catalog_registry.py radiance/coverage_ledger.py
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          c=json.loads(Path('radiance/data/radiance_catalog.json').read_text())['cards']
+          assert len(c)==219
+          codes=[x['public_code'] for x in c]
+          assert len(set(codes))==219
+          assert {f'RAD-{i:03d}/167' for i in range(1,168)} <= set(codes)
+          print('WAVE5_CATALOG_INTEGRITY_PASS')
+          PY
+      - name: Pin and patch real AlphaRune engine
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq cmake ninja-build g++ ccache libboost-all-dev nlohmann-json3-dev
+          git clone --quiet https://github.com/chorlick/alpharune.git alpharune
+          git -C alpharune checkout --quiet --detach ec90f0fed002aed374d06249fa95e83e3cfbd386
+          python3 radiance/engine_overlay/apply.py
+          python3 radiance/engine_overlay/wave1_regression_fix.py
+          python3 radiance/engine_overlay/apply_wave2.py
+          python3 radiance/engine_overlay/apply_wave3.py
+          python3 radiance/engine_overlay/apply_wave4.py
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/ccache
+          key: radiance-wave5-audit-${{ runner.os }}-${{ github.sha }}
+          restore-keys: |
+            radiance-wave4-ccache-
+            radiance-wave3-ccache-
+      - name: Compile real engine and all tests
+        run: |
+          cmake -S alpharune -B alpharune/build -G Ninja -DCMAKE_BUILD_TYPE=Release -DRIFTBOUND_BUILD_JOBS=2 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+          cmake --build alpharune/build --target riftbound riftbound_tests -j 2
+      - name: Run deterministic Radiance tests and full regression
+        run: |
+          mkdir -p results
+          RIFTBOUND_ROOT=alpharune alpharune/build/riftbound_tests --gtest_filter='RadianceWave1Test.*:RadianceWave2Test.*:RadianceWave3Test.*:RadianceWave4Test.*' --gtest_brief=1 --gtest_output=xml:results/radiance_wave5_card_tests.xml
+          RIFTBOUND_ROOT=alpharune alpharune/build/riftbound_tests --gtest_brief=1 --gtest_output=xml:results/radiance_wave5_regression.xml
+      - name: Reconcile compiled registry, full catalog, and coverage ledger
+        run: |
+          alpharune/build/riftbound --dump-registry results/radiance_wave5_registry.json
+          python3 radiance/verify_wave4_registry.py results/radiance_wave5_registry.json --output results/radiance_wave5_prior_wave_coverage.json
+          python3 radiance/audit_wave5_catalog_registry.py radiance/data/radiance_catalog.json results/radiance_wave5_registry.json > results/radiance_wave5_missing_ids.json
+          python3 radiance/coverage_ledger.py results/radiance_wave5_registry.json --output results/radiance_coverage_ledger.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          a=json.loads(Path('results/radiance_wave5_missing_ids.json').read_text())
+          l=json.loads(Path('results/radiance_coverage_ledger.json').read_text())
+          assert a['compiled_registry_size']==997
+          assert a['registered_base_count']==41
+          assert a['missing_base_count']==126
+          assert l['compiled_base_identities']==a['registered_base_count']
+          assert l['catalog_printings']==219
+          assert l['full_set_verified'] is False
+          print('WAVE5_COMPILED_RECONCILIATION_PASS_NOT_FULL_MECHANICS_CERTIFICATION')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: radiance-wave5-compiled-catalog-reconciliation
+          path: results/
+          retention-days: 30
+          if-no-files-found: ignore
