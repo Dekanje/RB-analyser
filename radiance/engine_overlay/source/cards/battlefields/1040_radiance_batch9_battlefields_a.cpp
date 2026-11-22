@@ -61,7 +61,8 @@ public:
     TriggerType triggerType()const override{return TriggerType::WhenYouDefendHere;}
     unsigned choicesAtFinalization()const override{return kFinalizeTrigger;}
     void onTrigger(CardContext& ctx,const std::vector<GameObjectId>&)override{
-        const BattlefieldId here=battlefieldOfCard(ctx.state,ctx.source);
+        const auto here=battlefieldOfCard(ctx.state,ctx.source);
+        if(!here)return;
         auto candidates=chooseableUnits(ctx.state,ctx.controller,
             [&](const GameObject& unit){
                 return unit.controller==ctx.controller&&unit.isAtBattlefield()&&
@@ -71,7 +72,7 @@ public:
             "Durand Memorial: choose a friendly defending unit here",candidates);
         if(finalizingChoices(ctx)||choice==kInvalidId)return;
         if(ctx.state.objectExists(choice))
-            ctx.executor.giveKeywordThisCombat(choice,Keyword::Tank,1,here);
+            ctx.executor.giveKeywordThisCombat(choice,Keyword::Tank,1,*here);
     }
 private:
     const CardDef d_=bf9(1043,161,"Durand Memorial",
