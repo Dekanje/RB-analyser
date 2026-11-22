@@ -6,6 +6,7 @@ on:
       - '.github/workflows/radiance-wave5-audit.yml'
       - 'radiance/audit_wave5_catalog_registry.py'
       - 'radiance/coverage_ledger.py'
+      - 'radiance/test_wave5_catalog_audit.py'
       - 'radiance/engine_overlay/**'
       - 'radiance/data/radiance_catalog.json'
   workflow_dispatch:
@@ -30,6 +31,7 @@ jobs:
           assert {f'RAD-{i:03d}/167' for i in range(1,168)} <= set(codes)
           print('WAVE5_CATALOG_INTEGRITY_PASS')
           PY
+          python3 -m unittest discover -s radiance -p 'test_wave5_catalog_audit.py' -v
       - name: Pin and patch real AlphaRune engine
         run: |
           sudo apt-get update -qq
