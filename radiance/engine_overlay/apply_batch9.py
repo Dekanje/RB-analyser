@@ -13,6 +13,12 @@ for src,dst in [
      "src/cards/units/1025_radiance_batch9_tranche1.cpp"),
     ("tests/cards/test_radiance_batch9.cpp",
      "tests/cards/test_radiance_batch9.cpp"),
+    ("cards/units/1028_radiance_batch9_tranche2a.cpp",
+     "src/cards/units/1028_radiance_batch9_tranche2a.cpp"),
+    ("cards/units/1032_radiance_batch9_tranche2b.cpp",
+     "src/cards/units/1032_radiance_batch9_tranche2b.cpp"),
+    ("cards/units/1036_radiance_batch9_tranche2c.cpp",
+     "src/cards/units/1036_radiance_batch9_tranche2c.cpp"),
 ]:
     target=engine/dst
     if target.exists():raise SystemExit("Batch9 source collision: "+str(target))
@@ -24,9 +30,9 @@ declaration="void register_card_1024(CardRegistry&);"
 registration="    register_card_1024(registry);"
 assert s.count(declaration)==1 and s.count(registration)==1, "Batch8 registration anchor changed"
 s=s.replace(declaration,declaration+"\n"+ "\n".join(
-    f"void register_card_{i}(CardRegistry&);" for i in range(1025,1028)),1)
+    f"void register_card_{i}(CardRegistry&);" for i in range(1025,1040)),1)
 s=s.replace(registration,registration+"\n"+ "\n".join(
-    f"    register_card_{i}(registry);" for i in range(1025,1028)),1)
+    f"    register_card_{i}(registry);" for i in range(1025,1040)),1)
 init.write_text(s)
 
 # Deploy score behavior: "When you conquer here" watches the battlefield,
@@ -61,4 +67,74 @@ patch="""    // Radiance Deploy gear observes conquers at its own battlefield.
 """
 assert t.count(anchor)==1, "Batch9 Deploy score trigger anchor changed"
 triggers.write_text(t.replace(anchor,patch+anchor,1))
-print("RADIANCE_BATCH9_TRANCHE1_APPLIED: IDs 1025..1027; Deploy score integration")
+
+# Radiance 2026-10-16 Core Rules: Disarm is a stackable attack-trigger keyword.
+# Keep existing bit positions stable; extend keyword enum before Count sentinel.
+types=engine/"src/core/types.h"
+words=types.read_text()
+old="    Flow         = 24,  // Vendetta: spell may be played from trash for its Flow cost, then banished\n    Count        = 25,"
+new="    Flow         = 24,  // Vendetta: spell may be played from trash for its Flow cost, then banished\n    Disarm       = 25,  // Radiance: -N Might on a chosen enemy when this unit attacks\n    Count        = 26,"
+assert words.count(old)==1, "Disarm enum anchor changed"
+types.write_text(words.replace(old,new,1))
+
+types_cpp=engine/"src/core/types.cpp"
+names=types_cpp.read_text()
+old="        case Keyword::Flow:         return \"Flow\";"
+new=old+"\n        case Keyword::Disarm:       return \"Disarm\";"
+assert names.count(old)==1, "Disarm string-table anchor changed"
+types_cpp.write_text(names.replace(old,new,1))
+
+# Common Disarm dispatcher: both printed keywords and continuous aura grants
+# (e.g. Clanging Sentry) contribute to the SAME attack. Fired once per unit
+# per combat by fireAttackDefendTriggers' existing per-combat guard. This
+# implementation currently uses an immediate object-choice prompt, not a
+# separate reactable ability on the chain. That timing gap is recorded in
+# the Batch 9 report and evidence ledger.
+trigger_source=engine/"src/engine/trigger_manager.cpp"
+src=trigger_source.read_text()
+before="    const bool is_defender = (obj.controller == defender);\n\n"
+insert="""    const bool is_defender = (obj.controller == defender);
+
+    // Radiance Disarm (2026-10-16): stack printed and aura-granted values.
+    // The caller has already suppressed repeat attacks in this combat.
+    if (is_attacker && obj.hasKeyword(Keyword::Disarm) && effect_executor_) {
+        int disarm = 0;
+        if (obj.keywords.has(Keyword::Disarm)) {
+            disarm = 1;
+            if (obj.card_def_id != kInvalidId)
+                if (const Card* c = card_registry_.get(obj.card_def_id))
+                    if (c->def().ability_text.find("[Disarm 2]") != std::string::npos)
+                        disarm = 2;
+        }
+        for (const auto& aura : obj.aura_effects)
+            if (aura.keyword == Keyword::Disarm)
+                disarm += std::max(1, aura.keyword_value);
+        if (disarm > 0) {
+            std::vector<GameObjectId> opponents_here;
+            for (const auto& [uid, target] : state_.objects.onBoard()) {
+                if (!target.isUnit() || !target.isAtBattlefield() ||
+                    target.controller == obj.controller ||
+                    target.battlefieldId() != battlefield) continue;
+                opponents_here.push_back(uid);
+            }
+            std::sort(opponents_here.begin(), opponents_here.end());
+            if (!opponents_here.empty()) {
+                GameObjectId chosen = effect_executor_->chooseObjectNow(
+                    obj.controller, opponents_here,
+                    "Disarm: choose an enemy unit here", PromptKind::ChooseObject);
+                if (chosen != kInvalidId && state_.objectExists(chosen)) {
+                    const auto& target = state_.getObject(chosen);
+                    if (target.isUnit() && target.isAtBattlefield() &&
+                        target.controller != obj.controller &&
+                        target.battlefieldId() == battlefield)
+                        effect_executor_->giveTemporaryMight(chosen, -disarm);
+                }
+            }
+        }
+    }
+
+"""
+assert src.count(before)==1, "Disarm attack hook anchor changed"
+trigger_source.write_text(src.replace(before,insert,1))
+
+print("RADIANCE_BATCH9_IMPLEMENTATIONS_APPLIED: 15 cards IDs 1025..1039, Disarm keyword and attack dispatcher")
