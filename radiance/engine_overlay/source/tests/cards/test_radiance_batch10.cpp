@@ -102,6 +102,16 @@ TEST_F(RadianceBatch10Test, LifeFromStonePaysExhaustAsAdditionalCastCost) {
  playThroughEngine(spell);
  EXPECT_TRUE(state.getObject(ally).is_exhausted);
 }
+TEST_F(RadianceBatch10Test, SatchelChargeMovesFriendlyUnitAndPlaysBombToken) {
+ const auto ally=addUnit(P1,kInvalidId,2,-1);
+ const auto spell=addToHand(P1,CardDefId{1055});
+ playThroughEngine(spell);
+ EXPECT_TRUE(state.getObject(ally).isAtBattlefield());
+ int bombs=0;
+ for(const auto& [id,o]:state.objects.onBoard())
+   if(o.name=="Bomb"&&o.isGear()&&o.controller==P1&&o.isAtBattlefield())++bombs;
+ EXPECT_EQ(bombs,1);
+}
 TEST_F(RadianceBatch10Test, ParallelConvergencePaysBounceAtCastTime) {
  const auto ally=addUnit(P1,kInvalidId,2,-1);
  const auto enemy=addUnit(P2,kInvalidId,3,0);
