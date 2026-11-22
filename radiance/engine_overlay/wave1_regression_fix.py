@@ -18,13 +18,13 @@ def replace_once(relative, old, new):
         raise SystemExit(f"Unexpected pinned-source anchor count ({text.count(old)}): {relative} :: {old[:100]}")
     p.write_text(text.replace(old, new, 1), encoding="utf-8")
 
-# The prior 988-card regression counted 22 lethal-helper sites across C++
+# The prior 988-card regression counted 28 lethal-helper sites across C++
 # cards. Wave 1 adds exactly two more in a new card source (Supernova,
 # Avalanche). Do not turn off the scan or silently drop any assertions.
 replace_once(
     "tests/test_review_fix_perf_engine.cpp",
-    "    EXPECT_EQ(helper, 22);   // + Falling Star (D20: both instructions, then the kills)",
-    "    EXPECT_EQ(helper, 24);   // 22 pinned 988-card sites + Supernova and Avalanche (Wave 1)"
+    "    EXPECT_EQ(helper, 28);   // 22 baseline + 6 explicit Radiance helper call sites",
+    "    EXPECT_EQ(helper, 30);   // 28 verified 988-card sites + Supernova and Avalanche (Wave 1)"
 )
 
 # A pinned seed is a snapshot of the FULL registered pool. A new set changes
@@ -33,14 +33,17 @@ replace_once(
 # measured 993-card snapshot. Future waves must explicitly refresh this test.
 replace_once(
     "tests/test_deck_fuzz.cpp",
-    "    EXPECT_EQ(h, kDeckOfSeedOne) << \"the deck of seed 1 changed: h = \" << h;",
-    """    // The Wave 1 cards expand the random deck candidate pool.
-    // Preserve both full-card-pool fingerprints rather than simply disabling
-    // the pinned-seed assertion on new engine revisions.
-    const uint64_t expected = db_->size() == 993
-        ? 5259447031096685743ull : kDeckOfSeedOne;
-    EXPECT_EQ(h, expected) << "seed 1 / registry " << db_->size()
-                           << " changed: h = " << h;"""
+    '''    constexpr uint64_t kRadiance988DeckOfSeedOne = 10066350758104723585ull;
+    const uint64_t expected = registry_->size()==988
+        ? kRadiance988DeckOfSeedOne : kDeckOfSeedOne;
+    EXPECT_EQ(h, expected) << "the deck of seed 1 changed: h = " << h;''',
+    '''    constexpr uint64_t kRadiance988DeckOfSeedOne = 10066350758104723585ull;
+    constexpr uint64_t kRadiance993DeckOfSeedOne = 5259447031096685743ull;
+    const uint64_t expected = registry_->size()==993 ? kRadiance993DeckOfSeedOne
+                             : registry_->size()==988 ? kRadiance988DeckOfSeedOne
+                             : kDeckOfSeedOne;
+    EXPECT_EQ(h, expected) << "the deck of seed 1 changed for registry "
+                           << registry_->size() << ": h = " << h;'''
 )
 
 # Comparing the number of decisions in ONE randomly generated game is a
