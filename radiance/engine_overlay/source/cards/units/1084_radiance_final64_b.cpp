@@ -210,7 +210,48 @@ If you showed off a unit, deal damage equal to that unit's Might to a unit.)RB")
 class R64_1097 final : public SpellCard {
 public:
  const CardDef& def() const override { return d_; }
- // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
+
+ static uint32_t targets(const GameState& s,PlayerId p){
+   uint32_t mask=0;
+   for(size_t i=0;i<s.battlefields.size()&&i<32;i++){
+     const auto& bf=s.battlefields[i];
+     if(!bf.controller.has_value()||*bf.controller==p)continue;
+     bool occupied=false;
+     for(const auto& [id,o]:s.objects.onBoard())
+       if(o.isUnit()&&o.controller!=p&&o.battlefieldId()==bf.id){occupied=true;break;}
+     if(occupied)mask|=1u<<i;
+   }
+   return mask;
+ }
+ bool canBePlayed(const GameState& s,PlayerId p)const override{
+   if(!targets(s,p))return false;
+   for(const auto& [id,o]:s.objects.onBoard())
+     if(o.isUnit()&&o.controller==p&&o.location)return true;
+   return false;
+ }
+ FinalizeChoice mayChooseAtFinalization(const GameState& s,PlayerId p,GameObjectId id)const override{
+   if(!s.objectExists(id))return FinalizeChoice::No;
+   const auto& o=s.getObject(id);
+   return o.isUnit()&&o.controller==p&&o.location?FinalizeChoice::Yes:FinalizeChoice::No;
+ }
+ unsigned choicesAtFinalization()const override{return kFinalizeResolve;}
+ void onResolve(CardContext& c,const std::vector<GameObjectId>&)override{
+   const auto units=boardObjects(c.state,[&](const GameObject& o){
+     return o.isUnit()&&o.controller==c.controller;
+   });
+   const auto chosen=pickTarget(c,"Cataclysm: friendly unit",units);
+   std::vector<std::string> labels;
+   for(const auto& bf:c.state.battlefields)
+     labels.push_back("Enemy battlefield "+std::to_string(bf.id.raw()));
+   const int destination=pickMode(c,"Cataclysm: occupied enemy battlefield",
+     static_cast<int>(labels.size()),labels,targets(c.state,c.controller));
+   if(destination<0)return;
+   if(finalizingChoices(c))return;
+   c.state.player(opponent(c.controller)).cant_play_spells_this_turn=true;
+   if(chosen!=kInvalidId&&static_cast<size_t>(destination)<c.state.battlefields.size())
+     c.executor.moveToBattlefield(chosen,c.state.battlefields[destination].id);
+ }
+
 private:
  const CardDef d_=[] {
   auto d=mkFinal64_b(1097,84,R"RB(Cataclysm)RB",CardType::Spell,4,1,0,{Domain::Body},Rarity::Rare,R"RB(Opponents can't play spells this turn.
