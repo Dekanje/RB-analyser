@@ -45,6 +45,17 @@ class CatalogAuditTests(unittest.TestCase):
         with self.assertRaises(AssertionError):
             self.run_audit()
 
+    def test_duplicate_engine_id_rejected_even_when_codes_differ(self):
+        self.registry["cards"] = [{"public_code":"RAD-001/167","id":100},
+                                  {"public_code":"RAD-002/167","id":100}]
+        with self.assertRaisesRegex(AssertionError, "Duplicate compiled engine IDs"):
+            self.run_audit()
+
+    def test_uncatalogued_radiance_code_rejected(self):
+        self.registry["cards"] = [{"public_code":"RAD-999/167","id":3000}]
+        with self.assertRaisesRegex(AssertionError, "absent from catalog"):
+            self.run_audit()
+
     def test_missing_numbered_catalog_identity_rejected(self):
         self.catalog["cards"] = [c for c in self.catalog["cards"]
                                   if c["public_code"] != "RAD-001/167"]
