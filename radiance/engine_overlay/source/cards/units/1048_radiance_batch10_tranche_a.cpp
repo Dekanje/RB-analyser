@@ -235,22 +235,25 @@ public:
  unsigned choicesAtFinalization()const override{return kFinalizeTrigger;}
     TriggerType triggerType()const override{return TriggerType::WhenYouPlayACard;}
     void onTrigger(CardContext& c,const std::vector<GameObjectId>&)override {
-      if(!c.state.objectExists(c.source))return;
+      // The engine requires every finalize pass to reach the end-of-choices
+      // marker, even when a played card does not satisfy this trigger.
+      const auto finishWithoutEffect=[&](){ (void)finalizingChoices(c); };
+      if(!c.state.objectExists(c.source)){finishWithoutEffect();return;}
       auto& self=c.state.getObject(c.source);
       if(costAlreadyPaid(c)){
         if(finalizingChoices(c))return;
         c.executor.drawCards(c.controller,1);
         return;
       }
-      if(!self.location||self.is_exhausted)return;
+      if(!self.location||self.is_exhausted){finishWithoutEffect();return;}
       const auto& chain=c.state.chain.resuming;
-      if(!chain||!c.state.objectExists(chain->triggering_subject))return;
+      if(!chain||!c.state.objectExists(chain->triggering_subject)){finishWithoutEffect();return;}
       const auto& unit=c.state.getObject(chain->triggering_subject);
-      if(!unit.isUnit()||unit.controller!=c.controller)return;
+      if(!unit.isUnit()||unit.controller!=c.controller){finishWithoutEffect();return;}
       int maxM=-1;
       for(const auto& [id,o]:c.state.objects.onBoard())
         if(o.isUnit()&&id!=unit.id)maxM=std::max(maxM,o.current_might);
-      if(unit.current_might<=maxM)return;
+      if(unit.current_might<=maxM){finishWithoutEffect();return;}
       if(costDueNow(c))c.executor.exhaustObject(c.source);
       if(finalizingChoices(c))return;
       c.executor.drawCards(c.controller,1);
