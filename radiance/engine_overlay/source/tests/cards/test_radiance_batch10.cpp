@@ -79,7 +79,7 @@ TEST_F(RadianceBatch10Test, OneTwoPunchBuffsFriendlyAndStunsEnemy) {
  auto foe=addUnit(P2,kInvalidId,3,0);
  auto spell=addToHand(P1,CardDefId{1067});
  playThroughEngine(spell);
- EXPECT_TRUE(state.getObject(ally).has_buff);
+ EXPECT_TRUE(state.getObject(ally).buff_count>0);
  EXPECT_TRUE(state.getObject(foe).is_stunned);
 }
 } // namespace
