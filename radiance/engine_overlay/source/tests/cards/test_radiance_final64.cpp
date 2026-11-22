@@ -122,10 +122,13 @@ TEST_F(RadianceFinal64Test, ExplosimianHoldCreatesThreeBombsAtOneBattlefield){
  EXPECT_EQ(battlefields.size(),1u);
 }
 TEST_F(RadianceFinal64Test, EvelynnScoresOnHoldOnlyWithFriendlyFacedownHere){
+ state.battlefields[0].controller=P1;
  auto eve=addUnit(P1,CardDefId{1108},4,0);
- auto facedown=state.createObject();
+ const auto facedown=addToHand(P1,CardDefId{1096});
  auto& obj=state.getObject(facedown);
- obj.owner=P1;obj.controller=P1;obj.card_type=CardType::Spell;
+ state.player(P1).hand.erase(std::remove(state.player(P1).hand.begin(),
+                             state.player(P1).hand.end(),facedown),
+                             state.player(P1).hand.end());
  obj.zone=ZoneType::FacedownZone;obj.is_hidden=true;
  obj.hidden_at=state.battlefields[0].id;
  state.battlefields[0].facedown.push_back(facedown);
