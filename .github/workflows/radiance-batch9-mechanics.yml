@@ -1,4 +1,5 @@
 name: Radiance Batch 9 - mechanics-based C++ implementation
+# Batch 9 tranche 1: run seven real engine-path tests (IDs 1025-1027).
 # Batch 9 staged CI, first three cards. No full-set mechanics certification.
 # Targeted run covers all authored Batch 8 cards before full acceptance.
 on:
