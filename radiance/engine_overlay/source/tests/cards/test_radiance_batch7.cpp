@@ -89,10 +89,20 @@ TEST_F(RadianceBatch7Test, OverloadedTravelerNeedsFriendlyDeployGearAtSameBattle
     KeywordSet deploy; deploy.set(Keyword::Deploy);
     GameObjectId deployed=kInvalidId;
     resolveThroughEngine([&](EffectExecutor& e,GameState&){
+        // Unattached gear at a battlefield is recalled during cleanup (CR 323.6).
+        // Create it in base first; it must not grant the battlefield aura there.
         deployed=e.createToken(P1,CardType::Gear,"Test Deploy Gear",0,{},deploy,
-            LocationId{BattlefieldLocation{state.battlefields[0].id}},false);
+            LocationId{BaseLocation{P1}},false);
     });
     recalc();
+    EXPECT_EQ(state.getObject(traveler).current_might,2);
+    resolveThroughEngine([&](EffectExecutor& e,GameState&){
+        // Attachment follows the legal engine path and moves gear with its bearer.
+        EXPECT_TRUE(e.attachGear(deployed,traveler));
+    });
+    recalc();
+    EXPECT_EQ(state.getObject(deployed).battlefieldId(),
+              state.getObject(traveler).battlefieldId());
     EXPECT_EQ(state.getObject(traveler).current_might,3);
     resolveThroughEngine([&](EffectExecutor& e,GameState&){e.killObject(deployed);});
     recalc();
@@ -123,11 +133,11 @@ TEST_F(RadianceBatch7Test, WatchfulCuratorGrantsDeflectOnlyToFriendlyGear) {
                            LocationId{BaseLocation{P2}},false);
     });
     recalc();
-    EXPECT_TRUE(state.getObject(friendly).keywords.has(Keyword::Deflect));
-    EXPECT_FALSE(state.getObject(enemy).keywords.has(Keyword::Deflect));
+    EXPECT_TRUE(state.getObject(friendly).hasKeyword(Keyword::Deflect));
+    EXPECT_FALSE(state.getObject(enemy).hasKeyword(Keyword::Deflect));
     resolveThroughEngine([&](EffectExecutor& e,GameState&){e.killObject(curator);});
     recalc();
-    EXPECT_FALSE(state.getObject(friendly).keywords.has(Keyword::Deflect));
+    EXPECT_FALSE(state.getObject(friendly).hasKeyword(Keyword::Deflect));
 }
 
 TEST_F(RadianceBatch7Test, SneakyZeeblesConquerAbilityAddsUnreactableUniversalPower) {
