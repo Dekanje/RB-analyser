@@ -11,6 +11,21 @@ class RadianceBatch10Test:public CardTestFixture {};
 struct Printed {
  int id,number,energy,power,might; const char* name; CardType type;
 };
+TEST_F(RadianceBatch10Test, GoodStuffPlayDiscardsOneAndDrawsThree) {
+ auto extra=addToHand(P1,CardDefId{1058});
+ for(int i=0;i<3;i++)addToDeck(P1,CardDefId{1058});
+ auto gear=addToHand(P1,CardDefId{1056});
+ playThroughEngine(gear,nullptr,LocationId{BattlefieldLocation{state.battlefields[0].id}});
+ EXPECT_FALSE(inHand(P1,extra));
+ EXPECT_EQ(state.player(P1).main_deck.size(),0u);
+}
+TEST_F(RadianceBatch10Test, GoodStuffBouncesWhenControllerHoldsItsBattlefield) {
+ auto gear=addToHand(P1,CardDefId{1056});
+ addToHand(P1,CardDefId{1058});
+ playThroughEngine(gear,nullptr,LocationId{BattlefieldLocation{state.battlefields[0].id}});
+ fireTriggerThroughEngine(gear,TriggerType::WhenYouHoldHere);
+ EXPECT_TRUE(inHand(P1,gear));
+}
 TEST_F(RadianceBatch10Test, TitanicShrineExhaustsToDrawForLargestPlayedUnit) {
  auto shrine=addToHand(P1,CardDefId{1054});
  playThroughEngine(shrine);
