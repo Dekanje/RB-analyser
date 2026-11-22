@@ -59,3 +59,28 @@ The Batch 9 GitHub Actions workflow reuses the staged architecture:
 C++ compiler artifacts are cached using the PCH-safe launcher and a
 Batch 9 cache key, restoring compatible Batch 8 entries on the first
 cache-assisted build.
+
+## Tranche 2 — 12 authored cards, awaiting acceptance CI
+
+| Code | Card | Engine ID | Intended mechanic |
+|---|---|---:|---|
+| RAD-049 | Industrious Mechsmith | 1028 | Play 3-Might Mech token here |
+| RAD-050 | Mysterious Chronomancer | 1029 | Predict 2; Disarm 2 |
+| RAD-055 | Clanging Sentry | 1030 | Give friendly Mechs Disarm, stackable |
+| RAD-072 | Overloaded Traveler | 1031 | +1 Might while friendly Deploy gear here |
+| RAD-076 | Sneaky Zeebles | 1032 | Add universal power on conquer |
+| RAD-083 | Stalwart Goatherd | 1033 | Shield 2; optional kill Gear costing up to 4 |
+| RAD-093 | Disposal Expert | 1034 | Enter ready when alone; Disarm 2 |
+| RAD-097 | Siren of the Shallows | 1035 | Disarm 1; Ganking |
+| RAD-099 | Suave Negotiator | 1036 | Each player draws 1 on play |
+| RAD-117 | For Demacia! | 1037 | Give Shield 2 to friendly units at chosen BF |
+| RAD-119 | Hunting Dog | 1038 | Deathknell Bird token with Deflect |
+| RAD-128 | Steadfast Outrider | 1039 | Tank; +2 Might if two other friendlies here |
+
+**Candidate-only registry projection:** 1,039 engine definitions, 80/167 Radiance numbered identities registered, 87 remaining. Neither new card behavior nor registry counts count as accepted until strict CI succeeds.
+
+### Disarm implementation and limitations
+
+The Batch 9 overlay adds `Keyword::Disarm` (bit 25), a name mapping, and an attack-event handler for printed/aura keyword strength. A unit's printed Disarm 2 and multiple Disarm 1 auras combine into a single attack's Might penalty against a chosen enemy unit at the same battlefield, once per combat, and the engine's standard temporary-Might field expires at the turn's end. Gameplay tests cover printed Disarm 1/2, aura stacking and field/owner isolation.
+
+**Known gap:** The current Disarm attack dispatcher asks for an immediate target rather than putting a separate reactable triggered ability onto the combat chain. That means reaction windows and resource costs for selecting protected units (such as Deflect) are not independently certified. These require a proper follow-up before declaring Disarm's interactions completely supported. Do not treat a passing regression as proof that every Disarm rule is implemented correctly.
