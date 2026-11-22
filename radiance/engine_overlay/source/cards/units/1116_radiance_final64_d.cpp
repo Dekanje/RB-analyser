@@ -44,7 +44,31 @@ private:
 class R64_1117 final : public SpellCard {
 public:
  const CardDef& def() const override { return d_; }
- // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
+
+ static bool eligible(const GameState& s,GameObjectId id){
+   if(!s.objectExists(id))return false;
+   const auto& o=s.getObject(id);
+   return o.location&&(o.isGear()||(o.isUnit()&&o.current_might<=3));
+ }
+ bool canBePlayed(const GameState& s,PlayerId)const override{
+   for(const auto& [id,o]:s.objects.onBoard())if(eligible(s,id))return true;
+   return false;
+ }
+ unsigned choicesAtFinalization()const override{return kFinalizeResolve;}
+ FinalizeChoice mayChooseAtFinalization(const GameState& s,PlayerId,GameObjectId id)const override{
+   return eligible(s,id)?FinalizeChoice::Yes:FinalizeChoice::No;
+ }
+ void onResolve(CardContext& c,const std::vector<GameObjectId>&)override{
+   std::vector<GameObjectId> options;
+   for(const auto& [id,o]:c.state.objects.onBoard())if(eligible(c.state,id))options.push_back(id);
+   std::sort(options.begin(),options.end());
+   const auto target=pickTarget(c,"Burn Away: banish gear or small unit",options);
+   if(finalizingChoices(c))return;
+   if(target==kInvalidId)return;
+   c.executor.banishObject(target,c.controller);
+   c.executor.burn(c.controller,2);
+ }
+
 private:
  const CardDef d_=[] {
   auto d=mkFinal64(1117,124,R"RB(Burn Away)RB",CardType::Spell,3,1,0,{Domain::Order},Rarity::Uncommon,R"RB(Banish a unit with 3 [M] or less or a gear. [Burn 2]. (Put the top 2 cards of your Main Deck into your trash.))RB");
@@ -108,7 +132,20 @@ private:
 class R64_1122 final : public UnitCard {
 public:
  const CardDef& def() const override { return d_; }
- // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
+
+ TriggerType triggerType()const override{return TriggerType::WhenAFriendlyUnitDies;}
+ unsigned choicesAtFinalization()const override{return kFinalizeTrigger;}
+ void onTrigger(CardContext& c,const std::vector<GameObjectId>&)override{
+   std::vector<GameObjectId> allies;
+   for(const auto& [id,o]:c.state.objects.onBoard())
+      if(o.isUnit()&&o.controller==c.controller&&o.location)allies.push_back(id);
+   std::sort(allies.begin(),allies.end());
+   const auto target=pickTarget(c,"Demacian Illuminators: Buff friendly unit",allies);
+   if(finalizingChoices(c))return;
+   if(target!=kInvalidId)c.executor.buffUnit(target);
+ }
+ // MECHANICS_INCOMPLETE: remaining timing/interaction cases under review.
+
 private:
  const CardDef d_=[] {
   auto d=mkFinal64(1122,131,R"RB(Demacian Illuminators)RB",CardType::Unit,3,1,3,{Domain::Order},Rarity::Rare,R"RB(When one or more friendly units die, [Buff] a friendly unit. (Give it a +1 [M] buff if it doesn't have one.))RB");
@@ -134,7 +171,19 @@ private:
 class R64_1124 final : public SpellCard {
 public:
  const CardDef& def() const override { return d_; }
- // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
+
+ void onResolve(CardContext& c,const std::vector<GameObjectId>&)override{
+   std::vector<GameObjectId> allies;
+   for(const auto& [id,o]:c.state.objects.onBoard())
+     if(o.isUnit()&&o.controller==c.controller&&o.location)allies.push_back(id);
+   std::sort(allies.begin(),allies.end());
+   for(const auto id:allies){
+     if(!c.state.objectExists(id)||!c.state.getObject(id).location)continue;
+     c.executor.readyObject(id);
+     c.executor.giveTemporaryMight(id,3);
+   }
+ }
+
 private:
  const CardDef d_=[] {
   auto d=mkFinal64(1124,134,R"RB(Raucous Anthem)RB",CardType::Spell,7,1,0,{Domain::Order},Rarity::Rare,R"RB(Ready your units and give them +3 [M] this turn.)RB");
