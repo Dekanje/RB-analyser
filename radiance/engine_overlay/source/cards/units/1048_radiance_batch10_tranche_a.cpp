@@ -133,6 +133,9 @@ private:
 class Radiance10_1052 final:public SpellCard {
 public:
  const CardDef& def()const override{return d_;}
+ int selfCostReduction(const GameState& state,PlayerId p)const override {
+   return state.player(p).played_unit_or_gear_to_battlefield_this_turn?2:0;
+ }
     void onResolve(CardContext& c,const std::vector<GameObjectId>&)override {
       auto u=r10units(c.state,c.controller),e=r10units(c.state,c.controller,false);
       u.insert(u.end(),e.begin(),e.end());std::sort(u.begin(),u.end());
