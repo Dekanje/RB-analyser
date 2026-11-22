@@ -10,7 +10,7 @@ protected:
     void recalc() {withEngine([&](GameEngine& e){e.testHook_recalculateAuras();});}
 };
 
-TEST_F(RadianceBatch7Test, AllSevenIdentitiesAndPrintedKeywordsAreCorrect) {
+TEST_F(RadianceBatch7Test, AllTenIdentitiesAndPrintedKeywordsAreCorrect) {
     EXPECT_EQ(card_db.get(1001).public_code,"RAD-058/167");
     EXPECT_TRUE(card_db.get(1001).keywords.has(Keyword::Accelerate));
     EXPECT_EQ(card_db.get(1001).energy_cost,4);
