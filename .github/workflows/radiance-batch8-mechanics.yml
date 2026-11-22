@@ -1,4 +1,5 @@
 name: Radiance Batch 8 - mechanics-based C++ implementation
+# Targeted run covers all authored Batch 8 cards before full acceptance.
 on:
   push:
     branches: ['radiance/mechanics-batch8-2026-11-22']
