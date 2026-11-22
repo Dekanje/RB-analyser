@@ -33,6 +33,7 @@ concurrency:
   cancel-in-progress: true
 permissions:
   contents: read
+  statuses: write
 jobs:
   preflight:
     runs-on: ubuntu-24.04
@@ -42,6 +43,15 @@ jobs:
       gtest_filter: ${{ steps.scope.outputs.gtest_filter }}
     steps:
       - uses: actions/checkout@v4
+      - name: Publish run link to commit status for log diagnosis
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api --method POST "repos/$GITHUB_REPOSITORY/statuses/$GITHUB_SHA" \
+            -f state=pending \
+            -f context=radiance/batch10-ci \
+            -f description="Running Batch 10 validation; not accepted yet" \
+            -f target_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
       - name: Select the minimum required validation scope
         id: scope
         env:
@@ -206,3 +216,29 @@ jobs:
           path: results/
           retention-days: 30
           if-no-files-found: ignore
+
+  report-validation:
+    needs: [preflight, compiled-card-check]
+    if: ${{ always() }}
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Publish final CI result and run link to commit status
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PREFLIGHT_RESULT: ${{ needs.preflight.result }}
+          COMPILED_RESULT: ${{ needs.compiled-card-check.result }}
+          VALIDATION_MODE: ${{ needs.preflight.outputs.mode }}
+        run: |
+          if [ "$PREFLIGHT_RESULT" = success ] && [ "$COMPILED_RESULT" = success ]; then
+            state=success
+          elif [ "$PREFLIGHT_RESULT" = success ] && [ "$COMPILED_RESULT" = skipped ] && [ "$VALIDATION_MODE" = preflight ]; then
+            state=pending
+          else
+            state=failure
+          fi
+          description="preflight=$PREFLIGHT_RESULT compiled=$COMPILED_RESULT mode=$VALIDATION_MODE"
+          gh api --method POST "repos/$GITHUB_REPOSITORY/statuses/$GITHUB_SHA" \
+            -f state="$state" \
+            -f context=radiance/batch10-ci \
+            -f description="$description" \
+            -f target_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
