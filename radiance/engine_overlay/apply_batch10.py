@@ -101,6 +101,7 @@ executor.write_text(es)
 
 # Route only the new event to Ahri copies at the SAME battlefield, and put
 # their abilities on the chain for a normal response window.
+tr=trigger.read_text()  # preserve the already-inserted gear-death listener
 change_anchor='    const PlayerId controller = state_.getObject(e.object).controller;'
 onchange_start=tr.index("void TriggerManager::onObjectStateChanged(")
 onchange_end=tr.index("\nvoid TriggerManager::",onchange_start+5)
