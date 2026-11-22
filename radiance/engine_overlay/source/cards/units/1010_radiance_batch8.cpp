@@ -15,7 +15,7 @@ CardDef rad(int id,int num,const char* name,CardType type,int energy,int power,
             int might,std::vector<Domain> domains,Rarity rarity,const char* text,
             std::initializer_list<Keyword> keywords={}) {
     CardDef d;
-    d.id=id;d.def_id="rad-"+std::to_string(num)+"-167";
+    d.id=CardDefId::fromRaw(id);d.def_id="rad-"+std::to_string(num)+"-167";
     const std::string ns=std::to_string(num);
     d.public_code="RAD-"+std::string(3-ns.size(),'0')+ns+"/167";
     d.name=name;d.set_code="RAD";d.set_name="Radiance";
