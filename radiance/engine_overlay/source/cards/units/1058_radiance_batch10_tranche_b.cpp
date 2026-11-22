@@ -234,6 +234,7 @@ private:
 class Radiance10_1067 final:public SpellCard {
 public:
  const CardDef& def()const override{return d_;}
+ unsigned choicesAtFinalization()const override{return kFinalizeResolve;}
     void onResolve(CardContext& c,const std::vector<GameObjectId>&)override {
       auto ally=units10b(c.state,c.controller,true);
       auto enemy=units10b(c.state,c.controller,false);
