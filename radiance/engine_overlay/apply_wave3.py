@@ -20,6 +20,16 @@ assert s.count(a)==1 and s.count(b)==1,"Wave 2 registration anchors changed"
 s=s.replace(a,a+"\nvoid register_card_995(CardRegistry&);",1)
 s=s.replace(b,b+"\n    register_card_995(registry);",1)
 init.write_text(s)
-# The 995-card seed-1 fingerprint must be measured by compiled CI and pinned
-# in the next commit; retain strict 994-card and earlier assertions.
+# Explicit compiled-pool seed-1 snapshot for the 995-card registry. Keep all
+# previous 988/993/994 assertions unchanged; do not relax reproducibility.
+decktest=engine/"tests/test_deck_fuzz.cpp"
+decksource=decktest.read_text()
+old="""    constexpr uint64_t kRadiance994DeckOfSeedOne = 3093099139649196331ull;
+    const uint64_t expected = registry_->size()==994 ? kRadiance994DeckOfSeedOne"""
+new="""    constexpr uint64_t kRadiance994DeckOfSeedOne = 3093099139649196331ull;
+    constexpr uint64_t kRadiance995DeckOfSeedOne = 6757871164987904898ull;
+    const uint64_t expected = registry_->size()==995 ? kRadiance995DeckOfSeedOne
+                             : registry_->size()==994 ? kRadiance994DeckOfSeedOne"""
+assert decksource.count(old)==1,"Unexpected Wave 2 seed fingerprint anchor"
+decktest.write_text(decksource.replace(old,new,1))
 print("WAVE3_APPLIED: RAD-008 War Scout, engine ID 995, deterministic tests")
