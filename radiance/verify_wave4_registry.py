@@ -23,7 +23,7 @@ WAVE4 = {
 
 def reconcile(cards):
     if len(cards) != 997:
-        raise ValueError(f"Expected 995 compiled definitions after Wave 4, found {len(cards)}")
+        raise ValueError(f"Expected 997 compiled definitions after Wave 4, found {len(cards)}")
     by_code = {}
     for row in cards:
         code = row.get("public_code")
