@@ -42,10 +42,22 @@ private:
 class Radiance10_1059 final:public UnitCard {
 public:
  const CardDef& def()const override{return d_;}
-    bool entersReadyOnPlay()const override{return true;}
-    // [Assault] is engine-provided; optional banish/replay activation pending.
+ TriggerType triggerType()const override{return TriggerType::WhenYouPlayMe;}
+ void onTrigger(CardContext& c,const std::vector<GameObjectId>&)override {
+   std::vector<LocationId> locations;
+   for(const auto& bf:c.state.battlefields)
+     locations.push_back(BattlefieldLocation{bf.id});
+   if(locations.empty())return;
+   const auto loc=c.executor.chooseLocationNow(c.controller,locations,
+      "Amateur Demolitionist: play a Bomb token to a battlefield");
+   KeywordSet keywords;keywords.set(Keyword::Deploy);
+   c.executor.createToken(c.controller,CardType::Gear,"Bomb",0,
+      {"Bomb"},keywords,loc,false,{},CardDefId{982});
+ }
 private:
- const CardDef d_=rad10b(1059,21,"Ekko, Revolutionary",CardType::Unit,5,1,4,{Domain::Fury},Rarity::Epic,"I enter ready.\n[Assault] (+1 [M] while I'm an attacker.)\n[Action][>] Discard 1, [1][R]: Banish me, then play me to your base, ignoring my cost.",{Keyword::Assault,Keyword::Action});
+ const CardDef d_=rad10b(1059,1,"Amateur Demolitionist",CardType::Unit,2,1,1,
+    {Domain::Fury},Rarity::Common,
+    "When you play me, play a Bomb gear token to a battlefield. (It has [Deploy]. When it dies, deal 2 to an enemy there and kill your other Bombs there.)",{});
 };
 class Radiance10_1060 final:public SpellCard {
 public:
