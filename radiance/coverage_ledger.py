@@ -10,6 +10,7 @@ WAVE1 = {
     "RAD-059/167": ["SupernovaDealsTenToChosenUnitAndDrawsTwo"],
     "RAD-079/167": ["AvalancheHitsBothBasesButNotBattlefields"],
     "RAD-099/167": ["SuaveNegotiatorDrawsOneForEachPlayer"],
+    "RAD-004/167": ["BrawlIsRegisteredAsChaosActionWithPrintedCost","BrawlGrantsAssaultEqualToChosenUnitMight","BrawlCanTargetEnemyUnit"],
 }
 # Evidence gaps must remain explicit until deterministic gameplay interactions pass.
 KNOWN_GAPS = {
@@ -18,6 +19,7 @@ KNOWN_GAPS = {
     "RAD-059/167": ["Illegal-target and countered-spell scenarios not yet covered"],
     "RAD-079/167": ["Shield and replacement-effect interactions not yet covered"],
     "RAD-099/167": ["Trigger suppression, empty-deck and counter-interaction cases not yet covered"],
+    "RAD-004/167": ["Assault expires at end of turn, actual attacker-only combat calculation, counter and illegal target cases not yet covered"],
 }
 
 def main():
