@@ -9,16 +9,16 @@ Pinned upstream AlphaRune engine: `ec90f0fed002aed374d06249fa95e83e3cfbd386`.
 | Engine ID | Canonical code | Card | Functional status |
 |---|---|---|---|
 | 1048 | RAD-013 | Lost to the Sands | Initial spell effect; mode and targeting timing to verify |
-| 1049 | RAD-035 | Invigorating Bloom | Play-time +3 Might; activated draw pending |
+| 1049 | RAD-035 | Invigorating Bloom | Play-time +3 Might plus Mighty-unit exhaust activation and draw; test pending |
 | 1050 | RAD-038 | Ahri, Confident | Disarm keyword; reaction to enemy Might reduction pending |
 | 1051 | RAD-051 | Parallel Convergence | Mandatory friendly-unit return is a play-time cost; battlefield damage chosen at finalization; test pending |
-| 1052 | RAD-070 | Hold 'Em | +3 Might effect; cost reduction pending |
-| 1053 | RAD-087 | Portable Portal | Deploy/Ganking aura; optional play-time cost pending |
+| 1052 | RAD-070 | Hold 'Em | +3 Might and -2 Energy conditional on tracked battlefield permanent play; tests pending |
+| 1053 | RAD-087 | Portable Portal | Deploy/Ganking aura and optional Body Power ready effect at trigger finalization; test pending |
 | 1054 | RAD-089 | Titanic Shrine | Play trigger draft; reaction timing/choice pending |
-| 1055 | RAD-096 | Satchel Charge | Bomb token and move mechanics pending |
+| 1055 | RAD-096 | Satchel Charge | Play-time selected friendly move and Bomb gear token placement; test pending |
 | 1056 | RAD-106 | The Good Stuff | Deploy and play/hold triggers; choices to verify |
-| 1057 | RAD-107 | Bedeviling Stranger | Hidden and conditional bounce; battlefield-choice locking pending |
-| 1058 | RAD-005 | Lingering Animus | Conditional enter-ready death history pending |
+| 1057 | RAD-107 | Bedeviling Stranger | Battlefield choice finalized before reactions; conditional optional enemy bounce; test pending |
+| 1058 | RAD-005 | Lingering Animus | Enter-ready checks friend unit or killed gear this turn, with gear death event hook; test pending |
 | 1059 | RAD-001 | Amateur Demolitionist | Play-time Bomb gear token using existing token effect; targeted gameplay test added |
 | 1060 | RAD-028 | Ki Burst | Exhaust-friendly-unit as cast-time additional cost; target/stun integration tests added, validation pending |
 | 1061 | RAD-029 | Life from Stone | Exhaust-friendly-unit as cast-time additional cost; draw/channel integration test added, validation pending |
@@ -66,3 +66,7 @@ and the listed rules-interaction gaps are unresolved.**
 RAD-047/051/061/075/116 have added effects and engine-path tests in the
 batch 10 development branch. These are **not accepted** until the focused
 CI run and full AlphaRune regression pass, and their edge cases are audited.
+
+Further engine-path tests have been added for Bloom's Mighty activation,
+Satchel Charge movement, Hold 'Em conditional discount, Portable Portal,
+Bedeviling Stranger, and Lingering Animus. These are unaccepted until CI proof.
