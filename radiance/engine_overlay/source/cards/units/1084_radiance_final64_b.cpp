@@ -2,6 +2,7 @@
 // These classes must not be declared mechanics-accepted without per-card scenarios.
 #include "cards/card.h"
 #include "cards/card_helpers.h"
+#include "cards/units/radiance_final64_helpers.h"
 #include "cards/card_registry.h"
 #include "core/game_state.h"
 #include "engine/effect_executor.h"
