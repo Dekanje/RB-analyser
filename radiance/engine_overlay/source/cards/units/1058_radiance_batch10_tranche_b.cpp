@@ -36,6 +36,13 @@ std::vector<GameObjectId> readyFriendly10b(const GameState& s,PlayerId p) {
       v.push_back(id);
   std::sort(v.begin(),v.end());return v;
 }
+
+std::vector<GameObjectId> friendlyGears10b(const GameState& s,PlayerId p) {
+ std::vector<GameObjectId> out;
+ for(const auto& [id,o]:s.objects.onBoard())
+   if(o.isGear()&&o.controller==p&&o.location.has_value())out.push_back(id);
+ std::sort(out.begin(),out.end());return out;
+}
 class Radiance10_1058 final:public UnitCard {
 public:
  const CardDef& def()const override{return d_;}
@@ -133,23 +140,77 @@ private:
 class Radiance10_1063 final:public SpellCard {
 public:
  const CardDef& def()const override{return d_;}
-    // Next three friendly unit plays need a duration-limited delayed effect.
+ void onResolve(CardContext& c,const std::vector<GameObjectId>&)override {
+   if(!c.state.objectExists(c.source))return;
+   c.state.getObject(c.source).card_counters["__rad_fanfare_remaining"]=3;
+   DelayedAbility da;
+   da.source=c.source;da.card_def_id=cardDefId();da.controller=c.controller;
+   da.trigger=TriggerType::WhenYouPlayAUnit;
+   da.expires_on_turn=c.state.turn.turn_number;da.repeats=true;
+   c.state.delayed_abilities.push_back(da);
+ }
+ void onTrigger(CardContext& c,const std::vector<GameObjectId>&)override {
+   if(!c.state.objectExists(c.source)||!c.state.chain.resuming)return;
+   const auto played=c.state.chain.resuming->triggering_subject;
+   if(played==kInvalidId||!c.state.objectExists(played))return;
+   const auto& unit=c.state.getObject(played);
+   if(!unit.isUnit()||unit.controller!=c.controller)return;
+   auto& counters=c.state.getObject(c.source).card_counters;
+   auto it=counters.find("__rad_fanfare_remaining");
+   if(it==counters.end()||it->second<=0)return;
+   --it->second;c.executor.drawCards(c.controller,1);
+ }
 private:
- const CardDef d_=rad10b(1063,47,"Fanfare",CardType::Spell,3,0,0,{},Rarity::Common,"The next three times you play a unit this turn, draw 1.",{});
+ const CardDef d_=rad10b(1063,47,"Fanfare",CardType::Spell,3,0,0,{},Rarity::Common,
+   "The next three times you play a unit this turn, draw 1.",{});
 };
 class Radiance10_1064 final:public UnitCard {
 public:
  const CardDef& def()const override{return d_;}
-    // [Ganking] is engine-provided. Return-friendly-unit play cost pending.
+ bool canBePlayed(const GameState& state,PlayerId player)const override {
+   return !units10b(state,player,true).empty();
+ }
+ AdditionalPlayCost additionalPlayCost(const GameState& state,const CardDB&,PlayerId player,GameObjectId)const override {
+   return {.exists=true,.mandatory=true,.payable=!units10b(state,player,true).empty()};
+ }
+ PlayCostAdjust payAdditionalPlayCost(CardContext& c,const std::function<bool(const PlayCostAdjust&)>&)override {
+   auto choices=units10b(c.state,c.controller,true);
+   choices.erase(std::remove(choices.begin(),choices.end(),c.source),choices.end());
+   if(choices.empty())return {};
+   const auto unit=c.executor.chooseObjectNow(c.controller,choices,"Ekko, Ingenious: return friendly unit as additional play cost");
+   if(unit!=kInvalidId)c.executor.bounceToHand(unit);
+   return {};
+ }
 private:
- const CardDef d_=rad10b(1064,61,"Ekko, Ingenious",CardType::Unit,3,0,4,{Domain::Mind},Rarity::Rare,"As an additional cost to play me, return a friendly unit to its owner's hand.\n[Ganking] (I can move from battlefield to battlefield.)",{Keyword::Ganking});
+ const CardDef d_=[] {
+   auto d=rad10b(1064,61,"Ekko, Ingenious",CardType::Unit,3,0,4,{Domain::Mind},
+     Rarity::Rare,"As an additional cost to play me, return a friendly unit to its owner's hand.\n[Ganking] (I can move from battlefield to battlefield.)",{Keyword::Ganking});
+   d.super_type=SuperType::Champion;d.tags={"Ekko","Zaun"};d.champion_tag="Ekko";
+   return d;
+ }();
 };
 class Radiance10_1065 final:public UnitCard {
 public:
  const CardDef& def()const override{return d_;}
-    // [Deflect] is engine-provided. Optional bounce-discount cost pending.
+ AdditionalPlayCost additionalPlayCost(const GameState& state,const CardDB&,PlayerId player,GameObjectId)const override {
+   AdditionalPlayCost c;c.exists=true;
+   c.payable=!friendlyGears10b(state,player).empty();
+   c.best.energy_reduction=2;return c;
+ }
+ PlayCostAdjust payAdditionalPlayCost(CardContext& c,const std::function<bool(const PlayCostAdjust&)>& affordable)override {
+   const auto gears=friendlyGears10b(c.state,c.controller);
+   if(gears.empty())return {};
+   if(affordable(PlayCostAdjust{})&&
+      !c.executor.confirmNow(c.controller,"Skystrike Squadron: return gear to cost 2 less"))return {};
+   const auto gear=c.executor.chooseObjectNow(c.controller,gears,
+      "Skystrike Squadron: return friendly gear as additional play cost");
+   if(gear==kInvalidId)return {};
+   c.executor.bounceToHand(gear);
+   return {.energy_reduction=2};
+ }
 private:
- const CardDef d_=rad10b(1065,75,"Skystrike Squadron",CardType::Unit,5,0,4,{Domain::Body},Rarity::Common,"You may return a friendly gear to its owner's hand as an additional cost to play me. If you do, I cost [2] less.\n[Deflect] (Opponents must pay [A] to choose me with a spell or ability.)",{Keyword::Deflect});
+ const CardDef d_=rad10b(1065,75,"Skystrike Squadron",CardType::Unit,5,0,4,{Domain::Body},
+   Rarity::Common,"You may return a friendly gear to its owner's hand as an additional cost to play me. If you do, I cost [2] less.\n[Deflect] (Opponents must pay [A] to choose me with a spell or ability.)",{Keyword::Deflect});
 };
 class Radiance10_1066 final:public GearCard {
 public:
