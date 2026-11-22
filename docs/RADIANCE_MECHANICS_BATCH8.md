@@ -9,6 +9,11 @@ registered, 99 not yet implemented.
 All 15 Batch 8 C++ card implementations are present on the development branch,
 but **do not call this batch accepted until the final full-regression workflow passes**.
 
+**Measured targeted test gate (run 45060798628):** 18/18 dedicated Batch 8
+scenario tests passed. Compiler cache: 116/121 hits (95.87%), with a 54-second
+C++ build. This is evidence for the targeted scope only; the deterministic
+seed-deck fingerprint and final full regression are still separate checks.
+
 ## Included mechanics
 
 | Set code | Card | Engine ID | Tested behavior |
