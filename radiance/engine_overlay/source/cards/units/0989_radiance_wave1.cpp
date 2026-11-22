@@ -73,7 +73,7 @@ private:
         d.id=991; d.def_id="rad-059-167";
         d.name="Supernova"; d.set_code="RAD"; d.set_name="Radiance";
         d.public_code="RAD-059/167"; d.collector_number=59;
-        d.card_type=CardType::Spell; d.domains={Domain::Order};
+        d.card_type=CardType::Spell; d.domains={Domain::Mind};
         d.energy_cost=9; d.power_cost=1; d.rarity=Rarity::Uncommon;
         d.ability_text="Deal 10 to a unit. Draw 2.";
         return d;
