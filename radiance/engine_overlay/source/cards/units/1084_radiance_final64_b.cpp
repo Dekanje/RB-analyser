@@ -59,7 +59,7 @@ public:
  // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
 private:
  const CardDef d_=[] {
-  auto d=mkFinal64(1086,62,R"RB(Gravity Field)RB",CardType::Gear,5,1,0,{Domain::Calm},Rarity::Rare,R"RB([Deploy] (Play this only to a battlefield. When an opponent holds here, kill this.)
+  auto d=mkFinal64(1086,62,R"RB(Gravity Field)RB",CardType::Gear,5,1,0,{Domain::Mind},Rarity::Rare,R"RB([Deploy] (Play this only to a battlefield. When an opponent holds here, kill this.)
 Opponents must pay [1][A] to move one or more units to this battlefield.
 [Deathknell][>] Draw 1. (When I die, get the effect.))RB");
   d.tags={R"RB(Device)RB"};
@@ -76,7 +76,7 @@ public:
  // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
 private:
  const CardDef d_=[] {
-  auto d=mkFinal64(1087,63,R"RB(Kai'Sa - Rebel)RB",CardType::Unit,5,1,5,{Domain::Mind},Rarity::Rare,R"RB([Disarm] (When I attack, give an enemy unit here -1 [M] this turn).
+  auto d=mkFinal64(1087,63,R"RB(Kai'Sa, Rebel)RB",CardType::Unit,5,1,5,{Domain::Mind},Rarity::Rare,R"RB([Disarm] (When I attack, give an enemy unit here -1 [M] this turn).
 While I'm in a showdown, your spells have [Reaction]. (Play them any time, even before spells and abilities resolve.))RB");
   d.super_type=SuperType::Champion;
   d.tags={R"RB(Kai'Sa)RB",R"RB(The Void)RB"};
@@ -86,13 +86,13 @@ While I'm in a showdown, your spells have [Reaction]. (Play them any time, even 
  }();
 };
 
-class R64_1088 final : public SpellCard {
+class R64_1088 final : public GearCard {
 public:
  const CardDef& def() const override { return d_; }
  // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
 private:
  const CardDef d_=[] {
-  auto d=mkFinal64(1088,64,R"RB(Scrutinizing Scope)RB",CardType::Spell,2,0,0,{Domain::Mind},Rarity::Rare,R"RB([1], [E]: Choose an opponent. They guess a card type. Reveal the top card of your Main Deck. If it has that type, recycle it. Otherwise, draw it. (Unit, gear, and spell are types.))RB");
+  auto d=mkFinal64(1088,64,R"RB(Scrutinizing Scope)RB",CardType::Gear,2,0,0,{Domain::Mind},Rarity::Rare,R"RB([1], [E]: Choose an opponent. They guess a card type. Reveal the top card of your Main Deck. If it has that type, recycle it. Otherwise, draw it. (Unit, gear, and spell are types.))RB");
   d.image_url=R"RB(https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/6a028fc372c14dda73864aba3d3e84063f6da98d-744x1039.png?accountingTag=RB)RB";
   return d;
  }();
@@ -117,7 +117,7 @@ public:
  // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
 private:
  const CardDef d_=[] {
-  auto d=mkFinal64(1090,67,R"RB(Clocktower Guardian)RB",CardType::Unit,8,2,8,{Domain::Fury},Rarity::Epic,R"RB(When you play me or when I hold, [Predict 3].
+  auto d=mkFinal64(1090,67,R"RB(Clocktower Guardian)RB",CardType::Unit,8,2,8,{Domain::Mind},Rarity::Epic,R"RB(When you play me or when I hold, [Predict 3].
 [Deathknell][>] Banish the top card of your Main Deck. You may play it, ignoring its Energy cost.)RB");
   d.tags={R"RB(Mech)RB"};
   d.image_url=R"RB(https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/b846d604eee450a4ab8f457f2738b0596e7b361e-744x1039.png?accountingTag=RB)RB";
@@ -132,7 +132,7 @@ public:
  // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
 private:
  const CardDef d_=[] {
-  auto d=mkFinal64(1091,68,R"RB(Orianna - Mechanical Marvel)RB",CardType::Unit,5,0,5,{Domain::Mind},Rarity::Epic,R"RB(Once each turn, while I'm at a battlefield, you may pay [1][A] less to play a gear.)RB");
+  auto d=mkFinal64(1091,68,R"RB(Orianna, Mechanical Marvel)RB",CardType::Unit,5,0,5,{Domain::Mind},Rarity::Epic,R"RB(Once each turn, while I'm at a battlefield, you may pay [1][A] less to play a gear.)RB");
   d.super_type=SuperType::Champion;
   d.tags={R"RB(Piltover)RB",R"RB(Orianna)RB"};
   d.image_url=R"RB(https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/00f5a081a085e9c3851daf79d9e39bd378f71fe3-744x1039.png?accountingTag=RB)RB";
@@ -140,13 +140,13 @@ private:
  }();
 };
 
-class R64_1092 final : public SpellCard {
+class R64_1092 final : public GearCard {
 public:
  const CardDef& def() const override { return d_; }
  // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
 private:
  const CardDef d_=[] {
-  auto d=mkFinal64(1092,69,R"RB(Zero Point Inflection)RB",CardType::Spell,9,2,0,{Domain::Mind},Rarity::Epic,R"RB(When you play a card, draw 2.
+  auto d=mkFinal64(1092,69,R"RB(Zero Point Inflection)RB",CardType::Gear,9,2,0,{Domain::Mind},Rarity::Epic,R"RB(When you play a card, draw 2.
 When you draw 1 or more cards with 9 or more other cards in your hand, discard your hand, kill this, and choose an opponent. They score 1 point.)RB");
   d.image_url=R"RB(https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/5e0646270d27f9fa78f4c3a637695e5cdeb8ee67-744x1039.png?accountingTag=RB)RB";
   return d;
@@ -226,7 +226,7 @@ public:
  // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
 private:
  const CardDef d_=[] {
-  auto d=mkFinal64(1098,85,R"RB(Graves - Blasting Through)RB",CardType::Unit,5,1,4,{Domain::Body},Rarity::Rare,R"RB(When I attack or defend, deal damage equal to my Might to all enemy units here.
+  auto d=mkFinal64(1098,85,R"RB(Graves, Blasting Through)RB",CardType::Unit,5,1,4,{Domain::Body},Rarity::Rare,R"RB(When I attack or defend, deal damage equal to my Might to all enemy units here.
 I don't deal combat damage.)RB");
   d.super_type=SuperType::Champion;
   d.tags={R"RB(Bilgewater)RB",R"RB(Graves)RB"};
@@ -241,7 +241,7 @@ public:
  // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
 private:
  const CardDef d_=[] {
-  auto d=mkFinal64(1099,90,R"RB(Evelynn - Consuming)RB",CardType::Unit,5,1,5,{Domain::Body},Rarity::Epic,R"RB([Ambush] (You may play me as a [Reaction] to a battlefield where you have units.)
+  auto d=mkFinal64(1099,90,R"RB(Evelynn, Consuming)RB",CardType::Unit,5,1,5,{Domain::Body},Rarity::Epic,R"RB([Ambush] (You may play me as a [Reaction] to a battlefield where you have units.)
 When you play a card from face down, ready me and give me +1 [M] this turn.)RB");
   d.super_type=SuperType::Champion;
   d.tags={R"RB(Evelynn)RB"};
