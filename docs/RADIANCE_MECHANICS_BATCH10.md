@@ -80,3 +80,12 @@ One-Two Punch, and existing The Good Stuff play/hold clauses. These additions
 require compiled gameplay tests and the full regression; they are not certified
 by the strict identity registry alone. The coverage ledger intentionally does
 not claim all 167 cards or all variants are implemented.
+
+## Batch 10 full-regression candidate
+
+Hold 'Em now counts both ordinary card plays and token unit/gear plays to a
+battlefield. The complete 20-card focused gameplay suite, registry audit, and
+full upstream AlphaRune regression are mandatory acceptance gates. This is a
+**candidate only** until the GitHub Actions full job succeeds and its output
+has been inspected. A successful run does not certify unrelated, still-missing
+Radiance cards or every possible card interaction.
