@@ -29,7 +29,28 @@ CardDef mkFinal64_c(int id,int num,const char* name,CardType type,int energy,int
 class R64_1100 final : public UnitCard {
 public:
  const CardDef& def() const override { return d_; }
- // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
+
+ TriggerType triggerType()const override{return TriggerType::WhenIConquer;}
+ void onTrigger(CardContext& c,const std::vector<GameObjectId>&)override{
+   if(!c.state.objectExists(c.source))return;
+   const auto& self=c.state.getObject(c.source);
+   if(!self.isAtBattlefield())return;
+   for(const auto& [id,o]:c.state.objects.onBoard())
+     if(o.isGear()&&o.controller==c.controller&&o.isAtBattlefield()&&
+        o.battlefieldId()==self.battlefieldId()&&o.hasKeyword(Keyword::Deploy)){
+          c.executor.channelRunes(c.controller,1,true);
+          return;
+        }
+ }
+ void applyPassiveAura(GameState& s,PlayerId p)const override{
+   forEachSelfOnce(*this,s,p,[&](GameObjectId source,GameObject& champion){
+      if(!champion.location)return;
+      for(auto& [id,o]:s.objects.onBoard())
+        if(o.isGear()&&o.controller==p&&o.hasKeyword(Keyword::Deploy))
+          auraKeyword(o,source,Keyword::Action);
+   });
+ }
+
 private:
  const CardDef d_=[] {
   auto d=mkFinal64_c(1100,91,R"RB(Jarvan IV, Martial Paragon)RB",CardType::Unit,4,1,4,{Domain::Body},Rarity::Epic,R"RB(Your gear with [Deploy] have [Action]. (They can be played on your turn or in showdowns.)
