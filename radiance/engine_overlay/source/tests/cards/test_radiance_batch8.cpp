@@ -235,4 +235,21 @@ TEST_F(RadianceBatch8Test, WatersWageFacedownOnOwnTurnMakesThreeReadyGold) {
     EXPECT_EQ(gold,3);
 }
 
+
+TEST_F(RadianceBatch8Test, EntrenchedBoarMayEnterReadyAtCostOfBeingUnableToMove) {
+    auto boar=addToHand(P1,CardDefId{1012});
+    EnginePathAgent accepts(EnginePathAgent::accepting());
+    playThroughEngine(boar,&accepts);
+    ASSERT_TRUE(state.getObject(boar).location.has_value());
+    EXPECT_FALSE(state.getObject(boar).is_exhausted);
+    EXPECT_TRUE(state.getObject(boar).cant_move_this_turn);
+}
+TEST_F(RadianceBatch8Test, MomentaryCompanionGetsTemporaryWhenPlayedOffTurn) {
+    auto companion=addUnit(P1,CardDefId{1015},4,0);
+    state.turn.phase=TurnPhase::MainPhase;
+    state.turn.turn_player=P2;
+    fireTriggerThroughEngine(companion,TriggerType::WhenYouPlayMe);
+    EXPECT_TRUE(state.getObject(companion).hasKeyword(Keyword::Temporary));
+}
+
 } // namespace riftbound::test::radiance_batch8
