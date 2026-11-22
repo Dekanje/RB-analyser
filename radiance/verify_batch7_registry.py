@@ -34,9 +34,17 @@ BATCH7 = {
     "RAD-101/167": ("An Offer You Can't Refuse","spell"),
 }
 
+# RAD-101/167 already exists as engine card 984 from an earlier wave.
+# Reject shadow duplicates instead of substituting an unverified implementation.
+NEW_BATCH7_CODES = {
+    "RAD-058/167", "RAD-048/167", "RAD-071/167",
+    "RAD-072/167", "RAD-122/167", "RAD-128/167",
+    "RAD-037/167", "RAD-076/167", "RAD-117/167",
+}
+
 def reconcile(cards):
-    if len(cards) != 1010:
-        raise ValueError(f"Expected 1010 compiled definitions after Batch 7, found {len(cards)}")
+    if len(cards) != 1009:
+        raise ValueError(f"Expected 1009 compiled definitions after Batch 7, found {len(cards)}")
     by_code = {}
     for row in cards:
         code = row.get("public_code")
@@ -46,6 +54,8 @@ def reconcile(cards):
         matches=by_code.get(code,[])
         if len(matches)!=1:
             raise ValueError(f"Expected exactly one compiled {code}; got {len(matches)}")
+        if code == "RAD-101/167" and matches[0].get("card_id") != 984:
+            raise ValueError("RAD-101 must use the existing engine card 984")
         if matches[0].get("name")!=name or matches[0].get("card_type")!=typ:
             raise ValueError(f"Wrong compiled card metadata for {code}: {matches[0]}")
     base_codes=[f"RAD-{num:03d}/167" for num in range(1,168)]
@@ -55,11 +65,11 @@ def reconcile(cards):
         "engine_definitions":len(cards),"base_set_card_count":167,
         "registered_base_radiance_cards":len(registered),
         "missing_base_radiance_card_codes":missing,
-        "newly_authored_cplusplus_cards":sorted(BATCH7),
-        "newly_authored_cplusplus_count":len(BATCH7),
+        "newly_authored_cplusplus_cards":sorted(NEW_BATCH7_CODES),
+        "newly_authored_cplusplus_count":len(NEW_BATCH7_CODES),
         "all_radiance_supported":len(missing)==0,
         "mechanics_certified_for_entire_set":False,
-        "note":"Registered cards may still have untested/incorrect mechanics; this check only guarantees twenty-two identities and a complete inventory of missing card codes."
+        "note":"Registered cards may still have untested/incorrect mechanics; this check only guarantees twenty-one identities and a complete inventory of missing card codes."
     }
 
 def main():

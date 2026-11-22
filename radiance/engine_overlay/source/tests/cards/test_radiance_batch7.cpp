@@ -1,4 +1,4 @@
-// Batch 7: executable engine-path coverage for cards 1001-1007.
+// Batch 7: executable engine-path coverage for new cards 1001-1009 and existing RAD-101 engine card 984.
 #include "tests/cards/card_test_fixture.h"
 #include "cards/card.h"
 #include "cards/card_helpers.h"
@@ -10,7 +10,7 @@ protected:
     void recalc() {withEngine([&](GameEngine& e){e.testHook_recalculateAuras();});}
 };
 
-TEST_F(RadianceBatch7Test, AllTenIdentitiesAndPrintedKeywordsAreCorrect) {
+TEST_F(RadianceBatch7Test, NineNewIdentitiesAndPreexistingOfferAreCorrect) {
     EXPECT_EQ(card_db.get(1001).public_code,"RAD-058/167");
     EXPECT_TRUE(card_db.get(1001).keywords.has(Keyword::Accelerate));
     EXPECT_EQ(card_db.get(1001).energy_cost,4);
@@ -28,8 +28,8 @@ TEST_F(RadianceBatch7Test, AllTenIdentitiesAndPrintedKeywordsAreCorrect) {
     EXPECT_EQ(card_db.get(1008).public_code,"RAD-076/167");
     EXPECT_EQ(card_db.get(1009).public_code,"RAD-117/167");
     EXPECT_TRUE(card_db.get(1009).keywords.has(Keyword::Reaction));
-    EXPECT_EQ(card_db.get(1010).public_code,"RAD-101/167");
-    EXPECT_TRUE(card_db.get(1010).keywords.has(Keyword::Action));
+    EXPECT_EQ(card_db.get(984).public_code,"RAD-101/167");
+    EXPECT_TRUE(card_db.get(984).keywords.has(Keyword::Action));
 }
 
 TEST_F(RadianceBatch7Test, RiptideMageDebuffsAnEnemyOnRealPlay) {
@@ -174,7 +174,7 @@ TEST_F(RadianceBatch7Test, AnOfferKillsChosenGearAndCreatesExhaustedGold) {
     auto gear=addToHand(P1,CardDefId{345});
     playThroughEngine(gear);
     ASSERT_TRUE(state.getObject(gear).location.has_value());
-    const auto spell=addToHand(P1,CardDefId{1010});
+    const auto spell=addToHand(P1,CardDefId{984});
     EnginePathAgent agent(EnginePathAgent::choosing(gear));
     playThroughEngine(spell,&agent);
     EXPECT_EQ(state.getObject(gear).zone,ZoneType::Trash);

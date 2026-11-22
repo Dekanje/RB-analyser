@@ -28,11 +28,11 @@ declaration="void register_card_1000(CardRegistry&);"
 registration="    register_card_1000(registry);"
 assert s.count(declaration)==1 and s.count(registration)==1, "Batch 6 cards_init anchors changed"
 s=s.replace(declaration,declaration+"\n"+"\n".join(
-    f"void register_card_{i}(CardRegistry&);" for i in range(1001,1011)),1)
+    f"void register_card_{i}(CardRegistry&);" for i in range(1001,1010)),1)
 s=s.replace(registration,registration+"\n"+"\n".join(
-    f"    register_card_{i}(registry);" for i in range(1001,1011)),1)
+    f"    register_card_{i}(registry);" for i in range(1001,1010)),1)
 init.write_text(s)
 
 # Batch 6 CI must supply the exact 1000-card seed-1 fingerprint before final
 # regression; similarly Batch 7's 1010-card value is measured, never guessed.
-print("RADIANCE_BATCH7_APPLIED: ten new C++ effects, IDs 1001..1010")
+print("RADIANCE_BATCH7_APPLIED: nine new C++ effects, IDs 1001..1009")

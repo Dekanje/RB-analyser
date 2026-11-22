@@ -1,4 +1,4 @@
-// Radiance Batch 7: seven individually implemented cards using existing
+// Radiance Batch 7: nine individually implemented cards using existing
 // engine semantics (finalized choice, equip, auras, and cost reductions).
 // Printed data: pinned AlphaRune Riot-gallery JSON rad_048, 058, 071, 072,
 // 122, 128, 037. No registry-only stubs.
@@ -262,46 +262,6 @@ private:
     }();
 };
 
-class RadianceAnOfferYouCantRefuse final : public SpellCard {
-public:
-    const CardDef& def() const override{return d_;}
-    unsigned choicesAtFinalization() const override{return kFinalizeResolve;}
-    bool hasLegalTargets(const GameState& state,PlayerId controller) const override {
-        for(const auto& [id,g]:state.objects.onBoard())
-            if(g.isGear() && g.location.has_value() &&
-               (g.controller==controller || !g.untargetable_by_enemy))return true;
-        return false;
-    }
-    void onResolve(CardContext& ctx,const std::vector<GameObjectId>&) override {
-        std::vector<GameObjectId> options;
-        for(const auto& [id,g]:ctx.state.objects.onBoard())
-            if(g.isGear() && g.location.has_value() &&
-               (g.controller==ctx.controller || !g.untargetable_by_enemy))
-                options.push_back(id);
-        std::sort(options.begin(),options.end());
-        const auto chosen=pickTarget(ctx,"An Offer You Can't Refuse: kill a gear",options);
-        if(finalizingChoices(ctx))return;
-        if(chosen==kInvalidId || !ctx.state.objectExists(chosen))return;
-        const auto beneficiary=ctx.state.getObject(chosen).controller;
-        ctx.executor.killObject(chosen);
-        // An actual token tied to the pinned engine Gold card definition:
-        // enters exhausted; its own reaction is registered on token card 326.
-        ctx.executor.createToken(beneficiary,CardType::Gear,"Gold",0,{},
-             KeywordSet{},LocationId{BaseLocation{beneficiary}},false,{},
-             kGoldGearCardDefId,/*enters_exhausted=*/true);
-    }
-private:
-    const CardDef d_=[]{
-        CardDef d;
-        d.id=1010;d.def_id="rad-101-167";d.public_code="RAD-101/167";
-        d.name="An Offer You Can't Refuse";d.set_code="RAD";d.set_name="Radiance";
-        d.collector_number=101;d.card_type=CardType::Spell;
-        d.domains={Domain::Chaos};d.energy_cost=2;d.rarity=Rarity::Uncommon;
-        d.keywords.set(Keyword::Action);
-        d.ability_text="[Action] (Play on your turn or in showdowns.)\\nKill a gear. Its controller plays a Gold gear token exhausted.";
-        return d;
-    }();
-};
 
 } // namespace
 void register_card_1001(CardRegistry& r){r.registerCard(1001,std::make_unique<RadianceRiptideMage>());}
@@ -313,5 +273,4 @@ void register_card_1006(CardRegistry& r){r.registerCard(1006,std::make_unique<Ra
 void register_card_1007(CardRegistry& r){r.registerCard(1007,std::make_unique<RadianceWatchfulCurator>());}
 void register_card_1008(CardRegistry& r){r.registerCard(1008,std::make_unique<RadianceSneakyZeebles>());}
 void register_card_1009(CardRegistry& r){r.registerCard(1009,std::make_unique<RadianceForDemacia>());}
-void register_card_1010(CardRegistry& r){r.registerCard(1010,std::make_unique<RadianceAnOfferYouCantRefuse>());}
 } // namespace riftbound
