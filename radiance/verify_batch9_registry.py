@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Batch 9 seven-new-card strict registry check: three new real engine card identities.
+"""Batch 9 fifteen-unique-card strict registry check (seven units/gear plus eight battlefields).
 
 Registration and focused tests are NOT complete-set Radiance certification.
 """
@@ -17,9 +17,17 @@ NEW={
     "RAD-055/167":("Clanging Sentry","unit",1030),
     "RAD-093/167":("Disposal Expert","unit",1034),
     "RAD-097/167":("Siren of the Shallows","unit",1035),
+    "RAD-157/167":("Bandle Scouts' Academy","battlefield",1040),
+    "RAD-159/167":("Black Rose Sanctum","battlefield",1041),
+    "RAD-160/167":("Cosmic Vista","battlefield",1042),
+    "RAD-161/167":("Durand Memorial","battlefield",1043),
+    "RAD-162/167":("Firelights' Hideout","battlefield",1044),
+    "RAD-164/167":("Packed Amphitheater","battlefield",1045),
+    "RAD-165/167":("Rakelstake","battlefield",1046),
+    "RAD-166/167":("Ruined Monastery","battlefield",1047),
 }
 def verify(cards):
-    assert len(cards)==1031, (len(cards),"Expected 1,031 compiled engine definitions")
+    assert len(cards)==1039, (len(cards),"Expected 1,039 compiled engine definitions")
     codes={}
     ids=set()
     for card in cards:
@@ -39,9 +47,9 @@ def verify(cards):
         assert c and c["name"]==name and c["card_type"]==kind,(code,c)
     base={f"RAD-{n:03d}/167" for n in range(1,168)}
     registered=base&set(codes)
-    assert len(registered)==75, (len(registered),"Expected 80 Radiance base IDs")
+    assert len(registered)==83, (len(registered),"Expected 83 Radiance base IDs")
     return {"compiled_registry_size":len(cards),"radiance_base_registered":len(registered),
-            "radiance_base_missing":len(base-registered),"batch9_tranche1_count":len(NEW),
+            "radiance_base_missing":len(base-registered),"batch9_new_unique_count":len(NEW),
             "batch9_new_codes":sorted(NEW),"full_set_verified":False}
 if __name__=="__main__":
     parser=argparse.ArgumentParser()
@@ -51,4 +59,4 @@ if __name__=="__main__":
     report=verify(json.loads(args.registry.read_text())["cards"])
     args.output.parent.mkdir(parents=True,exist_ok=True)
     args.output.write_text(json.dumps(report,indent=2))
-    print("BATCH9_TRANCHE1_STRICT_REGISTRY_PASS",json.dumps(report))
+    print("BATCH9_STRICT_REGISTRY_PASS",json.dumps(report))
