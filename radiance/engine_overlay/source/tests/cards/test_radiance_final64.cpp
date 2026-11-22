@@ -110,6 +110,42 @@ TEST_F(RadianceFinal64Test, DemacianIlluminatorsBuffsAfterFriendlyUnitDies){
  resolveThroughEngine([&](EffectExecutor& exec,GameState&){exec.killObject(victim);},&choice);
  EXPECT_EQ(state.getObject(ally).buff_count,1);
 }
+TEST_F(RadianceFinal64Test, ExplosimianHoldCreatesThreeBombsAtOneBattlefield){
+ auto unit=addUnit(P1,CardDefId{1102},6,0);
+ fireTriggerThroughEngine(unit,TriggerType::WhenIHold);
+ int bombs=0;std::set<BattlefieldId> battlefields;
+ for(const auto& [id,o]:state.objects.onBoard())
+   if(o.controller==P1&&o.isGear()&&o.name=="Bomb"&&o.isAtBattlefield()){
+     ++bombs;battlefields.insert(*o.battlefieldId());
+   }
+ EXPECT_EQ(bombs,3);
+ EXPECT_EQ(battlefields.size(),1u);
+}
+TEST_F(RadianceFinal64Test, EvelynnScoresOnHoldOnlyWithFriendlyFacedownHere){
+ auto eve=addUnit(P1,CardDefId{1108},4,0);
+ auto facedown=state.createObject();
+ auto& obj=state.getObject(facedown);
+ obj.owner=P1;obj.controller=P1;obj.card_type=CardType::Spell;
+ obj.zone=ZoneType::FacedownZone;obj.is_hidden=true;
+ obj.hidden_at=state.battlefields[0].id;
+ auto before=state.player(P1).score;
+ fireTriggerThroughEngine(eve,TriggerType::WhenIHold);
+ EXPECT_EQ(state.player(P1).score,before+1);
+}
+TEST_F(RadianceFinal64Test, PitilessStalkerExhaustsToStunEnemy){
+ auto stalker=addUnit(P1,CardDefId{1106},5,0);
+ auto enemy=addUnit(P2,kInvalidId,5,0);
+ auto* impl=card_registry.get(CardDefId{1106});
+ ASSERT_NE(impl,nullptr);
+ EXPECT_TRUE(impl->canActivateAbility(state,P1));
+ Intent a;a.type=IntentType::ActivateAbility;a.player=P1;a.ability_source=stalker;
+ EnginePathAgent choose(EnginePathAgent::choosing(enemy));
+ withEngineDefaultTurn([&](GameEngine& e){
+   e.testHook_executeIntent(a);settleLikeTheEngine(e);
+ },&choose,nullptr,P1);
+ EXPECT_TRUE(state.getObject(stalker).is_exhausted);
+ EXPECT_TRUE(state.getObject(enemy).is_stunned);
+}
 TEST_F(RadianceFinal64Test, SixtyFourUniqueCardDefinitionsHaveCanonicalMetadata){
  ASSERT_EQ(expected.size(),64u);
  std::set<int> ids,numbers;std::set<std::string> public_codes;
