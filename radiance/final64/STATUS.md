@@ -39,3 +39,11 @@ Empyrean, Scope, Raving Witness, Primordial Roar, Cataclysm, Evelynn,
 Jarvan IV, Explosimian, Gutter Guardian, Stalker, Lulu pending, Mechanical
 Bandit, Riven's exhaustion trigger, Rousing Display, Seraphine and more.
 Some listed cards have pending additional clauses; **no 64-card acceptance yet**.
+
+## Third mechanics wave
+
+Implemented additional Scorched Earth split damage, Drakehound Packmaster
+opponent-card play, Seraphic Wyvern channel replacement, Conquest tracking,
+Mind/Body/Chaos spells, Show Off as-you-play spell core hook, Bushwhack Trap
+facedown capacity, and multiple activated unit abilities with real engine-path
+scenarios. Full compilation, correctness and regression remain unverified.
