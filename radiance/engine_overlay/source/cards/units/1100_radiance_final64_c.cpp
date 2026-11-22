@@ -366,7 +366,37 @@ private:
 class R64_1111 final : public UnitCard {
 public:
  const CardDef& def() const override { return d_; }
- // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
+
+ std::vector<ActivatedAbility> activatedAbilities()const override {
+   ActivatedAbility a;a.cost.energy=1;a.cost.exhaust=true;return {a};
+ }
+ TriggerType triggerType()const override{return TriggerType::WhenIDefend;}
+ unsigned choicesAtFinalization()const override{return kFinalizeActivate|kFinalizeTrigger;}
+ void onActivate(CardContext& c,int,const std::vector<GameObjectId>&)override{
+   const int chosen=pickBattlefield(*this,c,"Ziggs: play a Bomb");
+   if(chosen<0)return;
+   if(finalizingChoices(c))return;
+   if(static_cast<size_t>(chosen)<c.state.battlefields.size())
+     f64Bomb(c,BattlefieldLocation{c.state.battlefields[chosen].id});
+ }
+ void onTrigger(CardContext& c,const std::vector<GameObjectId>&)override{
+   if(costAlreadyPaid(c)){
+     if(finalizingChoices(c))return;
+     c.executor.giveTemporaryMight(c.source,2);
+     return;
+   }
+   auto gears=f64Gears(c.state,c.controller);
+   const int yes=confirmOptional(c,"Ziggs: kill friendly gear to gain +2 Might?",
+                                 [&](){return !gears.empty();});
+   if(yes<0)return;
+   if(yes==0){(void)finalizingChoices(c);return;}
+   const auto gear=pickCostObject(c,"Ziggs: choose gear to kill",gears);
+   if(gear==kInvalidId)return;
+   if(costDueNow(c))killAsCost(c,gear);
+   if(finalizingChoices(c))return;
+   if(!costUnpaid(c))c.executor.giveTemporaryMight(c.source,2);
+ }
+
 private:
  const CardDef d_=[] {
   auto d=mkFinal64_c(1111,112,R"RB(Ziggs, Explosive)RB",CardType::Unit,4,0,4,{Domain::Chaos},Rarity::Rare,R"RB([1], [E]: Play a Bomb gear token to a battlefield. (It has [Deploy]. When it dies, deal 2 to an enemy there and kill your other Bombs there.)
@@ -381,7 +411,35 @@ When I defend, you may kill a friendly gear to give me +2 [M] this turn.)RB");
 class R64_1112 final : public UnitCard {
 public:
  const CardDef& def() const override { return d_; }
- // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
+
+ std::vector<ActivatedAbility> activatedAbilities()const override{
+   ActivatedAbility a;a.cost.exhaust=true;return {a};
+ }
+ unsigned choicesAtFinalization()const override{return kFinalizeActivate;}
+ bool canActivateAbilityAt(const GameState& s,PlayerId p,GameObjectId source,int)const override{
+   if(!s.objectExists(source)||!s.getObject(source).isAtBattlefield())return false;
+   const auto here=s.getObject(source).battlefieldId();
+   for(const auto& [id,o]:s.objects.onBoard())
+     if(o.isUnit()&&o.controller==opponent(p)&&o.location&&
+         o.battlefieldId()!=here)return true;
+   return false;
+ }
+ void onActivate(CardContext& c,int,const std::vector<GameObjectId>&)override{
+   if(!c.state.objectExists(c.source)){(void)finalizingChoices(c);return;}
+   const auto& self=c.state.getObject(c.source);
+   if(!self.isAtBattlefield()){(void)finalizingChoices(c);return;}
+   auto enemies=boardObjects(c.state,[&](const GameObject& o){
+     return o.isUnit()&&o.controller==opponent(c.controller)&&
+            o.battlefieldId()!=self.battlefieldId();
+   });
+   const auto picked=selectObjectAs(c,opponent(c.controller),
+        "Angler Wyrm: move one of your units to its battlefield",enemies);
+   if(!picked.has_value())return;
+   if(finalizingChoices(c))return;
+   if(*picked!=kInvalidId)
+     c.executor.moveToBattlefield(*picked,*self.battlefieldId());
+ }
+
 private:
  const CardDef d_=[] {
   auto d=mkFinal64_c(1112,113,R"RB(Angler Wyrm)RB",CardType::Unit,8,0,8,{Domain::Chaos},Rarity::Epic,R"RB([Deflect] (Opponents must pay [A] to choose me with a spell or ability.)
@@ -404,8 +462,37 @@ public:
    if(c.state.objectExists(c.source)&&c.state.getObject(c.source).location)
      c.executor.giveTemporaryMight(c.source,1);
  }
- // MECHANICS_INCOMPLETE: Once-per-turn "exhaust friendly unit to ready a unit" activation pending.
-
+ std::vector<ActivatedAbility> activatedAbilities()const override{
+   return {ActivatedAbility{}};
+ }
+ unsigned choicesAtFinalization()const override{return kFinalizeActivate;}
+ bool canActivateAbilityAt(const GameState& s,PlayerId p,GameObjectId source,int)const override{
+   if(!s.objectExists(source))return false;
+   const auto& obj=s.getObject(source);
+   const auto it=obj.card_counters.find("__f64_riven_used_turn");
+   if(it!=obj.card_counters.end()&&it->second==s.turn.turn_number+1)return false;
+   for(const auto& [id,o]:s.objects.onBoard())
+     if(o.isUnit()&&o.controller==p&&o.location&&!o.is_exhausted)return true;
+   return false;
+ }
+ void onActivate(CardContext& c,int,const std::vector<GameObjectId>&)override{
+   auto ready=boardObjects(c.state,[&](const GameObject& o){
+     return o.isUnit()&&o.controller==c.controller&&!o.is_exhausted;
+   });
+   auto cost=selectObjectAs(c,c.controller,"Riven: exhaust friendly unit as cost",ready,7);
+   if(!cost.has_value())return;
+   auto units=boardObjects(c.state,[](const GameObject& o){return o.isUnit();});
+   auto target=selectTargetOrNone(*this,c,"Riven: unit to ready",units,9,false);
+   if(!target.has_value())return;
+   if(costDueNow(c)&&*cost!=kInvalidId){
+     c.executor.exhaustObject(*cost);
+     if(c.state.objectExists(c.source))
+       c.state.getObject(c.source).card_counters["__f64_riven_used_turn"]=
+              c.state.turn.turn_number+1;
+   }
+   if(finalizingChoices(c))return;
+   if(*target!=kInvalidId)c.executor.readyObject(*target);
+ }
 private:
  const CardDef d_=[] {
   auto d=mkFinal64_c(1113,114,R"RB(Riven, Deserter)RB",CardType::Unit,5,1,5,{Domain::Chaos},Rarity::Epic,R"RB(When another friendly unit becomes exhausted, give me +1 [M] this turn.
@@ -420,7 +507,40 @@ Exhaust a friendly unit: Ready a unit. Use this ability only once each turn.)RB"
 class R64_1114 final : public UnitCard {
 public:
  const CardDef& def() const override { return d_; }
- // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
+
+ std::vector<ActivatedAbility> activatedAbilities()const override{
+   ActivatedAbility a;a.cost.power=1;a.cost.power_domain=Domain::Chaos;
+   a.cost.exhaust=true;return {a};
+ }
+ unsigned choicesAtFinalization()const override{return kFinalizeActivate;}
+ bool canActivateAbilityAt(const GameState& s,PlayerId p,GameObjectId,int)const override{
+   return !f64Units(s,p).empty();
+ }
+ void onActivate(CardContext& c,int,const std::vector<GameObjectId>&)override{
+   const auto friendly=f64Units(c.state,c.controller);
+   const auto returned=pickTarget(c,"Transpositionist: friendly unit to return",friendly);
+   if(finalizingChoices(c))return;
+   if(returned==kInvalidId||!c.state.objectExists(returned))return;
+   const int might=c.state.getObject(returned).current_might;
+   c.executor.bounceToHand(returned);
+   std::vector<GameObjectId> candidates;
+   for(auto id:c.state.player(c.controller).hand) {
+     if(!c.state.objectExists(id))continue;
+     const auto& o=c.state.getObject(id);
+     if(!o.isUnit()||o.card_def_id==kInvalidId)continue;
+     if(c.executor.cardDB().get(o.card_def_id).might<might)candidates.push_back(id);
+   }
+   if(candidates.empty()||!c.executor.confirmNow(c.controller,
+     "Transpositionist: play lower-Might unit ignoring its cost?"))return;
+   const auto choice=c.executor.chooseObjectNow(c.controller,candidates,
+                                      "Transpositionist: unit to play for free");
+   if(choice==kInvalidId)return;
+   const auto locations=playLocations(c.state,c.controller);
+   const auto where=c.executor.chooseLocationNow(c.controller,locations.locations,
+                                     "Transpositionist: choose play location");
+   (void)c.executor.playIgnoringCost(c.controller,choice,where);
+ }
+
 private:
  const CardDef d_=[] {
   auto d=mkFinal64_c(1114,115,R"RB(Transpositionist)RB",CardType::Unit,6,0,4,{Domain::Chaos},Rarity::Epic,R"RB([C], [E]: Return a friendly unit to its owner's hand. You may play a unit with less Might than that unit had, ignoring its cost.)RB");
