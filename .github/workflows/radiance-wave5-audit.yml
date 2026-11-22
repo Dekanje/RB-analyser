@@ -10,10 +10,39 @@ on:
       - 'radiance/engine_overlay/**'
       - 'radiance/data/radiance_catalog.json'
   workflow_dispatch:
+# Stop older CI executions when a newer commit arrives on the same branch.
+concurrency:
+  group: radiance-wave5-${{ github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:
+  # Fast checks on EVERY developer commit: catch integrity and schema bugs
+  # without spending 10-15 minutes compiling a 997-card engine.
+  preflight:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Python syntax, catalog sanity and negative audit tests
+        run: |
+          python3 -m py_compile radiance/audit_wave5_catalog_registry.py radiance/coverage_ledger.py radiance/engine_overlay/apply_wave4.py
+          python3 -m unittest discover -s radiance -p 'test_wave5_catalog_audit.py' -v
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          cards=json.loads(Path("radiance/data/radiance_catalog.json").read_text())["cards"]
+          codes=[c["public_code"] for c in cards]
+          assert len(cards)==len(set(codes))==219
+          assert {f"RAD-{i:03d}/167" for i in range(1,168)} <= set(codes)
+          print("WAVE5_FAST_PREFLIGHT_PASS")
+          PY
+
+  # Long build only when the batch is explicitly ready for the regression
+  # gate. This avoids rebuilding the entire engine on every source edit.
   compiled-reconciliation:
+    needs: preflight
+    if: ${{ github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[batch-ready]') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 59
     steps:
@@ -31,7 +60,6 @@ jobs:
           assert {f'RAD-{i:03d}/167' for i in range(1,168)} <= set(codes)
           print('WAVE5_CATALOG_INTEGRITY_PASS')
           PY
-          python3 -m unittest discover -s radiance -p 'test_wave5_catalog_audit.py' -v
       - name: Pin and patch real AlphaRune engine
         run: |
           sudo apt-get update -qq
@@ -46,8 +74,10 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: ~/.cache/ccache
-          key: radiance-wave5-audit-${{ runner.os }}-${{ github.sha }}
+          key: radiance-alpharune-ec90f0f-gcc13-release-v1-${{ github.sha }}
           restore-keys: |
+            radiance-alpharune-ec90f0f-gcc13-release-v1-
+            radiance-wave5-audit-
             radiance-wave4-ccache-
             radiance-wave3-ccache-
       - name: Compile real engine and all tests
