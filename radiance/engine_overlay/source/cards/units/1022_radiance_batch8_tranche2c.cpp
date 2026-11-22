@@ -45,6 +45,14 @@ class ImprovisedProjectile8 final:public SpellCard {
 public:
     const CardDef& def()const override{return d_;}
     unsigned choicesAtFinalization()const override{return kFinalizeResolve;}
+    FinalizeChoice mayChooseAtFinalization(const GameState& s,PlayerId p,GameObjectId id)const override{
+        if(id==kInvalidId||!s.objectExists(id)||!hasLegalTargets(s,p))return FinalizeChoice::No;
+        const auto& o=s.getObject(id);
+        if(!o.location)return FinalizeChoice::No;
+        if(o.isGear()&&o.controller==p)return FinalizeChoice::Yes;
+        if(o.isUnit()&&o.isAtBattlefield()&&(o.controller==p||!o.untargetable_by_enemy))return FinalizeChoice::Yes;
+        return FinalizeChoice::No;
+    }
     TargetRequirements getTargetRequirements()const override{return {.count=2};}
     bool needsPlayTimeTargetPair()const override{return true;}
     static std::vector<GameObjectId> friendlyGear(const GameState& s,PlayerId me){
