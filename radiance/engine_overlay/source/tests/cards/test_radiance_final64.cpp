@@ -427,6 +427,26 @@ TEST_F(RadianceFinal64Test, TranspositionistReturnsUnitAndPlaysLowerMightUnitFre
  EXPECT_TRUE(inHand(P1,target));
  EXPECT_TRUE(state.getObject(replacement).location.has_value());
 }
+TEST_F(RadianceFinal64Test, SeraphicWyvernAddsOneExhaustedRuneToReadyChannel){
+ addUnit(P1,CardDefId{1101},8,0);
+ for(int i=0;i<3;i++){
+   auto rune=addRune(P1,Domain::Order);
+   auto& obj=state.getObject(rune);
+   obj.zone=ZoneType::RuneDeck;
+   obj.location=std::nullopt;
+   state.player(P1).rune_deck.push_back(rune);
+ }
+ withEngine([&](GameEngine& e){
+   e.testHook_executor().channelRunes(P1,1,false);
+ });
+ int ready=0,exhausted=0;
+ for(const auto& [id,o]:state.objects.onBoard())
+   if(o.isRune()&&o.controller==P1)
+     (o.is_exhausted?exhausted:ready)++;
+ EXPECT_EQ(ready,1);
+ EXPECT_EQ(exhausted,1);
+ EXPECT_EQ(state.player(P1).rune_deck.size(),1u);
+}
 TEST_F(RadianceFinal64Test, SixtyFourUniqueCardDefinitionsHaveCanonicalMetadata){
  ASSERT_EQ(expected.size(),64u);
  std::set<int> ids,numbers;std::set<std::string> public_codes;
