@@ -41,10 +41,15 @@ std::vector<GameObjectId> r10gear(const GameState& s) {
 class Radiance10_1048 final:public SpellCard {
 public:
  const CardDef& def()const override{return d_;}
+ unsigned choicesAtFinalization()const override{return kFinalizeResolve;}
     void onResolve(CardContext& c,const std::vector<GameObjectId>&)override {
       auto v=r10gear(c.state);auto units=r10units(c.state,c.controller);
       auto enemies=r10units(c.state,c.controller,false);
       v.insert(v.end(),units.begin(),units.end());v.insert(v.end(),enemies.begin(),enemies.end());
+      v.erase(std::remove_if(v.begin(),v.end(),[&](GameObjectId id){
+        const auto& obj=c.state.getObject(id);
+        return obj.isUnit()&&!obj.isAtBattlefield();
+      }),v.end());
       std::sort(v.begin(),v.end());v.erase(std::unique(v.begin(),v.end()),v.end());
       auto id=pickTarget(c,"Lost to the Sands: unit to deal 4 or gear to kill",v);
       if(finalizingChoices(c)||id==kInvalidId||!c.state.objectExists(id))return;
@@ -183,6 +188,7 @@ private:
 class Radiance10_1054 final:public GearCard {
 public:
  const CardDef& def()const override{return d_;}
+ unsigned choicesAtFinalization()const override{return kFinalizeTrigger;}
     TriggerType triggerType()const override{return TriggerType::WhenYouPlayACard;}
     void onTrigger(CardContext& c,const std::vector<GameObjectId>&)override {
       if(!c.state.objectExists(c.source))return;
@@ -196,7 +202,8 @@ public:
       for(const auto& [id,o]:c.state.objects.onBoard())
         if(o.isUnit()&&id!=unit.id)maxM=std::max(maxM,o.current_might);
       if(unit.current_might<=maxM)return;
-      c.executor.exhaustObject(c.source);
+      if(costDueNow(c))c.executor.exhaustObject(c.source);
+      if(finalizingChoices(c))return;
       c.executor.drawCards(c.controller,1);
     }
 private:
