@@ -1,5 +1,5 @@
 name: Radiance Batch 9 - mechanics-based C++ implementation
-# Batch 9 tranche 1: run seven real engine-path tests (IDs 1025-1027).
+# Batch 9: 15 unique identities, including eight new battlefield cards (IDs 1040-1047).
 # Batch 9 staged CI, 15 authored cards. Full regression mandatory for acceptance.
 # Targeted run covers Batch 9 mechanics; Disarm timing gaps recorded in evidence ledger.
 on:
@@ -26,7 +26,7 @@ on:
         description: 'GoogleTest name/filter for targeted mode only'
         type: string
         required: false
-        default: 'RadianceBatch9Test.*'
+        default: 'RadianceBatch9Test.*:RadianceBatch9BattlefieldsTest.*'
 concurrency:
   group: radiance-batch9-staged-${{ github.ref }}
   cancel-in-progress: true
@@ -56,7 +56,7 @@ jobs:
           subject = message[0].strip() if message else ""
           if event == "workflow_dispatch":
               mode = os.environ.get("INPUT_LEVEL") or "targeted"
-              test_filter = os.environ.get("INPUT_FILTER") or "RadianceBatch9Test.*"
+              test_filter = os.environ.get("INPUT_FILTER") or "RadianceBatch9Test.*:RadianceBatch9BattlefieldsTest.*"
               if mode not in ("targeted", "batch", "full"):
                   raise ValueError("Invalid dispatch validation level")
           elif subject.startswith("[batch-ready]"):
@@ -67,7 +67,7 @@ jobs:
               match = re.match(r"^\[test-fix(?::([A-Za-z0-9_.*?:/-]{1,200}))?\](?:\s|$)", subject)
               if not match:
                   raise ValueError("Invalid [test-fix:GoogleTest.Filter] commit prefix")
-              mode, test_filter = "targeted", match.group(1) or "RadianceBatch9Test.*"
+              mode, test_filter = "targeted", match.group(1) or "RadianceBatch9Test.*:RadianceBatch9BattlefieldsTest.*"
           else:
               mode, test_filter = "preflight", ""
           if mode == "targeted" and not re.fullmatch(r"[A-Za-z0-9_.*?:/-]{1,200}", test_filter):
@@ -77,11 +77,15 @@ jobs:
           PY
       - name: Fast source and catalog audit sanity
         run: |
-          python3 -m py_compile radiance/engine_overlay/apply.py radiance/engine_overlay/apply_wave2.py radiance/engine_overlay/apply_wave3.py radiance/engine_overlay/apply_wave4.py radiance/engine_overlay/apply_batch6.py radiance/engine_overlay/apply_batch7.py radiance/engine_overlay/apply_batch8.py radiance/engine_overlay/apply_batch9.py radiance/verify_batch8_registry.py radiance/verify_batch9_registry.py radiance/coverage_ledger.py radiance/audit_wave5_catalog_registry.py
+          python3 -m py_compile radiance/engine_overlay/apply.py radiance/engine_overlay/apply_wave2.py radiance/engine_overlay/apply_wave3.py radiance/engine_overlay/apply_wave4.py radiance/engine_overlay/apply_batch6.py radiance/engine_overlay/apply_batch7.py radiance/engine_overlay/apply_batch8.py radiance/engine_overlay/apply_batch9.py radiance/engine_overlay/apply_batch9_battlefields.py radiance/verify_batch8_registry.py radiance/verify_batch9_registry.py radiance/coverage_ledger.py radiance/audit_wave5_catalog_registry.py
           python3 -m unittest discover -s radiance -p 'test_wave5_catalog_audit.py' -v
           grep -F '[1025,1026,1027,1029,1030,1034,1035]' radiance/engine_overlay/apply_batch9.py
+          grep -F 'range(1040,1048)' radiance/engine_overlay/apply_batch9_battlefields.py
           test -f radiance/engine_overlay/source/cards/units/1010_radiance_batch8.cpp
           test -f radiance/engine_overlay/source/tests/cards/test_radiance_batch9.cpp
+          test -f radiance/engine_overlay/source/tests/cards/test_radiance_batch9_battlefields.cpp
+          test -f radiance/engine_overlay/source/cards/battlefields/1040_radiance_batch9_battlefields_a.cpp
+          test -f radiance/engine_overlay/source/cards/battlefields/1044_radiance_batch9_battlefields_b.cpp
           test -f radiance/engine_overlay/source/cards/units/1025_radiance_batch9_tranche1.cpp
           test -f radiance/engine_overlay/source/cards/units/1028_radiance_batch9_tranche2a.cpp
           test -f radiance/engine_overlay/source/cards/units/1032_radiance_batch9_tranche2b.cpp
@@ -113,6 +117,7 @@ jobs:
           python3 radiance/engine_overlay/apply_batch7.py
           python3 radiance/engine_overlay/apply_batch8.py
           python3 radiance/engine_overlay/apply_batch9.py
+          python3 radiance/engine_overlay/apply_batch9_battlefields.py
       - name: Restore incremental C++ compiler cache
         id: ccache-restore
         uses: actions/cache/restore@v4
@@ -152,7 +157,7 @@ jobs:
         if: ${{ needs.preflight.outputs.mode == 'batch' || needs.preflight.outputs.mode == 'full' }}
         run: |
           mkdir -p results
-          RIFTBOUND_ROOT=alpharune alpharune/build/riftbound_tests --gtest_filter='RadianceWave1Test.*:RadianceWave2Test.*:RadianceWave3Test.*:RadianceWave4Test.*:RadianceBatch6Test.*:RadianceBatch7Test.*:RadianceBatch8Test.*:RadianceBatch9Test.*' --gtest_brief=1 --gtest_output=xml:results/radiance_batch9_focused_tests.xml
+          RIFTBOUND_ROOT=alpharune alpharune/build/riftbound_tests --gtest_filter='RadianceWave1Test.*:RadianceWave2Test.*:RadianceWave3Test.*:RadianceWave4Test.*:RadianceBatch6Test.*:RadianceBatch7Test.*:RadianceBatch8Test.*:RadianceBatch9Test.*:RadianceBatch9BattlefieldsTest.*' --gtest_brief=1 --gtest_output=xml:results/radiance_batch9_focused_tests.xml
       - name: Strict compiled registration and catalog audit
         if: ${{ needs.preflight.outputs.mode == 'batch' || needs.preflight.outputs.mode == 'full' }}
         run: |
@@ -165,11 +170,11 @@ jobs:
           import json
           from pathlib import Path
           x=json.loads(Path("results/radiance_batch9_catalog_audit.json").read_text())
-          assert x["compiled_registry_size"]==1031
-          assert x["registered_base_count"]==75
-          assert x["missing_base_count"]==92
+          assert x["compiled_registry_size"]==1039
+          assert x["registered_base_count"]==83
+          assert x["missing_base_count"]==84
           assert x["all_mechanics_verified"] is False
-          print("BATCH9_TRANCHE1_CATALOG_GATE_PASS_NOT_FULL_MECHANICS_CERTIFICATION")
+          print("BATCH9_15_UNIQUE_CATALOG_GATE_PASS_NOT_FULL_MECHANICS_CERTIFICATION")
           PY
       - name: Full AlphaRune regression - final batch gate only
         if: ${{ needs.preflight.outputs.mode == 'full' }}
