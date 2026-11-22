@@ -57,14 +57,36 @@ private:
 class Radiance10_1049 final:public GearCard {
 public:
  const CardDef& def()const override{return d_;}
-    TriggerType triggerType()const override{return TriggerType::WhenYouPlayThis;}
-    void onTrigger(CardContext& c,const std::vector<GameObjectId>&)override {
-      const auto v=r10units(c.state,c.controller);
-      auto id=pickTarget(c,"Invigorating Bloom: +3 Might this turn",v);
-      if(!finalizingChoices(c)&&id!=kInvalidId)c.executor.giveTemporaryMight(id,3);
-    }
+ unsigned choicesAtFinalization()const override{return kFinalizeTrigger|kFinalizeActivate;}
+ TriggerType triggerType()const override{return TriggerType::WhenYouPlayThis;}
+ void onTrigger(CardContext& c,const std::vector<GameObjectId>&)override {
+   const auto v=r10units(c.state,c.controller);
+   const auto id=pickTarget(c,"Invigorating Bloom: +3 Might this turn",v);
+   if(!finalizingChoices(c)&&id!=kInvalidId)c.executor.giveTemporaryMight(id,3);
+ }
+ static std::vector<GameObjectId> mightyReady(const GameState& s,PlayerId p) {
+   std::vector<GameObjectId> v;
+   for(const auto& [id,o]:s.objects.onBoard())
+     if(o.isUnit()&&o.controller==p&&o.location&&o.current_might>=5&&!o.is_exhausted)
+       v.push_back(id);
+   std::sort(v.begin(),v.end());return v;
+ }
+ bool hasActivatedAbility()const override{return true;}
+ ActivationCost getActivationCost()const override{return {.exhaust=true};}
+ bool canActivateAbility(const GameState& s,PlayerId p)const override {
+   return !mightyReady(s,p).empty();
+ }
+ void onActivate(CardContext& c,const std::vector<GameObjectId>&)override {
+   const auto eligible=mightyReady(c.state,c.controller);
+   const auto id=pickTarget(c,"Invigorating Bloom: exhaust a ready friendly Mighty unit",eligible);
+   if(id==kInvalidId)return;
+   if(costDueNow(c))c.executor.exhaustObject(id);
+   if(finalizingChoices(c))return;
+   c.executor.drawCards(c.controller,1);
+ }
 private:
- const CardDef d_=rad10a(1049,35,"Invigorating Bloom",CardType::Gear,3,0,0,{Domain::Calm},Rarity::Uncommon,"When you play this, give a friendly unit +3 [M] this turn.\nExhaust a friendly [Mighty] unit, [E]: Draw 1. (A unit is Mighty while it has 5+ [M].)",{});
+ const CardDef d_=rad10a(1049,35,"Invigorating Bloom",CardType::Gear,3,0,0,{Domain::Calm},Rarity::Uncommon,
+   "When you play this, give a friendly unit +3 [M] this turn.\nExhaust a friendly [Mighty] unit, [E]: Draw 1. (A unit is Mighty while it has 5+ [M].)",{});
 };
 class Radiance10_1050 final:public UnitCard {
 public:
