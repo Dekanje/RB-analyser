@@ -20,3 +20,11 @@ Compile the complete one-batch registry, then implement all 64 distinct
 mechanics. Validate resource payment, delayed effects, optional choices,
 target finalization, hidden information, replacement effects, token play and
 deck construction; finally run the complete suite and reach zero failures.
+
+## Compiler fixes and early mechanics wave
+
+Four distinct compiler helper names resolve the AlphaRune unity-build duplicate
+symbol failure identified in run 45082063224. Implementations and initial
+engine-path tests are in place for Raucous Anthem, Burn Away, Demacian
+Illuminators, Explosimian, Evelynn In Control, and Pitiless Stalker.
+This is a **work-in-progress test run**, not final gameplay acceptance.
