@@ -251,7 +251,27 @@ private:
 class R64_1110 final : public GearCard {
 public:
  const CardDef& def() const override { return d_; }
- // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
+
+ TriggerType triggerType()const override{return TriggerType::AtStartOfBeginning;}
+ void onTrigger(CardContext& c,const std::vector<GameObjectId>&)override{
+   const auto yours=f64RevealTop(c,c.controller);
+   const auto theirs=f64RevealTop(c,opponent(c.controller));
+   if(yours==kInvalidId&&theirs==kInvalidId)return;
+   auto energy=[&](GameObjectId id)->int{
+     if(id==kInvalidId||!c.state.objectExists(id))return 999;
+     const auto def=c.state.getObject(id).card_def_id;
+     return def==kInvalidId?999:c.executor.cardDB().get(def).energy_cost;
+   };
+   const int lowest=std::min(energy(yours),energy(theirs));
+   for(const auto [owner,card] :
+       std::vector<std::pair<PlayerId,GameObjectId>>{
+           {c.controller,yours},{opponent(c.controller),theirs}}){
+     if(card==kInvalidId||!c.state.objectExists(card))continue;
+     if(energy(card)==lowest)c.executor.drawCards(owner,1);
+     else c.executor.recycleCards(owner,{card},knowledge::everyone());
+   }
+ }
+
 private:
  const CardDef d_=[] {
   auto d=mkFinal64_c(1110,111,R"RB(Mechanical Bandit)RB",CardType::Gear,4,1,0,{Domain::Chaos},Rarity::Rare,R"RB(At the start of your Beginning Phase, each player reveals the top card of their Main Deck. If you revealed a card with the lowest Energy cost, draw it. Recycle the rest.)RB");
