@@ -257,6 +257,13 @@ TEST_F(RadianceBatch10Test, InvigoratingBloomMightyExhaustActivationDrawsOne) {
  EXPECT_TRUE(state.getObject(gear).is_exhausted);
  EXPECT_EQ(state.player(P1).main_deck.size()+1,before);
 }
+TEST_F(RadianceBatch10Test, SatchelChargeNeedsFriendlyUnitToMove) {
+ const auto* spell=card_registry.get(CardDefId{1055});
+ ASSERT_NE(spell,nullptr);
+ EXPECT_FALSE(spell->canBePlayed(state,P1));
+ addUnit(P1,kInvalidId,2,-1);
+ EXPECT_TRUE(spell->canBePlayed(state,P1));
+}
 TEST_F(RadianceBatch10Test, SatchelChargeMovesFriendlyUnitAndPlaysBombToken) {
  const auto ally=addUnit(P1,kInvalidId,2,-1);
  const auto spell=addToHand(P1,CardDefId{1055});
