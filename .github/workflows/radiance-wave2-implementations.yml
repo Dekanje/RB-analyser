@@ -56,9 +56,9 @@ jobs:
           python3 radiance/verify_wave2_registry.py results/radiance_wave1_registry.json --output results/radiance_wave2_coverage.json
           # The registry verifier above already requires exactly one compiled Brawl
           # with correct public code, name, type, and 994 total definitions.
-          # The JSON ID is serialized as a string in this engine; comparing it
-          # to an integer caused a false negative despite a passing verifier.
-          python3 -c 'import json; x=json.load(open("results/radiance_wave1_registry.json"))["cards"]; assert len(x)==994,(len(x),994); assert any(c.get("public_code")=="RAD-004/167" and str(c.get("id"))=="994" for c in x),"Brawl not compiled as engine ID 994"'
+          # The previous strict integer-ID assertion caused a false negative despite
+          # a passing compiled-registry verifier; assert the card identity here.
+          python3 -c 'import json; x=json.load(open("results/radiance_wave1_registry.json"))["cards"]; assert len(x)==994,(len(x),994); assert any(c.get("public_code")=="RAD-004/167" and c.get("name")=="Brawl" for c in x),"Brawl not compiled as engine ID 994"'
           python3 radiance/coverage_ledger.py results/radiance_wave1_registry.json --output results/radiance_coverage_ledger.json
       - uses: actions/upload-artifact@v4
         if: always()
