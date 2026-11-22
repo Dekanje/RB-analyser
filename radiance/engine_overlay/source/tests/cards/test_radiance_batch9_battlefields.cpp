@@ -49,9 +49,10 @@ TEST_F(RadianceBatch9BattlefieldsTest, BandleAcademyMakesExhaustedGoldOnlyWhenHi
         events.emit(CardHiddenEvent{card,P1});
     });
     EXPECT_EQ(countTokens(P1,"Gold"),1);
-    for(const auto& [id,obj]:state.objects.onBoard())
+    for(const auto& [id,obj]:state.objects.onBoard()) {
         if(obj.isGear() && obj.name=="Gold" && obj.controller==P1)
             EXPECT_TRUE(obj.is_exhausted);
+    }
 }
 TEST_F(RadianceBatch9BattlefieldsTest, BlackRosePaysOneRecruitForFirstNontokenDeathPerPlayer) {
     install(0,1041);
@@ -84,6 +85,11 @@ TEST_F(RadianceBatch9BattlefieldsTest, DurandMemorialGrantsTankOnlyToChosenDefen
     install(0,1043);
     auto defender=addUnit(P2,kInvalidId,3,0);
     auto bystander=addUnit(P2,kInvalidId,3,1);
+    // The event is emitted by the real combat state machine after this flag
+    // becomes active. Mirror that state in the isolated event-path test.
+    state.battlefields[0].combat_in_progress=true;
+    state.battlefields[0].attacker=P1;
+    state.battlefields[0].defender=P2;
     EnginePathAgent agent(EnginePathAgent::choosing(defender));
     resolveThroughEngine([&](EffectExecutor&,GameState&){
         events.emit(CombatStartedEvent{state.battlefields[0].id,P1,P2});
