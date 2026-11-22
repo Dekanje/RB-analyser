@@ -29,11 +29,14 @@ BATCH7 = {
     "RAD-122/167": ("Party Crasher","unit"),
     "RAD-128/167": ("Steadfast Outrider","unit"),
     "RAD-037/167": ("Watchful Curator","unit"),
+    "RAD-076/167": ("Sneaky Zeebles","unit"),
+    "RAD-117/167": ("For Demacia!","spell"),
+    "RAD-101/167": ("An Offer You Can't Refuse","spell"),
 }
 
 def reconcile(cards):
-    if len(cards) != 1007:
-        raise ValueError(f"Expected 1007 compiled definitions after Batch 7, found {len(cards)}")
+    if len(cards) != 1010:
+        raise ValueError(f"Expected 1010 compiled definitions after Batch 7, found {len(cards)}")
     by_code = {}
     for row in cards:
         code = row.get("public_code")
@@ -56,7 +59,7 @@ def reconcile(cards):
         "newly_authored_cplusplus_count":len(BATCH7),
         "all_radiance_supported":len(missing)==0,
         "mechanics_certified_for_entire_set":False,
-        "note":"Registered cards may still have untested/incorrect mechanics; this check only guarantees nineteen identities and a complete inventory of missing card codes."
+        "note":"Registered cards may still have untested/incorrect mechanics; this check only guarantees twenty-two identities and a complete inventory of missing card codes."
     }
 
 def main():
