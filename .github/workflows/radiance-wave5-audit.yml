@@ -38,11 +38,11 @@ jobs:
           print("WAVE5_FAST_PREFLIGHT_PASS")
           PY
 
-  # Long build only when the batch is explicitly ready for the regression
+  # Long build only when the HEAD commit begins with the [batch-ready] prefix and the batch is ready for the regression
   # gate. This avoids rebuilding the entire engine on every source edit.
   compiled-reconciliation:
     needs: preflight
-    if: ${{ github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[batch-ready]') }}
+    if: ${{ github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, '[batch-ready]') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 59
     steps:
