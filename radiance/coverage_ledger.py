@@ -12,6 +12,8 @@ WAVE1 = {
     "RAD-099/167": ["SuaveNegotiatorDrawsOneForEachPlayer"],
     "RAD-004/167": ["BrawlIsRegisteredAsChaosActionWithPrintedCost","BrawlGrantsAssaultEqualToChosenUnitMight","BrawlCanTargetEnemyUnit"],
     "RAD-008/167": ["WarScoutPrintedIdentityAndAccelerate","WarScoutBuffsChosenFriendlyUnitViaTriggeredChoice","WarScoutCanBuffEnemyUnitViaTriggeredChoice"],
+    "RAD-049/167": ["PrintedCostDomainAndIdentity","IndustriousMechsmithCreatesThreeMightMechInBase","IndustriousMechsmithCreatesTokenAtSameBattlefield"],
+    "RAD-003/167": ["PrintedCostDomainAndIdentity","BilgewaterTrackerCanDeclineEveryOptionalTarget","BilgewaterTrackerChoosesTwoUnitsAndNotThird","BilgewaterTrackerDamageIsLethalForOneMightUnits"],
 }
 # Evidence gaps must remain explicit until deterministic gameplay interactions pass.
 KNOWN_GAPS = {
@@ -22,6 +24,8 @@ KNOWN_GAPS = {
     "RAD-099/167": ["Trigger suppression, empty-deck and counter-interaction cases not yet covered"],
     "RAD-004/167": ["Assault expires at end of turn, actual attacker-only combat calculation, counter and illegal target cases not yet covered"],
     "RAD-008/167": ["Accelerate payment/ready-state, Might expiration, counter and invalid-target cases not yet covered"],
+    "RAD-049/167": ["Source leaves board before triggered effect resolves; token replacement effects and token interactions not yet exercised"],
+    "RAD-003/167": ["Deflect, mistargeted unit, damaged-before-trigger and death-replacement interactions not yet tested"],
 }
 
 def main():
