@@ -61,6 +61,71 @@ left_replace="""void TriggerManager::onLeftBoard(const LeftBoardEvent& e) {
 assert tr.count(left_anchor)==1, "Gear death event anchor changed"
 trigger.write_text(tr.replace(left_anchor,left_replace,1))
 
+# Ahri, Confident (RAD-038): a real, respondable Might-reduction trigger.
+# Extend the enum with a new value at the END, leaving all existing values stable.
+effects=engine/"src/effects/effect_types.h"
+eff=effects.read_text()
+enum_first=eff.index("enum class TriggerType")
+last=eff.index("    WhenAnOpponentHidesACard,",enum_first)
+end=eff.index("\n};",last)
+assert "WhenEnemyMightReducedHere" not in eff
+eff=eff[:end]+"\n    WhenEnemyMightReducedHere, // Radiance Ahri; emitted only for real enemy Might reduction"+eff[end:]
+effects.write_text(eff)
+
+# Emit an event only if the target actually lost Might, and record the
+# controller whose resolving card/ability caused the reduction.
+executor=engine/"src/engine/effect_executor.cpp"
+es=executor.read_text()
+start=es.index("void EffectExecutor::giveTemporaryMight(")
+end=es.index("\nvoid EffectExecutor::giveKeywordThisCombat(",start)
+body=es[start:end]
+old_line="    obj.temp_might_bonus += amount;"
+assert body.count(old_line)==1
+body=body.replace(old_line,
+    "    const int rad10_previous_might = obj.current_might;\n"+old_line,1)
+emit='    events_.emit(ObjectStateChangedEvent{target, "might_changed"});'
+assert body.count(emit)==1
+body=body.replace(emit,emit+"""
+    if (amount < 0 && obj.isUnit() && obj.current_might < rad10_previous_might &&
+        state_.chain.resuming.has_value()) {
+        const PlayerId reducer = state_.chain.resuming->controller;
+        if (reducer != PlayerId::None && reducer != obj.controller) {
+            const auto what = reducer == PlayerId::Player1
+                ? "radiance_enemy_might_reduced_p1"
+                : "radiance_enemy_might_reduced_p2";
+            events_.emit(ObjectStateChangedEvent{target, what});
+        }
+    }""",1)
+es=es[:start]+body+es[end:]
+executor.write_text(es)
+
+# Route only the new event to Ahri copies at the SAME battlefield, and put
+# their abilities on the chain for a normal response window.
+change_anchor='    const PlayerId controller = state_.getObject(e.object).controller;'
+onchange_start=tr.index("void TriggerManager::onObjectStateChanged(")
+onchange_end=tr.index("\nvoid TriggerManager::",onchange_start+5)
+section=tr[onchange_start:onchange_end]
+assert section.count(change_anchor)==1
+section=section.replace(change_anchor,change_anchor+"""
+    if (e.what_changed == "radiance_enemy_might_reduced_p1" ||
+        e.what_changed == "radiance_enemy_might_reduced_p2") {
+        const PlayerId reducer=e.what_changed=="radiance_enemy_might_reduced_p1"
+            ? PlayerId::Player1 : PlayerId::Player2;
+        const auto& target=state_.getObject(e.object);
+        if (!target.isUnit() || target.controller==reducer || !target.isAtBattlefield())
+            return;
+        std::vector<GameObjectId> ahri;
+        for(const auto& [id,obj]:state_.objects.onBoard())
+            if(obj.card_def_id==CardDefId{1050} && obj.controller==reducer &&
+               obj.battlefieldId()==target.battlefieldId())
+                ahri.push_back(id);
+        for(auto id:ahri)
+            fireTrigger(id,reducer,0,TriggerType::WhenEnemyMightReducedHere,e.object);
+        return;
+    }""",1)
+tr=tr[:onchange_start]+section+tr[onchange_end:]
+trigger.write_text(tr)
+
 init=engine/"src/cards/cards_init.cpp"
 s=init.read_text()
 decl="void register_card_1047(CardRegistry&);"
