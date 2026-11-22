@@ -1,7 +1,7 @@
 name: Radiance Batch 9 - mechanics-based C++ implementation
 # Batch 9: 15 unique identities, including eight new battlefield cards (IDs 1040-1047).
 # Batch 9 staged CI, 15 authored cards. Full regression mandatory for acceptance.
-# Disarm now queues a reactable stacked keyword ability.
+# Targeted 36/36 pass; run strict 83-card registry and catalog verification.
 on:
   push:
     branches: ['radiance/mechanics-batch9-2026-11-22']
