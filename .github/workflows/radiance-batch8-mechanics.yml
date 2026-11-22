@@ -100,6 +100,7 @@ jobs:
           python3 radiance/engine_overlay/apply_wave3.py
           python3 radiance/engine_overlay/apply_wave4.py
           python3 radiance/engine_overlay/apply_batch6.py
+          python3 radiance/engine_overlay/apply_batch7.py
           python3 radiance/engine_overlay/apply_batch8.py
       - name: Restore and save C++ compiler cache (also on failed tests)
         uses: actions/cache@v4
