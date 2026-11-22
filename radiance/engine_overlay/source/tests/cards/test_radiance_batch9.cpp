@@ -234,4 +234,50 @@ TEST_F(RadianceBatch9Test, SteadfastOutriderRequiresTwoOtherFriendsHereForTwoMig
     EXPECT_TRUE(state.getObject(friend1).location.has_value());
 }
 
+
+TEST_F(RadianceBatch9Test, DisarmTwoFromDisposalExpertLowersEnemyMightOnceWhenAttacking) {
+    auto attacker=addUnit(P1,CardDefId{1034},3,0);
+    auto defender=addUnit(P2,kInvalidId,5,0);
+    EnginePathAgent choice(EnginePathAgent::choosing(defender));
+    resolveThroughEngine([&](EffectExecutor&,GameState&){
+        events.emit(CombatStartedEvent{state.battlefields[0].id,P1,P2});
+    },&choice);
+    EXPECT_TRUE(state.getObject(attacker).hasKeyword(Keyword::Disarm));
+    EXPECT_EQ(state.getObject(defender).temp_might_bonus,-2);
+    EXPECT_EQ(state.getObject(defender).current_might,3);
+}
+TEST_F(RadianceBatch9Test, SirenDisarmsForOneAndCanGank) {
+    addUnit(P1,CardDefId{1035},1,0);
+    auto defender=addUnit(P2,kInvalidId,5,0);
+    EnginePathAgent choice(EnginePathAgent::choosing(defender));
+    resolveThroughEngine([&](EffectExecutor&,GameState&){
+        events.emit(CombatStartedEvent{state.battlefields[0].id,P1,P2});
+    },&choice);
+    EXPECT_EQ(state.getObject(defender).temp_might_bonus,-1);
+}
+TEST_F(RadianceBatch9Test, TwoClangingSentriesStackDisarmTwoOnFriendlyMech) {
+    auto mech=addUnit(P1,kInvalidId,3,0);
+    state.getObject(mech).tags={"Mech"};
+    addUnit(P1,CardDefId{1030},2,0);
+    addUnit(P1,CardDefId{1030},2,0);
+    auto defender=addUnit(P2,kInvalidId,6,0);
+    withEngine([&](GameEngine& e){e.testHook_recalculateAuras();});
+    ASSERT_TRUE(state.getObject(mech).hasKeyword(Keyword::Disarm));
+    EnginePathAgent choice(EnginePathAgent::choosing(defender));
+    resolveThroughEngine([&](EffectExecutor&,GameState&){
+        events.emit(CombatStartedEvent{state.battlefields[0].id,P1,P2});
+    },&choice);
+    EXPECT_EQ(state.getObject(defender).temp_might_bonus,-2);
+}
+TEST_F(RadianceBatch9Test, DisarmDoesNotTargetFriendlyUnitsOrUnitsAtOtherBattlefields) {
+    addUnit(P1,CardDefId{1029},4,0);
+    auto ally=addUnit(P1,kInvalidId,5,0);
+    auto elsewhere=addUnit(P2,kInvalidId,5,1);
+    resolveThroughEngine([&](EffectExecutor&,GameState&){
+        events.emit(CombatStartedEvent{state.battlefields[0].id,P1,P2});
+    });
+    EXPECT_EQ(state.getObject(ally).temp_might_bonus,0);
+    EXPECT_EQ(state.getObject(elsewhere).temp_might_bonus,0);
+}
+
 } // namespace riftbound::test::radiance_batch9
