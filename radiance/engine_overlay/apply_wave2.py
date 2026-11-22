@@ -20,4 +20,21 @@ assert s.count(a)==1 and s.count(b)==1,"Wave 1 registration anchors changed"
 s=s.replace(a,a+"\nvoid register_card_994(CardRegistry&);",1)
 s=s.replace(b,b+"\n    register_card_994(registry);",1)
 init.write_text(s)
+# Preserve 988/993 pinned deck fingerprints and explicitly pin the 994-card
+# deterministic seed-1 deck fingerprint observed in the real compiled CI run.
+# This is a catalog-dependent snapshot, not a rules change or relaxed test.
+decktest=engine/"tests/test_deck_fuzz.cpp"
+decksource=decktest.read_text()
+old="""    constexpr uint64_t kRadiance993DeckOfSeedOne = 5259447031096685743ull;
+    const uint64_t expected = registry_->size()==993 ? kRadiance993DeckOfSeedOne
+                             : registry_->size()==988 ? kRadiance988DeckOfSeedOne
+                             : kDeckOfSeedOne;"""
+new="""    constexpr uint64_t kRadiance993DeckOfSeedOne = 5259447031096685743ull;
+    constexpr uint64_t kRadiance994DeckOfSeedOne = 3093099139649196331ull;
+    const uint64_t expected = registry_->size()==994 ? kRadiance994DeckOfSeedOne
+                             : registry_->size()==993 ? kRadiance993DeckOfSeedOne
+                             : registry_->size()==988 ? kRadiance988DeckOfSeedOne
+                             : kDeckOfSeedOne;"""
+assert decksource.count(old)==1,"Unexpected Wave 1 deck fingerprint anchor"
+decktest.write_text(decksource.replace(old,new,1))
 print("WAVE2_APPLIED: RAD-004 Brawl, engine ID 994, deterministic tests")
