@@ -30,7 +30,50 @@ CardDef mkFinal64_a(int id,int num,const char* name,CardType type,int energy,int
 class R64_1068 final : public SpellCard {
 public:
  const CardDef& def() const override { return d_; }
- // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
+
+ unsigned choicesAtFinalization()const override{return kFinalizeResolve;}
+ static uint32_t candidateMask(const GameState& s){
+   uint32_t mask=0;
+   for(size_t i=0;i<s.battlefields.size()&&i<32;i++){
+     for(const auto& [id,o]:s.objects.onBoard())
+       if(o.isUnit()&&o.battlefieldId()==s.battlefields[i].id){
+         mask|=1u<<i;break;
+       }
+   }
+   return mask;
+ }
+ bool canBePlayed(const GameState& s,PlayerId)const override{
+   return candidateMask(s)!=0;
+ }
+ FinalizeChoice mayChooseAtFinalization(const GameState& s,PlayerId,GameObjectId id)const override{
+   if(!s.objectExists(id))return FinalizeChoice::No;
+   const auto& o=s.getObject(id);
+   return o.isUnit()&&o.isAtBattlefield()?FinalizeChoice::Yes:FinalizeChoice::No;
+ }
+ void onResolve(CardContext& c,const std::vector<GameObjectId>&)override{
+   if(!c.state.objectExists(c.source))return;
+   auto& counters=c.state.getObject(c.source).card_counters;
+   int selected=counters["__f64_scorched_bf"]-1;
+   if(selected<0){
+     std::vector<std::string> labels;
+     for(const auto& bf:c.state.battlefields)
+       labels.push_back("Scorched Earth at "+std::to_string(bf.id.raw()));
+     selected=pickMode(c,"Scorched Earth: choose one battlefield",
+                       static_cast<int>(labels.size()),labels,candidateMask(c.state));
+     if(selected<0)return;
+     counters["__f64_scorched_bf"]=selected+1;
+   }
+   if(static_cast<size_t>(selected)>=c.state.battlefields.size()){
+     (void)finalizingChoices(c);return;
+   }
+   const auto bf=c.state.battlefields[selected].id;
+   auto units=boardObjects(c.state,[&](const GameObject& o){
+      return o.isUnit()&&o.isAtBattlefield()&&o.battlefieldId()==bf;
+   });
+   std::vector<GameObjectId> damaged;
+   (void)splitDamageAmong(c,"Scorched Earth",5,c.source,units,damaged);
+ }
+
 private:
  const CardDef d_=[] {
   auto d=mkFinal64_a(1068,6,R"RB(Scorched Earth)RB",CardType::Spell,4,1,0,{Domain::Fury},Rarity::Common,R"RB([Action] (Play on your turn or in showdowns.)
