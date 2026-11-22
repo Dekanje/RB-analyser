@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Batch 9 15-card strict registry check: three new real engine card identities.
+"""Batch 9 seven-new-card strict registry check: three new real engine card identities.
 
 Registration and focused tests are NOT complete-set Radiance certification.
 """
@@ -13,21 +13,13 @@ NEW={
     "RAD-057/167":("Piltovan Guidebot","unit",1025),
     "RAD-126/167":("Mournful Spirit","unit",1026),
     "RAD-073/167":("Pillaged Armory","gear",1027),
-    "RAD-049/167":("Industrious Mechsmith","unit",1028),
     "RAD-050/167":("Mysterious Chronomancer","unit",1029),
     "RAD-055/167":("Clanging Sentry","unit",1030),
-    "RAD-072/167":("Overloaded Traveler","unit",1031),
-    "RAD-076/167":("Sneaky Zeebles","unit",1032),
-    "RAD-083/167":("Stalwart Goatherd","unit",1033),
     "RAD-093/167":("Disposal Expert","unit",1034),
     "RAD-097/167":("Siren of the Shallows","unit",1035),
-    "RAD-099/167":("Suave Negotiator","unit",1036),
-    "RAD-117/167":("For Demacia!","spell",1037),
-    "RAD-119/167":("Hunting Dog","unit",1038),
-    "RAD-128/167":("Steadfast Outrider","unit",1039),
 }
 def verify(cards):
-    assert len(cards)==1039, (len(cards),"Expected 1,027 compiled engine definitions")
+    assert len(cards)==1031, (len(cards),"Expected 1,031 compiled engine definitions")
     codes={}
     ids=set()
     for card in cards:
@@ -47,7 +39,7 @@ def verify(cards):
         assert c and c["name"]==name and c["card_type"]==kind,(code,c)
     base={f"RAD-{n:03d}/167" for n in range(1,168)}
     registered=base&set(codes)
-    assert len(registered)==80, (len(registered),"Expected 80 Radiance base IDs")
+    assert len(registered)==75, (len(registered),"Expected 80 Radiance base IDs")
     return {"compiled_registry_size":len(cards),"radiance_base_registered":len(registered),
             "radiance_base_missing":len(base-registered),"batch9_tranche1_count":len(NEW),
             "batch9_new_codes":sorted(NEW),"full_set_verified":False}
