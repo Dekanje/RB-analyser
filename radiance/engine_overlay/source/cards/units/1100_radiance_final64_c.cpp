@@ -104,7 +104,34 @@ private:
 class R64_1103 final : public SpellCard {
 public:
  const CardDef& def() const override { return d_; }
- // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
+
+ static std::vector<GameObjectId> eligible(const GameState& s,PlayerId p){
+   return boardObjects(s,[&](const GameObject& o){
+     return o.isUnit()&&o.controller!=p&&o.moves_this_turn>0&&
+            !moveDests(s,o).empty();
+   });
+ }
+ bool canBePlayed(const GameState& s,PlayerId p)const override{
+   return !eligible(s,p).empty();
+ }
+ FinalizeChoice mayChooseAtFinalization(const GameState& s,PlayerId p,GameObjectId id)const override{
+   if(!s.objectExists(id))return FinalizeChoice::No;
+   const auto& o=s.getObject(id);
+   return o.isUnit()&&o.controller!=p&&o.location&&o.moves_this_turn>0
+       ?FinalizeChoice::Yes:FinalizeChoice::No;
+ }
+ unsigned choicesAtFinalization()const override{return kFinalizeResolve;}
+ void onResolve(CardContext& c,const std::vector<GameObjectId>&)override{
+   const auto target=pickTarget(c,"Siren's Song: enemy unit that moved this turn",
+                                eligible(c.state,c.controller));
+   if(target==kInvalidId){(void)finalizingChoices(c);return;}
+   const int dest=pickMoveDest(*this,c,"Siren's Song: destination",
+                              c.state.getObject(target));
+   if(dest<0)return;
+   if(finalizingChoices(c))return;
+   moveTo(c,target,dest);
+ }
+
 private:
  const CardDef d_=[] {
   auto d=mkFinal64_c(1103,98,R"RB(Siren's Song)RB",CardType::Spell,2,0,0,{Domain::Chaos},Rarity::Common,R"RB([Reaction] (Play any time, even before spells and abilities resolve.)
@@ -118,7 +145,38 @@ Move an enemy unit that moved this turn.)RB");
 class R64_1104 final : public SpellCard {
 public:
  const CardDef& def() const override { return d_; }
- // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
+
+ bool canBePlayed(const GameState& s,PlayerId p)const override{
+   return !f64Units(s,p).empty();
+ }
+ FinalizeChoice mayChooseAtFinalization(const GameState& s,PlayerId p,GameObjectId id)const override{
+   if(!s.objectExists(id))return FinalizeChoice::No;
+   const auto& o=s.getObject(id);
+   return o.isUnit()&&o.controller==p&&o.location?FinalizeChoice::Yes:FinalizeChoice::No;
+ }
+ unsigned choicesAtFinalization()const override{return kFinalizeResolve;}
+ void onResolve(CardContext& c,const std::vector<GameObjectId>&)override{
+   const auto unit=pickTarget(c,"Demon Shade: choose a friendly unit",f64Units(c.state,c.controller));
+   if(unit==kInvalidId){(void)finalizingChoices(c);return;}
+   uint32_t mask=0;
+   std::vector<std::string> names;
+   for(size_t i=0;i<c.state.battlefields.size()&&i<32;i++){
+     const auto& bf=c.state.battlefields[i];
+     names.push_back("Open battlefield #"+std::to_string(bf.id.raw()));
+     if(!bf.controller.has_value()&&!bf.is_contested)mask|=1u<<i;
+   }
+   int picked=-2;
+   if(mask){
+     picked=pickMode(c,"Demon Shade: choose open battlefield",
+         static_cast<int>(names.size()),names,mask);
+     if(picked<0)return;
+   }
+   if(finalizingChoices(c))return;
+   if(mask&&picked>=0&&static_cast<size_t>(picked)<c.state.battlefields.size())
+     c.executor.moveToBattlefield(unit,c.state.battlefields[picked].id);
+   else c.executor.giveTemporaryKeyword(unit,Keyword::Ganking);
+ }
+
 private:
  const CardDef d_=[] {
   auto d=mkFinal64_c(1104,102,R"RB(Demon Shade)RB",CardType::Spell,3,0,0,{Domain::Chaos},Rarity::Uncommon,R"RB([Hidden] (Hide now for [A] to react with later for [0].)
@@ -241,7 +299,27 @@ When I hold, if you control a facedown card here, score 1 point.)RB");
 class R64_1109 final : public UnitCard {
 public:
  const CardDef& def() const override { return d_; }
- // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
+
+ TriggerType triggerType()const override{return TriggerType::WhenIMove;}
+ unsigned choicesAtFinalization()const override{return kFinalizeTrigger;}
+ void onTrigger(CardContext& c,const std::vector<GameObjectId>&)override{
+   auto units=boardObjects(c.state,[&](const GameObject& o){
+     return o.isUnit()&&o.id!=c.source;
+   });
+   const int yes=confirmOptional(c,
+     "Lulu: make another unit's base Might 4 this turn?",[&](){return !units.empty();});
+   if(yes<0)return;
+   if(yes==0){(void)finalizingChoices(c);return;}
+   const auto target=pickTarget(c,"Lulu: unit to set base Might to 4",units);
+   if(finalizingChoices(c))return;
+   if(target!=kInvalidId&&c.state.objectExists(target)){
+     auto& o=c.state.getObject(target);
+     o.base_might_this_turn=4;
+     o.recomputeMight();
+     c.events.emit(ObjectStateChangedEvent{target,"might_changed"});
+   }
+ }
+
 private:
  const CardDef d_=[] {
   auto d=mkFinal64_c(1109,110,R"RB(Lulu, Whimsical)RB",CardType::Unit,3,0,3,{Domain::Chaos},Rarity::Rare,R"RB(When I move, you may have another unit's base Might become 4 this turn.)RB");
