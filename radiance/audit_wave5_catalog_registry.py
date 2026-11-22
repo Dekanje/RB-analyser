@@ -19,6 +19,14 @@ def audit(catalog, registry):
     assert bases <= set(codes), f"Missing numbered catalog IDs: {sorted(bases-set(codes))}"
     compiled_codes = [x.get("public_code") for x in compiled if x.get("public_code")]
     assert len(compiled_codes) == len(set(compiled_codes)), "Duplicate compiled public codes"
+    # A duplicate engine ID can silently alias two distinct card identities even
+    # when their public codes are unique. Fail before reporting coverage.
+    engine_ids = [x["id"] for x in compiled if x.get("id") is not None]
+    assert len(engine_ids) == len(set(engine_ids)), "Duplicate compiled engine IDs"
+    # Unknown Radiance codes must not silently count as reviewed printings.
+    unexpected_radiance = sorted(code for code in compiled_codes
+                                 if code.startswith("RAD-") and code not in set(codes))
+    assert not unexpected_radiance, f"Compiled Radiance codes absent from catalog: {unexpected_radiance}"
     by_code = {x["public_code"]: x for x in compiled if x.get("public_code")}
     registered = sorted(bases & by_code.keys())
     missing = sorted(bases - by_code.keys())
