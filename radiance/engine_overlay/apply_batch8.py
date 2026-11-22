@@ -59,4 +59,17 @@ assert t.count(before)==1, "CombatResult hook changed"
 tpath.write_text(t.replace(before,after,1))
 
 # The seed-1 deck fingerprint must be measured for this registry size.
+# Full CI seed-1 probe run 45061034720 measured the hash for the
+# 1,024-definition registry. Keep every earlier pool-size snapshot intact.
+decktest=engine/"tests/test_deck_fuzz.cpp"
+f=decktest.read_text()
+before="""    constexpr uint64_t kRadiance1009DeckOfSeedOne = 16217678500199303007ull;
+    const uint64_t expected = registry_->size()==1009 ? kRadiance1009DeckOfSeedOne"""
+after="""    constexpr uint64_t kRadiance1009DeckOfSeedOne = 16217678500199303007ull;
+    constexpr uint64_t kRadiance1024DeckOfSeedOne = 7489794038716556845ull;
+    const uint64_t expected = registry_->size()==1024 ? kRadiance1024DeckOfSeedOne
+                             : registry_->size()==1009 ? kRadiance1009DeckOfSeedOne"""
+assert f.count(before)==1, "DeckFuzz seed-1 anchor changed after Batch 7"
+decktest.write_text(f.replace(before,after,1))
+
 print("RADIANCE_BATCH8_APPLIED: 15 cards, IDs 1010-1024")
