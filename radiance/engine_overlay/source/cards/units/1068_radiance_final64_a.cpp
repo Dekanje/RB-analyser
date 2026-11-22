@@ -43,7 +43,25 @@ Deal 5 damage split among units at a single battlefield.)RB");
 class R64_1069 final : public SpellCard {
 public:
  const CardDef& def() const override { return d_; }
- // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
+
+ bool canBePlayed(const GameState& s,PlayerId)const override{
+   for(const auto& [id,o]:s.objects.onBoard())if(o.isUnit()&&o.location)return true;
+   return false;
+ }
+ FinalizeChoice mayChooseAtFinalization(const GameState& s,PlayerId,GameObjectId id)const override{
+   if(!s.objectExists(id))return FinalizeChoice::No;
+   const auto& o=s.getObject(id);
+   return o.isUnit()&&o.location?FinalizeChoice::Yes:FinalizeChoice::No;
+ }
+ unsigned choicesAtFinalization()const override{return kFinalizeResolve;}
+ void onResolve(CardContext& c,const std::vector<GameObjectId>&)override{
+   const auto units=boardObjects(c.state,[](const GameObject& o){return o.isUnit();});
+   const auto chosen=pickTarget(c,"Forbidden Technique: ready a unit",units);
+   if(finalizingChoices(c))return;
+   if(chosen!=kInvalidId)c.executor.readyObject(chosen);
+ }
+ // MECHANICS_INCOMPLETE: expensive-play replay from trash and banishment.
+
 private:
  const CardDef d_=[] {
   auto d=mkFinal64_a(1069,10,R"RB(Forbidden Technique)RB",CardType::Spell,2,0,0,{Domain::Fury},Rarity::Uncommon,R"RB(Ready a unit.
@@ -97,7 +115,16 @@ The second time I move each turn, banish the top card of your Main Deck. Until y
 class R64_1073 final : public UnitCard {
 public:
  const CardDef& def() const override { return d_; }
- // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
+
+ TriggerType triggerType()const override{return TriggerType::AtEndOfTurn;}
+ void onTrigger(CardContext& c,const std::vector<GameObjectId>&)override{
+   const auto runes=boardObjects(c.state,[&](const GameObject& o){
+     return o.isRune()&&o.controller==c.controller;
+   });
+   if(!runes.empty())c.executor.recycleCards(c.controller,runes);
+   c.executor.channelRunes(c.controller,4,true);
+ }
+
 private:
  const CardDef d_=[] {
   auto d=mkFinal64_a(1073,16,R"RB(Coalesced Energy)RB",CardType::Unit,4,2,4,{Domain::Fury},Rarity::Rare,R"RB(At the end of your turn, recycle all your runes, then channel 4 runes exhausted.)RB");
