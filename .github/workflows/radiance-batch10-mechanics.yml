@@ -123,7 +123,8 @@ jobs:
           python3 radiance/engine_overlay/apply_batch8.py
           python3 radiance/engine_overlay/apply_batch9.py
           python3 radiance/engine_overlay/apply_batch9_battlefields.py
-          python3 radiance/engine_overlay/apply_batch9_disarm_chain.py\n          python3 radiance/engine_overlay/apply_batch10.py
+          python3 radiance/engine_overlay/apply_batch9_disarm_chain.py
+          python3 radiance/engine_overlay/apply_batch10.py
       - name: Restore incremental C++ compiler cache
         id: ccache-restore
         uses: actions/cache/restore@v4
