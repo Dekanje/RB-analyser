@@ -24,7 +24,7 @@ jobs:
         run: |
           python3 -m py_compile radiance/engine_overlay/apply.py radiance/engine_overlay/apply_wave2.py radiance/engine_overlay/apply_wave3.py radiance/engine_overlay/apply_wave4.py radiance/engine_overlay/apply_batch6.py radiance/verify_batch6_registry.py radiance/coverage_ledger.py radiance/audit_wave5_catalog_registry.py
           python3 -m unittest discover -s radiance -p 'test_wave5_catalog_audit.py' -v
-          grep -F 'register_card_1000' radiance/engine_overlay/apply_batch6.py
+          grep -F 'range(998,1001)' radiance/engine_overlay/apply_batch6.py
           test -f radiance/engine_overlay/source/cards/units/0998_radiance_antagonistic_apparatus.cpp
           test -f radiance/engine_overlay/source/cards/units/0999_radiance_hunting_dog.cpp
           test -f radiance/engine_overlay/source/cards/units/1000_radiance_stalwart_goatherd.cpp
