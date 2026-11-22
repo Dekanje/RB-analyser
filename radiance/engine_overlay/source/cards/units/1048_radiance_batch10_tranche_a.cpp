@@ -182,9 +182,50 @@ private:
 class Radiance10_1055 final:public SpellCard {
 public:
  const CardDef& def()const override{return d_;}
-    // TODO: Bomb gear token linked death behavior and move choice, pending mechanic tests.
+ unsigned choicesAtFinalization()const override{return kFinalizeResolve;}
+ static constexpr size_t kMoveSlot=Card::kChoiceStateSlot+4;
+ static constexpr size_t kBombSlot=Card::kChoiceStateSlot+5;
+ void onResolve(CardContext& c,const std::vector<GameObjectId>&)override {
+   if(!c.state.chain.resuming)return;
+   auto& ri=*c.state.chain.resuming;
+   auto friends=r10units(c.state,c.controller);
+   const auto unit=pickTarget(c,"Satchel Charge: move a friendly unit",friends);
+   if(ri.resume_data.size()<=kBombSlot||ri.resume_data[kMoveSlot]==0) {
+     std::vector<int> dests;
+     if(unit!=kInvalidId&&c.state.objectExists(unit))
+       dests=moveDests(c.state,c.state.getObject(unit));
+     if(dests.empty())dests.push_back(-1);
+     const auto nbf=c.state.battlefields.size();
+     if(nbf==0)return;
+     std::vector<std::string> labels;
+     for(auto dest:dests)
+       for(const auto& bf:c.state.battlefields)
+         labels.push_back("Move: "+(dest<0?std::string("stay"):destLabel(dest))+
+           " / Bomb: battlefield #"+std::to_string(bf.id.raw()));
+     const int choice=pickMode(c,"Satchel Charge: move unit and place Bomb",
+       static_cast<int>(labels.size()),labels);
+     if(choice<0)return;
+     ri.resume_data.resize(std::max(ri.resume_data.size(),kBombSlot+1),0);
+     if(choice>=static_cast<int>(labels.size()))return;
+     ri.resume_data[kMoveSlot]=dests[choice/nbf]+2;
+     ri.resume_data[kBombSlot]=static_cast<int>(
+       c.state.battlefields[choice%nbf].id.raw())+1;
+   }
+   if(finalizingChoices(c))return;
+   const int moveDest=ri.resume_data[kMoveSlot]-2;
+   const int bombDest=ri.resume_data[kBombSlot]-1;
+   if(unit!=kInvalidId&&c.state.objectExists(unit)&&moveDest>=0)
+     moveTo(c,unit,moveDest);
+   if(bombDest<0)return;
+   KeywordSet deploy;deploy.set(Keyword::Deploy);
+   c.executor.createToken(c.controller,CardType::Gear,"Bomb",0,{"Bomb"},
+     deploy,BattlefieldLocation{BattlefieldId::fromRaw(bombDest)},
+     false,{},CardDefId{982});
+ }
 private:
- const CardDef d_=rad10a(1055,96,"Satchel Charge",CardType::Spell,3,1,0,{Domain::Chaos},Rarity::Common,"[Action] (Play on your turn or in showdowns.)\nMove a friendly unit, then play a Bomb gear token to a battlefield. (It has [Deploy]. When it dies, deal 2 to an enemy there and kill your other Bombs there.)",{Keyword::Action,Keyword::Deploy});
+ const CardDef d_=rad10a(1055,96,"Satchel Charge",CardType::Spell,3,1,0,
+   {Domain::Chaos},Rarity::Common,
+   "[Action] (Play on your turn or in showdowns.)\nMove a friendly unit, then play a Bomb gear token to a battlefield. (It has [Deploy]. When it dies, deal 2 to an enemy there and kill your other Bombs there.)",{Keyword::Action});
 };
 class Radiance10_1056 final:public GearCard {
 public:
