@@ -25,7 +25,9 @@ for src,dest in [
     ("cards/legends/0975_seraphine_package.cpp","src/cards/legends/0975_seraphine_package.cpp"),
     ("cards/units/0983_additional_deck_cards.cpp","src/cards/units/0983_additional_deck_cards.cpp"),
     ("cards/spells/0987_hush.cpp","src/cards/spells/0987_hush.cpp"),
-    ("cards/units/0988_shimmering_swimmer.cpp","src/cards/units/0988_shimmering_swimmer.cpp")]:
+    ("cards/units/0988_shimmering_swimmer.cpp","src/cards/units/0988_shimmering_swimmer.cpp"),
+    ("cards/units/0989_radiance_wave1.cpp","src/cards/units/0989_radiance_wave1.cpp"),
+    ("tests/cards/test_radiance_wave1.cpp","tests/cards/test_radiance_wave1.cpp")]:
     target=engine/dest
     if target.exists():raise SystemExit("Collision: "+str(target))
     shutil.copyfile(source/src,target)
@@ -38,6 +40,11 @@ replace_once(init,"void register_card_955(CardRegistry&);",
 "void register_card_955(CardRegistry&);\nvoid register_card_956(CardRegistry&);\nvoid register_card_957(CardRegistry&);\nvoid register_card_958(CardRegistry&);\nvoid register_card_959(CardRegistry&);\nvoid register_card_960(CardRegistry&);\nvoid register_card_961(CardRegistry&);\nvoid register_card_962(CardRegistry&);\nvoid register_card_963(CardRegistry&);\nvoid register_card_964(CardRegistry&);\nvoid register_card_965(CardRegistry&);\nvoid register_card_969(CardRegistry&);\nvoid register_card_970(CardRegistry&);\nvoid register_card_971(CardRegistry&);\nvoid register_card_972(CardRegistry&);\nvoid register_card_973(CardRegistry&);\nvoid register_card_974(CardRegistry&);\nvoid register_card_978(CardRegistry&);\nvoid register_card_979(CardRegistry&);\nvoid register_card_980(CardRegistry&);\nvoid register_card_981(CardRegistry&);\nvoid register_card_982(CardRegistry&);\nvoid register_card_966(CardRegistry&);\nvoid register_card_967(CardRegistry&);\nvoid register_card_968(CardRegistry&);\nvoid register_card_975(CardRegistry&);\nvoid register_card_976(CardRegistry&);\nvoid register_card_977(CardRegistry&);\nvoid register_card_983(CardRegistry&);\nvoid register_card_984(CardRegistry&);\nvoid register_card_985(CardRegistry&);\nvoid register_card_986(CardRegistry&);\nvoid register_card_987(CardRegistry&);\nvoid register_card_988(CardRegistry&);")
 replace_once(init,"    register_card_955(registry);",
 "    register_card_955(registry);\n    register_card_956(registry);\n    register_card_957(registry);\n    register_card_958(registry);\n    register_card_959(registry);\n    register_card_960(registry);\n    register_card_961(registry);\n    register_card_962(registry);\n    register_card_963(registry);\n    register_card_964(registry);\n    register_card_965(registry);\n    register_card_969(registry);\n    register_card_970(registry);\n    register_card_971(registry);\n    register_card_972(registry);\n    register_card_973(registry);\n    register_card_974(registry);\n    register_card_978(registry);\n    register_card_979(registry);\n    register_card_980(registry);\n    register_card_981(registry);\n    register_card_982(registry);\n    register_card_966(registry);\n    register_card_967(registry);\n    register_card_968(registry);\n    register_card_975(registry);\n    register_card_976(registry);\n    register_card_977(registry);\n    register_card_983(registry);\n    register_card_984(registry);\n    register_card_985(registry);\n    register_card_986(registry);\n    register_card_987(registry);\n    register_card_988(registry);")
+# Append only newly authored cards; retain the validated 955..988 overlay verbatim.
+replace_once(init, "void register_card_988(CardRegistry&);",
+             "void register_card_988(CardRegistry&);\nvoid register_card_989(CardRegistry&);\nvoid register_card_990(CardRegistry&);\nvoid register_card_991(CardRegistry&);\nvoid register_card_992(CardRegistry&);\nvoid register_card_993(CardRegistry&);")
+replace_once(init, "    register_card_988(registry);",
+             "    register_card_988(registry);\n    register_card_989(registry);\n    register_card_990(registry);\n    register_card_991(registry);\n    register_card_992(registry);\n    register_card_993(registry);")
 game=engine/"src/engine/game_engine.cpp"
 original="        if (state_.player(card.controller).otherUnitsEnterReady(card.id)) enters_ready = true;"
 replacement=original+"""
