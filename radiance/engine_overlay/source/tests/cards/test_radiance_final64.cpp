@@ -275,6 +275,15 @@ TEST_F(RadianceFinal64Test, RousingDisplayShowsOffExpensiveCardToCreateFourRecru
    if(o.controller==P1&&o.name=="Recruit"&&o.isUnit())++recruits;
  EXPECT_EQ(recruits,4);
 }
+TEST_F(RadianceFinal64Test, ScorchedEarthDealsExactlyFiveAllocatedDamageAtOneBattlefield){
+ auto target=addUnit(P2,kInvalidId,12,0);
+ auto unaffected=addUnit(P2,kInvalidId,12,1);
+ auto spell=addToHand(P1,CardDefId{1068});
+ EnginePathAgent select(EnginePathAgent::choosing(target));
+ playThroughEngine(spell,&select);
+ EXPECT_EQ(state.getObject(target).damage_marked,5);
+ EXPECT_EQ(state.getObject(unaffected).damage_marked,0);
+}
 TEST_F(RadianceFinal64Test, SixtyFourUniqueCardDefinitionsHaveCanonicalMetadata){
  ASSERT_EQ(expected.size(),64u);
  std::set<int> ids,numbers;std::set<std::string> public_codes;
