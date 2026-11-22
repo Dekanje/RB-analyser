@@ -66,7 +66,8 @@ When I conquer, if there is a friendly gear with [Deploy] here, channel 1 rune e
 class R64_1101 final : public UnitCard {
 public:
  const CardDef& def() const override { return d_; }
- // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
+ // Channel replacement is enforced centrally by EffectExecutor::channelRunes.
+ // Extra channels enter exhausted even when the original instruction channels ready.
 private:
  const CardDef d_=[] {
   auto d=mkFinal64_c(1101,92,R"RB(Seraphic Wyvern)RB",CardType::Unit,7,0,7,{Domain::Body},Rarity::Epic,R"RB(If you would channel runes, channel that many runes plus 1 exhausted rune instead.)RB");
