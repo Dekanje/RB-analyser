@@ -1,4 +1,5 @@
 #include "tests/cards/card_test_fixture.h"
+#include "engine/keyword_abilities.h"
 #include "cards/card.h"
 #include "cards/card_helpers.h"
 #include <gtest/gtest.h>
@@ -278,6 +279,39 @@ TEST_F(RadianceBatch9Test, DisarmDoesNotTargetFriendlyUnitsOrUnitsAtOtherBattlef
     });
     EXPECT_EQ(state.getObject(ally).temp_might_bonus,0);
     EXPECT_EQ(state.getObject(elsewhere).temp_might_bonus,0);
+}
+
+
+TEST_F(RadianceBatch9Test, DisarmIsAReactableFinalizableKeywordTrigger) {
+    const Card* ability=keywordAbilityCard(Keyword::Disarm);
+    ASSERT_NE(ability,nullptr);
+    EXPECT_NE(ability->choicesAtFinalization(),0u);
+    EXPECT_EQ(ability->triggerType(),TriggerType::WhenIAttack);
+    auto attacker=addUnit(P1,CardDefId{1034},3,0);
+    EXPECT_EQ(keywordAbilityInstances(state.getObject(attacker),
+                                      Keyword::Disarm,false),1);
+}
+TEST_F(RadianceBatch9Test, DisarmStacksPrintedTwoAndAuraOneAsOneTrigger) {
+    auto attacker=addUnit(P1,CardDefId{1034},3,0);
+    state.getObject(attacker).tags={"Mech"};
+    addUnit(P1,CardDefId{1030},2,0);
+    auto enemy=addUnit(P2,kInvalidId,7,0);
+    withEngine([&](GameEngine& e){e.testHook_recalculateAuras();});
+    ASSERT_TRUE(state.getObject(attacker).hasKeyword(Keyword::Disarm));
+    EXPECT_EQ(keywordAbilityInstances(state.getObject(attacker),Keyword::Disarm,false),1);
+    EnginePathAgent chooser(EnginePathAgent::choosing(enemy));
+    resolveThroughEngine([&](EffectExecutor&,GameState&){
+        events.emit(CombatStartedEvent{state.battlefields[0].id,P1,P2});
+    },&chooser);
+    EXPECT_EQ(state.getObject(enemy).temp_might_bonus,-3);
+}
+TEST_F(RadianceBatch9Test, DefendingDisarmUnitDoesNotDebuffAttacker) {
+    auto attacker=addUnit(P1,kInvalidId,5,0);
+    addUnit(P2,CardDefId{1035},1,0);
+    resolveThroughEngine([&](EffectExecutor&,GameState&){
+        events.emit(CombatStartedEvent{state.battlefields[0].id,P1,P2});
+    });
+    EXPECT_EQ(state.getObject(attacker).temp_might_bonus,0);
 }
 
 } // namespace riftbound::test::radiance_batch9
