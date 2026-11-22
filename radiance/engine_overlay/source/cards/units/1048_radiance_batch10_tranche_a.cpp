@@ -82,12 +82,18 @@ public:
    return !mightyReady(s,p).empty();
  }
  void onActivate(CardContext& c,const std::vector<GameObjectId>&)override {
+   // The chosen Mighty unit is exhausted at finalization. At resolution,
+   // do not recompute a ready-only list or the paid target disappears.
+   if(costAlreadyPaid(c)){
+     if(finalizingChoices(c))return;
+     c.executor.drawCards(c.controller,1);
+     return;
+   }
    const auto eligible=mightyReady(c.state,c.controller);
    const auto id=pickTarget(c,"Invigorating Bloom: exhaust a ready friendly Mighty unit",eligible);
    if(id==kInvalidId)return;
    if(costDueNow(c))c.executor.exhaustObject(id);
    if(finalizingChoices(c))return;
-   c.executor.drawCards(c.controller,1);
  }
 private:
  const CardDef d_=rad10a(1049,35,"Invigorating Bloom",CardType::Gear,3,0,0,{Domain::Calm},Rarity::Uncommon,
@@ -177,11 +183,13 @@ public:
      [&](){return !units.empty()&&c.executor.canPayWithAdds(c.controller,0,1,
                resource::maskOf(Domain::Body));});
    if(yes<1)return;
+   // Choices first, payment immediately before the finalize marker.
+   const auto unit=pickTarget(c,"Portable Portal: ready a unit here",units);
+   if(unit==kInvalidId)return;
    if(costDueNow(c)&&!c.executor.payResources(c.controller,0,1,
            resource::maskOf(Domain::Body)))return;
-   const auto unit=pickTarget(c,"Portable Portal: ready a unit here",units);
    if(finalizingChoices(c))return;
-   if(unit!=kInvalidId)c.executor.readyObject(unit);
+   c.executor.readyObject(unit);
  }
     void applyPassiveAura(GameState& s,PlayerId player)const override {
       forEachSelfOnce(*this,s,player,[&](GameObjectId source,GameObject& gear) {
