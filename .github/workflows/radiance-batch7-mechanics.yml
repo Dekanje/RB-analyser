@@ -9,8 +9,23 @@ on:
       - 'radiance/coverage_ledger.py'
       - 'radiance/audit_wave5_catalog_registry.py'
   workflow_dispatch:
+    inputs:
+      validation_level:
+        description: 'Select fast targeted test, batch audit, or final full regression'
+        type: choice
+        required: true
+        default: targeted
+        options:
+          - targeted
+          - batch
+          - full
+      gtest_filter:
+        description: 'GoogleTest name/filter for targeted mode only'
+        type: string
+        required: false
+        default: 'RadianceBatch7Test.*'
 concurrency:
-  group: radiance-batch7-${{ github.ref }}
+  group: radiance-batch7-staged-${{ github.ref }}
   cancel-in-progress: true
 permissions:
   contents: read
@@ -18,8 +33,45 @@ jobs:
   preflight:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
+    outputs:
+      mode: ${{ steps.scope.outputs.mode }}
+      gtest_filter: ${{ steps.scope.outputs.gtest_filter }}
     steps:
       - uses: actions/checkout@v4
+      - name: Select the minimum required validation scope
+        id: scope
+        env:
+          EVENT_KIND: ${{ github.event_name }}
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+          INPUT_LEVEL: ${{ inputs.validation_level }}
+          INPUT_FILTER: ${{ inputs.gtest_filter }}
+        run: |
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import os, re
+          event = os.environ.get("EVENT_KIND", "")
+          message = os.environ.get("COMMIT_MESSAGE", "").splitlines()
+          subject = message[0].strip() if message else ""
+          if event == "workflow_dispatch":
+              mode = os.environ.get("INPUT_LEVEL") or "targeted"
+              test_filter = os.environ.get("INPUT_FILTER") or "RadianceBatch7Test.*"
+              if mode not in ("targeted", "batch", "full"):
+                  raise ValueError("Invalid dispatch validation level")
+          elif subject.startswith("[batch-ready]"):
+              mode, test_filter = "full", ""
+          elif subject.startswith("[check-cards]"):
+              mode, test_filter = "batch", ""
+          elif subject.startswith("[test-fix"):
+              match = re.match(r"^\[test-fix(?::([A-Za-z0-9_.*?:/-]{1,200}))?\](?:\s|$)", subject)
+              if not match:
+                  raise ValueError("Invalid [test-fix:GoogleTest.Filter] commit prefix")
+              mode, test_filter = "targeted", match.group(1) or "RadianceBatch7Test.*"
+          else:
+              mode, test_filter = "preflight", ""
+          if mode == "targeted" and not re.fullmatch(r"[A-Za-z0-9_.*?:/-]{1,200}", test_filter):
+              raise ValueError("Unsafe targeted GoogleTest filter")
+          print("mode=" + mode)
+          print("gtest_filter=" + (test_filter if mode == "targeted" else ""))
+          PY
       - name: Fast source and catalog audit sanity
         run: |
           python3 -m py_compile radiance/engine_overlay/apply.py radiance/engine_overlay/apply_wave2.py radiance/engine_overlay/apply_wave3.py radiance/engine_overlay/apply_wave4.py radiance/engine_overlay/apply_batch6.py radiance/engine_overlay/apply_batch7.py radiance/verify_batch7_registry.py radiance/coverage_ledger.py radiance/audit_wave5_catalog_registry.py
@@ -29,9 +81,11 @@ jobs:
           test -f radiance/engine_overlay/source/tests/cards/test_radiance_batch7.cpp
   compiled-card-check:
     needs: preflight
-    if: ${{ github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, '[check-cards]') || startsWith(github.event.head_commit.message, '[batch-ready]') }}
+    if: ${{ needs.preflight.outputs.mode != 'preflight' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 59
+    env:
+      VALIDATION_MODE: ${{ needs.preflight.outputs.mode }}
     steps:
       - uses: actions/checkout@v4
       - name: Install required C++ libraries and apply pinned engine overlay
@@ -47,28 +101,49 @@ jobs:
           python3 radiance/engine_overlay/apply_wave4.py
           python3 radiance/engine_overlay/apply_batch6.py
           python3 radiance/engine_overlay/apply_batch7.py
-      - uses: actions/cache@v4
+      - name: Restore and save C++ compiler cache (also on failed tests)
+        uses: actions/cache@v4
         with:
           path: ~/.cache/ccache
-          key: rad7-ec90f0f-ubuntu-gcc13-release-${{ github.sha }}
+          key: rad7-staged-ec90f0f-ubuntu-gcc13-release-${{ github.sha }}
+          save-always: true
           restore-keys: |
+            rad7-staged-ec90f0f-ubuntu-gcc13-release-
+            rad7-ec90f0f-ubuntu-gcc13-release-
             rad6-ec90f0f-ubuntu-gcc13-release-
             radiance-alpharune-ec90f0f-gcc13-release-v1-
             radiance-wave5-audit-
             radiance-wave4-ccache-
       - name: Compile actual AlphaRune engine with Batch 7 cards
         run: |
+          ccache -M 1G
           cmake -S alpharune -B alpharune/build -G Ninja -DCMAKE_BUILD_TYPE=Release -DRIFTBOUND_BUILD_JOBS=2 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-          cmake --build alpharune/build --target riftbound riftbound_tests -j 2
-      - name: Run all dedicated Radiance mechanics tests through engine paths
+          if [ "$VALIDATION_MODE" = targeted ]; then
+            cmake --build alpharune/build --target riftbound_tests -j 2
+          else
+            cmake --build alpharune/build --target riftbound riftbound_tests -j 2
+          fi
+          ccache -s
+      - name: Targeted test - only the failing GoogleTest cases
+        if: ${{ needs.preflight.outputs.mode == 'targeted' }}
+        env:
+          GTEST_FILTER: ${{ needs.preflight.outputs.gtest_filter }}
+        run: |
+          mkdir -p results
+          RIFTBOUND_ROOT=alpharune alpharune/build/riftbound_tests --gtest_list_tests --gtest_filter="$GTEST_FILTER" > results/targeted_list.txt
+          python3 - <<'PY'
+          from pathlib import Path
+          lines = Path("results/targeted_list.txt").read_text().splitlines()
+          assert any(line.startswith("  ") and not line.lstrip().startswith("#") for line in lines), "No tests matched the requested filter"
+          PY
+          RIFTBOUND_ROOT=alpharune alpharune/build/riftbound_tests --gtest_filter="$GTEST_FILTER" --gtest_brief=1 --gtest_output=xml:results/radiance_targeted_tests.xml
+      - name: Focused Radiance mechanics tests - batch and full modes
+        if: ${{ needs.preflight.outputs.mode == 'batch' || needs.preflight.outputs.mode == 'full' }}
         run: |
           mkdir -p results
           RIFTBOUND_ROOT=alpharune alpharune/build/riftbound_tests --gtest_filter='RadianceWave1Test.*:RadianceWave2Test.*:RadianceWave3Test.*:RadianceWave4Test.*:RadianceBatch6Test.*:RadianceBatch7Test.*' --gtest_brief=1 --gtest_output=xml:results/radiance_batch7_focused_tests.xml
-      - name: Full regression gate - only on batch ready
-        if: ${{ github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, '[batch-ready]') }}
-        run: |
-          RIFTBOUND_ROOT=alpharune alpharune/build/riftbound_tests --gtest_brief=1 --gtest_output=xml:results/radiance_batch7_full_regression.xml
       - name: Strict compiled registration and catalog audit
+        if: ${{ needs.preflight.outputs.mode == 'batch' || needs.preflight.outputs.mode == 'full' }}
         run: |
           mkdir -p results
           alpharune/build/riftbound --dump-registry results/radiance_batch7_registry.json
@@ -85,10 +160,14 @@ jobs:
           assert x["all_mechanics_verified"] is False
           print("BATCH7_CATALOG_GATE_PASS_NOT_FULL_MECHANICS_CERTIFICATION")
           PY
+      - name: Full AlphaRune regression - final batch gate only
+        if: ${{ needs.preflight.outputs.mode == 'full' }}
+        run: |
+          RIFTBOUND_ROOT=alpharune alpharune/build/riftbound_tests --gtest_brief=1 --gtest_output=xml:results/radiance_batch7_full_regression.xml
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: radiance-batch7-1009-card-registry-and-tests
+          name: radiance-batch7-validation-${{ needs.preflight.outputs.mode }}
           path: results/
           retention-days: 30
           if-no-files-found: ignore
