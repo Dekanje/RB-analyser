@@ -77,6 +77,20 @@ TEST_F(RadianceBatch10Test, AmateurDemolitionistCreatesBombAtBattlefield) {
      ++bombs;
  EXPECT_EQ(bombs,1);
 }
+TEST_F(RadianceBatch10Test, KiBurstExhaustsFriendlyUnitBeforeSpellResolves) {
+ auto ally=addUnit(P1,kInvalidId,3,0);
+ auto enemy=addUnit(P2,kInvalidId,3,0);
+ auto spell=addToHand(P1,CardDefId{1060});
+ playThroughEngine(spell);
+ EXPECT_TRUE(state.getObject(ally).is_exhausted);
+ EXPECT_TRUE(state.getObject(ally).is_stunned||state.getObject(enemy).is_stunned);
+}
+TEST_F(RadianceBatch10Test, LifeFromStonePaysExhaustAsAdditionalCastCost) {
+ auto ally=addUnit(P1,kInvalidId,3,0);
+ auto spell=addToHand(P1,CardDefId{1061});
+ playThroughEngine(spell);
+ EXPECT_TRUE(state.getObject(ally).is_exhausted);
+}
 TEST_F(RadianceBatch10Test, HoldEmGrantsThreeMightToChosenUnit) {
  auto unit=addUnit(P1,kInvalidId,2,0);
  auto spell=addToHand(P1,CardDefId{1052});
