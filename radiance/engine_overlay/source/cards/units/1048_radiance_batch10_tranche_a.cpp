@@ -193,6 +193,11 @@ public:
     void onTrigger(CardContext& c,const std::vector<GameObjectId>&)override {
       if(!c.state.objectExists(c.source))return;
       auto& self=c.state.getObject(c.source);
+      if(costAlreadyPaid(c)){
+        if(finalizingChoices(c))return;
+        c.executor.drawCards(c.controller,1);
+        return;
+      }
       if(!self.location||self.is_exhausted)return;
       const auto& chain=c.state.chain.resuming;
       if(!chain||!c.state.objectExists(chain->triggering_subject))return;
