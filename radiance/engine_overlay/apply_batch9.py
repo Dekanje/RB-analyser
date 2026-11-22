@@ -30,9 +30,9 @@ declaration="void register_card_1024(CardRegistry&);"
 registration="    register_card_1024(registry);"
 assert s.count(declaration)==1 and s.count(registration)==1, "Batch8 registration anchor changed"
 s=s.replace(declaration,declaration+"\n"+ "\n".join(
-    f"void register_card_{i}(CardRegistry&);" for i in range(1025,1040)),1)
+    f"void register_card_{i}(CardRegistry&);" for i in [1025,1026,1027,1029,1030,1034,1035]),1)
 s=s.replace(registration,registration+"\n"+ "\n".join(
-    f"    register_card_{i}(registry);" for i in range(1025,1040)),1)
+    f"    register_card_{i}(registry);" for i in [1025,1026,1027,1029,1030,1034,1035]),1)
 init.write_text(s)
 
 # Deploy score behavior: "When you conquer here" watches the battlefield,
@@ -137,4 +137,4 @@ insert="""    const bool is_defender = (obj.controller == defender);
 assert src.count(before)==1, "Disarm attack hook anchor changed"
 trigger_source.write_text(src.replace(before,insert,1))
 
-print("RADIANCE_BATCH9_IMPLEMENTATIONS_APPLIED: 15 cards IDs 1025..1039, Disarm keyword and attack dispatcher")
+print("RADIANCE_BATCH9_IMPLEMENTATIONS_APPLIED: 7 distinct new cards; existing Radiance identities not re-registered, Disarm keyword and attack dispatcher")
