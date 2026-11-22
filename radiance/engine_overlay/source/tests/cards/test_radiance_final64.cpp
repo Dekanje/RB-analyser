@@ -232,6 +232,48 @@ TEST_F(RadianceFinal64Test, RivenDeserterGainsMightWhenAnotherFriendlyUnitExhaus
    settleLikeTheEngine(e);});
  EXPECT_EQ(state.getObject(riven).temp_might_bonus,1);
 }
+TEST_F(RadianceFinal64Test, IncorrigibleConstructEntersReadyAfterShowingOffMech){
+ addToHand(P1,CardDefId{1090}); // Clocktower Guardian is a Mech.
+ auto construct=addToHand(P1,CardDefId{1070});
+ EnginePathAgent accept(EnginePathAgent::accepting());
+ playThroughEngine(construct,&accept);
+ EXPECT_FALSE(state.getObject(construct).is_exhausted);
+}
+TEST_F(RadianceFinal64Test, TheEmpyreanShowsOffAndDrawsTwo){
+ addToHand(P1,CardDefId{1090});
+ for(int i=0;i<4;i++)addToDeck(P1,CardDefId{1070});
+ const auto prior=state.player(P1).hand.size();
+ auto dragon=addToHand(P1,CardDefId{1085});
+ EnginePathAgent accept(EnginePathAgent::accepting());
+ playThroughEngine(dragon,&accept);
+ EXPECT_GE(state.player(P1).hand.size(),prior+2u);
+}
+TEST_F(RadianceFinal64Test, PrimordialRoarUsesShownUnitMightForDamage){
+ addToHand(P1,CardDefId{1090}); // 8 Might
+ auto enemy=addUnit(P2,kInvalidId,7,0);
+ auto spell=addToHand(P1,CardDefId{1096});
+ EnginePathAgent accept(EnginePathAgent::accepting());
+ playThroughEngine(spell,&accept);
+ EXPECT_FALSE(state.getObject(enemy).isAtBattlefield());
+}
+TEST_F(RadianceFinal64Test, RousingDisplayCreatesTwoRecruitsWithoutShowOff){
+ auto spell=addToHand(P1,CardDefId{1119});
+ playThroughEngine(spell);
+ int recruits=0;
+ for(const auto& [id,o]:state.objects.onBoard())
+    if(o.controller==P1&&o.name=="Recruit"&&o.isUnit())++recruits;
+ EXPECT_EQ(recruits,2);
+}
+TEST_F(RadianceFinal64Test, RousingDisplayShowsOffExpensiveCardToCreateFourRecruits){
+ addToHand(P1,CardDefId{1090}); // 8-energy Mech
+ auto spell=addToHand(P1,CardDefId{1119});
+ EnginePathAgent accept(EnginePathAgent::accepting());
+ playThroughEngine(spell,&accept);
+ int recruits=0;
+ for(const auto& [id,o]:state.objects.onBoard())
+   if(o.controller==P1&&o.name=="Recruit"&&o.isUnit())++recruits;
+ EXPECT_EQ(recruits,4);
+}
 TEST_F(RadianceFinal64Test, SixtyFourUniqueCardDefinitionsHaveCanonicalMetadata){
  ASSERT_EQ(expected.size(),64u);
  std::set<int> ids,numbers;std::set<std::string> public_codes;
