@@ -72,14 +72,14 @@ triggers.write_text(t.replace(anchor,patch+anchor,1))
 # Keep existing bit positions stable; extend keyword enum before Count sentinel.
 types=engine/"src/core/types.h"
 words=types.read_text()
-old="    Flow         = 24,  // Vendetta: spell may be played from trash for its Flow cost, then banished\n    Count        = 25,"
-new="    Flow         = 24,  // Vendetta: spell may be played from trash for its Flow cost, then banished\n    Disarm       = 25,  // Radiance: -N Might on a chosen enemy when this unit attacks\n    Count        = 26,"
+old="    Deploy       = 25,  // Radiance: gear played to battlefield; dies on enemy hold\n    Count        = 26,"
+new="    Deploy       = 25,  // Radiance: gear played to battlefield; dies on enemy hold\n    Disarm       = 26,  // Radiance: stackable -N Might when attacking\n    Count        = 27,"
 assert words.count(old)==1, "Disarm enum anchor changed"
 types.write_text(words.replace(old,new,1))
 
 types_cpp=engine/"src/core/types.cpp"
 names=types_cpp.read_text()
-old="        case Keyword::Flow:         return \"Flow\";"
+old="        case Keyword::Deploy:       return \"Deploy\";"
 new=old+"\n        case Keyword::Disarm:       return \"Disarm\";"
 assert names.count(old)==1, "Disarm string-table anchor changed"
 types_cpp.write_text(names.replace(old,new,1))
