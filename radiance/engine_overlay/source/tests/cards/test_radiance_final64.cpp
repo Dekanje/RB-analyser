@@ -347,6 +347,86 @@ TEST_F(RadianceFinal64Test, GravesDealDamageOnAttackTriggerButNoCombatDamage){
  fireTriggerThroughEngine(graves,TriggerType::WhenIAttackOrDefend);
  EXPECT_EQ(state.getObject(enemy).damage_marked,5);
 }
+TEST_F(RadianceFinal64Test, SirensSongMovesOnlyEnemyUnitThatMovedThisTurn){
+ auto enemy=addUnit(P2,kInvalidId,5,0);
+ state.getObject(enemy).moves_this_turn=1;
+ auto spell=addToHand(P1,CardDefId{1103});
+ playThroughEngine(spell);
+ EXPECT_TRUE(state.getObject(enemy).isAtBase());
+}
+TEST_F(RadianceFinal64Test, DemonShadeMovesFriendlyUnitToOpenBattlefield){
+ auto friendUnit=addUnit(P1,kInvalidId,2,-1);
+ auto shade=addToHand(P1,CardDefId{1104});
+ playThroughEngine(shade);
+ EXPECT_TRUE(state.getObject(friendUnit).isAtBattlefield());
+}
+TEST_F(RadianceFinal64Test, LuluCanChangeAnotherUnitsBaseMightAfterMove){
+ auto lulu=addUnit(P1,CardDefId{1109},2,-1);
+ auto other=addUnit(P1,kInvalidId,6,1);
+ EnginePathAgent accept(EnginePathAgent::accepting());
+ resolveThroughEngine([&](EffectExecutor& exec,GameState&){
+   exec.moveToBattlefield(lulu,state.battlefields[0].id);
+ },&accept);
+ EXPECT_EQ(state.getObject(other).base_might_this_turn,4);
+}
+TEST_F(RadianceFinal64Test, ZiggsActivatedAbilityExhaustsAndPlaysBomb){
+ auto ziggs=addUnit(P1,CardDefId{1111},4,0);
+ state.player(P1).rune_pool.energy=1;
+ Intent act;act.type=IntentType::ActivateAbility;act.player=P1;act.ability_source=ziggs;
+ withEngineDefaultTurn([&](GameEngine& e){
+   e.testHook_executeIntent(act);settleLikeTheEngine(e);
+ },nullptr,nullptr,P1);
+ int bombs=0;
+ for(const auto& [id,o]:state.objects.onBoard())
+   if(o.name=="Bomb"&&o.isGear()&&o.controller==P1)++bombs;
+ EXPECT_TRUE(state.getObject(ziggs).is_exhausted);
+ EXPECT_EQ(bombs,1);
+}
+TEST_F(RadianceFinal64Test, ZiggsDefendCanKillFriendlyGearForTwoMight){
+ auto gear=addToHand(P1,CardDefId{1088});
+ playThroughEngine(gear);
+ auto ziggs=addUnit(P1,CardDefId{1111},4,0);
+ EnginePathAgent accept(EnginePathAgent::accepting());
+ fireTriggerThroughEngine(ziggs,TriggerType::WhenIDefend,&accept);
+ EXPECT_FALSE(state.getObject(gear).location.has_value());
+ EXPECT_EQ(state.getObject(ziggs).temp_might_bonus,2);
+}
+TEST_F(RadianceFinal64Test, AnglerWyrmAbilityLetsOpponentSelectUnitToMove){
+ auto angler=addUnit(P1,CardDefId{1112},8,0);
+ auto enemy=addUnit(P2,kInvalidId,2,-1);
+ EnginePathAgent chooser(EnginePathAgent::choosing(enemy));
+ Intent act;act.type=IntentType::ActivateAbility;act.player=P1;act.ability_source=angler;
+ withEngineDefaultTurn([&](GameEngine& e){
+   e.testHook_executeIntent(act);settleLikeTheEngine(e);
+ },nullptr,&chooser,P1);
+ EXPECT_TRUE(state.getObject(angler).is_exhausted);
+ EXPECT_EQ(state.getObject(enemy).battlefieldId(),state.battlefields[0].id);
+}
+TEST_F(RadianceFinal64Test, RivenDeserterActivationCanOnlyBeUsedOncePerTurn){
+ auto riven=addUnit(P1,CardDefId{1113},5,0);
+ addUnit(P1,kInvalidId,2,0);
+ auto* card=card_registry.get(CardDefId{1113});
+ ASSERT_NE(card,nullptr);
+ ASSERT_TRUE(card->canActivateAbilityAt(state,P1,riven,0));
+ Intent act;act.type=IntentType::ActivateAbility;act.player=P1;act.ability_source=riven;
+ withEngineDefaultTurn([&](GameEngine& e){
+   e.testHook_executeIntent(act);settleLikeTheEngine(e);
+ },nullptr,nullptr,P1);
+ EXPECT_FALSE(card->canActivateAbilityAt(state,P1,riven,0));
+}
+TEST_F(RadianceFinal64Test, TranspositionistReturnsUnitAndPlaysLowerMightUnitFree){
+ auto target=addUnit(P1,kInvalidId,6,-1);
+ auto replacement=addToHand(P1,CardDefId{1084});
+ auto caster=addUnit(P1,CardDefId{1114},3,-1);
+ addRune(P1,Domain::Chaos);
+ Intent act;act.type=IntentType::ActivateAbility;act.player=P1;act.ability_source=caster;
+ EnginePathAgent accept(EnginePathAgent::accepting());
+ withEngineDefaultTurn([&](GameEngine& e){
+   e.testHook_executeIntent(act);settleLikeTheEngine(e);
+ },&accept,nullptr,P1);
+ EXPECT_TRUE(inHand(P1,target));
+ EXPECT_TRUE(state.getObject(replacement).location.has_value());
+}
 TEST_F(RadianceFinal64Test, SixtyFourUniqueCardDefinitionsHaveCanonicalMetadata){
  ASSERT_EQ(expected.size(),64u);
  std::set<int> ids,numbers;std::set<std::string> public_codes;
