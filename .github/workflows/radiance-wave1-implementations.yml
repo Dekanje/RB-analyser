@@ -18,7 +18,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Python syntax and baseline overlay anchors
         run: |
-          python3 -m py_compile radiance/engine_overlay/apply.py radiance/verify_wave1_registry.py
+          python3 -m py_compile radiance/engine_overlay/apply.py radiance/engine_overlay/wave1_regression_fix.py radiance/verify_wave1_registry.py
           grep -F 'register_card_993(registry);' radiance/engine_overlay/apply.py
           grep -F '0989_radiance_wave1.cpp' radiance/engine_overlay/apply.py
           grep -F 'test_radiance_wave1.cpp' radiance/engine_overlay/apply.py
@@ -29,6 +29,7 @@ jobs:
           git clone --quiet https://github.com/chorlick/alpharune.git alpharune
           git -C alpharune checkout --quiet --detach ec90f0fed002aed374d06249fa95e83e3cfbd386
           python3 radiance/engine_overlay/apply.py
+          python3 radiance/engine_overlay/wave1_regression_fix.py
       - uses: actions/cache@v4
         with:
           path: ~/.cache/ccache
