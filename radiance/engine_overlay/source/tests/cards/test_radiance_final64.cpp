@@ -450,6 +450,19 @@ TEST_F(RadianceFinal64Test, SeraphicWyvernAddsOneExhaustedRuneToReadyChannel){
  EXPECT_EQ(exhausted,1);
  EXPECT_EQ(state.player(P1).rune_deck.size(),1u);
 }
+TEST_F(RadianceFinal64Test, BushwhackTrapGrantsExtraFacedownSlotOnlyWhileHeld){
+ state.battlefields[0].controller=P1;
+ auto trap=addToHand(P1,CardDefId{1107});
+ playThroughEngine(trap,nullptr,
+    LocationId{BattlefieldLocation{state.battlefields[0].id}});
+ withEngine([&](GameEngine& e){e.testHook_recalculateAuras();});
+ EXPECT_EQ(state.battlefields[0].facedown_max_occupancy,2);
+ withEngine([&](GameEngine& e){
+   e.testHook_executor().killObject(trap);
+   e.testHook_recalculateAuras();
+ });
+ EXPECT_EQ(state.battlefields[0].facedown_max_occupancy,1);
+}
 TEST_F(RadianceFinal64Test, SixtyFourUniqueCardDefinitionsHaveCanonicalMetadata){
  ASSERT_EQ(expected.size(),64u);
  std::set<int> ids,numbers;std::set<std::string> public_codes;
