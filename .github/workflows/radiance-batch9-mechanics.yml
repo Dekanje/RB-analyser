@@ -1,7 +1,7 @@
 name: Radiance Batch 9 - mechanics-based C++ implementation
 # Batch 9 tranche 1: run seven real engine-path tests (IDs 1025-1027).
-# Batch 9 staged CI, first three cards. No full-set mechanics certification.
-# Targeted run covers all authored Batch 8 cards before full acceptance.
+# Batch 9 staged CI, 15 authored cards. Full regression mandatory for acceptance.
+# Targeted run covers Batch 9 mechanics; Disarm timing gaps recorded in evidence ledger.
 on:
   push:
     branches: ['radiance/mechanics-batch9-2026-11-22']
@@ -79,10 +79,13 @@ jobs:
         run: |
           python3 -m py_compile radiance/engine_overlay/apply.py radiance/engine_overlay/apply_wave2.py radiance/engine_overlay/apply_wave3.py radiance/engine_overlay/apply_wave4.py radiance/engine_overlay/apply_batch6.py radiance/engine_overlay/apply_batch7.py radiance/engine_overlay/apply_batch8.py radiance/engine_overlay/apply_batch9.py radiance/verify_batch8_registry.py radiance/verify_batch9_registry.py radiance/coverage_ledger.py radiance/audit_wave5_catalog_registry.py
           python3 -m unittest discover -s radiance -p 'test_wave5_catalog_audit.py' -v
-          grep -F 'range(1025,1028)' radiance/engine_overlay/apply_batch9.py
+          grep -F 'range(1025,1040)' radiance/engine_overlay/apply_batch9.py
           test -f radiance/engine_overlay/source/cards/units/1010_radiance_batch8.cpp
           test -f radiance/engine_overlay/source/tests/cards/test_radiance_batch9.cpp
           test -f radiance/engine_overlay/source/cards/units/1025_radiance_batch9_tranche1.cpp
+          test -f radiance/engine_overlay/source/cards/units/1028_radiance_batch9_tranche2a.cpp
+          test -f radiance/engine_overlay/source/cards/units/1032_radiance_batch9_tranche2b.cpp
+          test -f radiance/engine_overlay/source/cards/units/1036_radiance_batch9_tranche2c.cpp
           test -f radiance/engine_overlay/source/cards/units/1016_radiance_batch8_tranche2a.cpp
           test -f radiance/engine_overlay/source/cards/units/1019_radiance_batch8_tranche2b.cpp
           test -f radiance/engine_overlay/source/cards/units/1022_radiance_batch8_tranche2c.cpp
@@ -119,7 +122,7 @@ jobs:
           restore-keys: |
             rad9-pch-safe-linux-gcc13-
             rad8-pch-safe-linux-gcc13-
-      - name: Compile actual AlphaRune engine with Batch 8 cards
+      - name: Compile actual AlphaRune engine with Batch 9 cards
         run: |
           # Reuse compiled objects safely when AlphaRune uses precompiled headers.
           # Direct ccache previously classified 121/123 calls as uncacheable.
@@ -162,9 +165,9 @@ jobs:
           import json
           from pathlib import Path
           x=json.loads(Path("results/radiance_batch9_catalog_audit.json").read_text())
-          assert x["compiled_registry_size"]==1027
-          assert x["registered_base_count"]==71
-          assert x["missing_base_count"]==96
+          assert x["compiled_registry_size"]==1039
+          assert x["registered_base_count"]==80
+          assert x["missing_base_count"]==87
           assert x["all_mechanics_verified"] is False
           print("BATCH9_TRANCHE1_CATALOG_GATE_PASS_NOT_FULL_MECHANICS_CERTIFICATION")
           PY
@@ -186,7 +189,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: radiance-batch8-validation-${{ needs.preflight.outputs.mode }}
+          name: radiance-batch9-validation-${{ needs.preflight.outputs.mode }}
           path: results/
           retention-days: 30
           if-no-files-found: ignore
