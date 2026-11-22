@@ -269,6 +269,14 @@ private:
 class Radiance10_1067 final:public SpellCard {
 public:
  const CardDef& def()const override{return d_;}
+ bool canBePlayed(const GameState& s,PlayerId p)const override {
+   return !units10b(s,p,true).empty()&&!units10b(s,p,false).empty();
+ }
+ FinalizeChoice mayChooseAtFinalization(const GameState& s,PlayerId,GameObjectId id)const override {
+   if(!s.objectExists(id))return FinalizeChoice::No;
+   const auto& o=s.getObject(id);
+   return o.isUnit()&&o.location?FinalizeChoice::Yes:FinalizeChoice::No;
+ }
  unsigned choicesAtFinalization()const override{return kFinalizeResolve;}
     void onResolve(CardContext& c,const std::vector<GameObjectId>&)override {
       auto ally=units10b(c.state,c.controller,true);
