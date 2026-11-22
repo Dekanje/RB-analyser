@@ -1,0 +1,390 @@
+{
+  "schema_version": 1,
+  "note": "Per-card gameplay coverage. Pending until actual rule-specific engine-path scenarios pass; registration tests do not qualify.",
+  "cards": {
+    "RAD-006/167": {
+      "engine_id": 1068,
+      "status": "pending",
+      "engine_scenarios": [],
+      "unverified_rules": "[Action] (Play on your turn or in showdowns.)\nDeal 5 damage split among units at a single battlefield."
+    },
+    "RAD-010/167": {
+      "engine_id": 1069,
+      "status": "pending",
+      "engine_scenarios": [],
+      "unverified_rules": "Ready a unit.\nWhen you play a card with Energy cost :rb_energy_7: or more, you may play this from your trash for :rb_energy_1::rb_rune_fury::rb_rune_fury:. Banish this."
+    },
+    "RAD-011/167": {
+      "engine_id": 1070,
+      "status": "pending",
+      "engine_scenarios": [],
+      "unverified_rules": "[Show Off] a Mech. (As you play me, you may reveal a Mech from hand or pick another friendly Mech.)\nI enter ready if you showed off."
+    },
+    "RAD-012/167": {
+      "engine_id": 1071,
+      "status": "pending",
+      "engine_scenarios": [],
+      "unverified_rules": "When you play this or when this leaves the board, banish the top card of your Main Deck. Until your next Ending Phase, you may play that card. (You still pay its costs.)\n:rb_energy_2::rb_rune_chaos:, :rb_exhaust:: Kill this."
+    },
+    "RAD-015/167": {
+      "engine_id": 1072,
+      "status": "pending",
+      "engine_scenarios": [],
+      "unverified_rules": "The first time I move each turn, [Add] :rb_energy_1::rb_rune_rainbow:.\nThe second time I move each turn, banish the top card of your Main Deck. Until your next Ending Phase, you may play that card. (You still pay its costs.)"
+    },
+    "RAD-016/167": {
+      "engine_id": 1073,
+      "status": "pending",
+      "engine_scenarios": [],
+      "unverified_rules": "At the end of your turn, recycle all your runes, then channel 4 runes exhausted."
+    },
+    "RAD-018/167": {
+      "engine_id": 1074,
+      "status": "pending",
+      "engine_scenarios": [],
+      "unverified_rules": "When you play me, reveal the top card of each opponent's Main Deck. Choose one and banish it, then play it, ignoring its cost. Recycle the rest."
+    },
+    "RAD-019/167": {
+      "engine_id": 1075,
+      "status": "pending",
+      "engine_scenarios": [],
+      "unverified_rules": "I enter ready.\nWhen you play me, ready all enemy units.\nOther units enter ready.\nUnits don't ready during the Awaken Phase."
+    },
+    "RAD-022/167": {
+      "engine_id": 1076,
+      "status": "pending",
+      "engine_scenarios": [],
+      "unverified_rules": ":rb_exhaust:: Play a Gold gear token exhausted. (It has \"[Reaction][>] Kill this, :rb_exhaust:: [Add] :rb_rune_rainbow:.\")\nKill a friendly gear, :rb_exhaust:: Play a 1 :rb_might: Recruit unit token.\nKill a friendly unit, :rb_exhaust:: Play a 3 :rb_might: Mech unit token."
+    },
+    "RAD-031/167": {
+      "engine_id": 1077,
+      "status": "pending",
+      "engine_scenarios": [],
+      "unverified_rules": "[Shield 3] (+3 :rb_might: while I'm a defender.)\nWhen you play me to a battlefield, you may move another unit you control here to your base."
+    },
+    "RAD-033/167": {
+      "engine_id": 1078,
+      "status": "pending",
+      "engine_scenarios": [],
+      "unverified_rules": "Choose one —Move a friendly gear with [Deploy] to a battlefield.Look at the top 5 cards of your Main Deck. You may reveal a gear from among them and draw it. Recycle the rest."
+    },
+    "RAD-043/167": {
+      "engine_id": 1079,
+      "status": "pending",
+      "engine_scenarios": [],
+      "unverified_rules": "When I become exhausted, choose one that hasn't been chosen this turn —[Buff] me. (Give me a +1 :rb_might: buff if I don't have one.)Spend my buff to [Stun] an enemy unit. (It doesn't deal combat damage this turn.)Spend my buff to ready me."
+    },
+    "RAD-044/167": {
+      "engine_id": 1080,
+      "status": "pending",
+      "engine_scenarios": [],
+      "unverified_rules": "[Deploy] (Play this only to a battlefield. When an opponent holds here, kill this.)\nWhen you play this, you may move an enemy unit to this battlefield.\nFriendly units here have [Shield 2]. (+2 :rb_might: while they're defenders.)"
+    },
+    "RAD-045/167": {
+      "engine_id": 1081,
+      "status": "pending",
+      "engine_scenarios": [],
+      "unverified_rules": "[Shield] (+1 :rb_might: while I'm a defender.)\nWhen I attack or defend, double the [Shield] of a unit you control here this turn."
+    },
+    "RAD-046/167": {
+      "engine_id": 1082,
+      "status": "pending",
+      "engine_scenarios": [],
+      "unverified_rules": ":rb_exhaust:: Draw 1 and channel 1 rune exhausted.\nWhen I become exhausted, give a friendly unit +3 :rb_might: this turn."
+    },
+    "RAD-053/167": {
+      "engine_id": 1083,
+      "status": "pending",
+      "engine_scenarios": [],
+      "unverified_rules": "When I become exhausted, [Predict]. (Look at the top card of your Main Deck. You may recycle it.)"
+    },
+    "RAD-054/167": {
+      "engine_id": 1084,
+      "status": "pending",
+      "engine_scenarios": [],
+      "unverified_rules": "[Disarm] (When I attack, give an enemy unit here -1 :rb_might: this turn.)"
+    },
+    "RAD-060/167": {
+      "engine_id": 1085,
+      "status": "pending",
+      "engine_scenarios": [],
+      "unverified_rules": "[Show Off] a card. (As you play me, you may reveal a card from hand or pick another friendly one.)\nWhen you play me, if you showed off a card, [Predict] equal to its Power cost, then draw 2. (Look at that many cards from your Main Deck. Recycle any of them and put the rest back in any order.)"
+    },
+    "RAD-062/167": {
+      "engine_id": 1086,
+      "status": "pending",
+      "engine_scenarios": [],
+      "unverified_rules": "[Deploy] (Play this only to a battlefield. When an opponent holds here, kill this.)\nOpponents must pay :rb_energy_1::rb_rune_rainbow: to move one or more units to this battlefield.\n[Deathknell][>] Draw 1. (When I die, get the effect.)"
+    },
+    "RAD-063/167": {
+      "engine_id": 1087,
+      "status": "pending",
+      "engine_scenarios": [],
+      "unverified_rules": "[Disarm] (When I attack, give an enemy unit here -1 :rb_might: this turn).\nWhile I'm in a showdown, your spells have [Reaction]. (Play them any time, even before spells and abilities resolve.)"
+    },
+    "RAD-064/167": {
+      "engine_id": 1088,
+      "status": "pending",
+      "engine_scenarios": [],
+      "unverified_rules": ":rb_energy_1:, :rb_exhaust:: Choose an opponent. They guess a card type. Reveal the top card of your Main Deck. If it has that type, recycle it. Otherwise, draw it. (Unit, gear, and spell are types.)"
+    },
+    "RAD-066/167": {
+      "engine_id": 1089,
+      "status": "pending",
+      "engine_scenarios": [],
+      "unverified_rules": "You may return a friendly gear to its owner's hand as an additional cost to play me.\nWhen you play me, if you paid the additional cost, ready me and give me +:rb_might: this turn equal to the Energy cost of the gear you returned."
+    },
+    "RAD-067/167": {
+      "engine_id": 1090,
+      "status": "pending",
+      "engine_scenarios": [],
+      "unverified_rules": "When you play me or when I hold, [Predict 3].\n[Deathknell][>] Banish the top card of your Main Deck. You may play it, ignoring its Energy cost."
+    },
+    "RAD-068/167": {
+      "engine_id": 1091,
+      "status": "pending",
+      "engine_scenarios": [],
+      "unverified_rules": "Once each turn, while I'm at a battlefield, you may pay :rb_energy_1::rb_rune_rainbow: less to play a gear."
+    },
+    "RAD-069/167": {
+      "engine_id": 1092,
+      "status": "pending",
+      "engine_scenarios": [],
+      "unverified_rules": "When you play a card, draw 2.\nWhen you draw 1 or more cards with 9 or more other cards in your hand, discard your hand, kill this, and choose an opponent. They score 1 point."
+    },
+    "RAD-074/167": {
+      "engine_id": 1093,
+      "status": "pending",
+      "engine_scenarios": [],
+      "unverified_rules": "When I move, reveal the top card of your Main Deck. If it's [Mighty], draw it. Otherwise, recycle it. (A unit is Mighty while it has 5+ :rb_might:.)"
+    },
+    "RAD-078/167": {
+      "engine_id": 1094,
+      "status": "pending",
+      "engine_scenarios": [],
+      "unverified_rules": "[Shield 3] (+3 :rb_might: while I'm a defender.)\n[Tank] (I must be assigned combat damage first.)\nWhen I move, you may deal damage equal to my [Shield] to a unit at a battlefield."
+    },
+    "RAD-080/167": {
+      "engine_id": 1095,
+      "status": "pending",
+      "engine_scenarios": [],
+      "unverified_rules": "I cost :rb_energy_2: less for each battlefield you've conquered this turn."
+    },
+    "RAD-082/167": {
+      "engine_id": 1096,
+      "status": "pending",
+      "engine_scenarios": [],
+      "unverified_rules": "[Show Off] a unit. (As you play this, you may reveal a unit from hand or pick a friendly unit.)\nIf you showed off a unit, deal damage equal to that unit's Might to a unit."
+    },
+    "RAD-084/167": {
+      "engine_id": 1097,
+      "status": "pending",
+      "engine_scenarios": [],
+      "unverified_rules": "Opponents can't play spells this turn.\nMove a friendly unit to an occupied enemy battlefield."
+    },
+    "RAD-085/167": {
+      "engine_id": 1098,
+      "status": "pending",
+      "engine_scenarios": [],
+      "unverified_rules": "When I attack or defend, deal damage equal to my Might to all enemy units here.\nI don't deal combat damage."
+    },
+    "RAD-090/167": {
+      "engine_id": 1099,
+      "status": "pending",
+      "engine_scenarios": [],
+      "unverified_rules": "[Ambush] (You may play me as a [Reaction] to a battlefield where you have units.)\nWhen you play a card from face down, ready me and give me +1 :rb_might: this turn."
+    },
+    "RAD-091/167": {
+      "engine_id": 1100,
+      "status": "pending",
+      "engine_scenarios": [],
+      "unverified_rules": "Your gear with [Deploy] have [Action]. (They can be played on your turn or in showdowns.)\nWhen I conquer, if there is a friendly gear with [Deploy] here, channel 1 rune exhausted."
+    },
+    "RAD-092/167": {
+      "engine_id": 1101,
+      "status": "pending",
+      "engine_scenarios": [],
+      "unverified_rules": "If you would channel runes, channel that many runes plus 1 exhausted rune instead."
+    },
+    "RAD-094/167": {
+      "engine_id": 1102,
+      "status": "pending",
+      "engine_scenarios": [],
+      "unverified_rules": "When I hold, play three Bomb gear tokens to a single battlefield. (They have [Deploy]. When each dies, deal 2 to an enemy there and kill your other Bombs there.)"
+    },
+    "RAD-098/167": {
+      "engine_id": 1103,
+      "status": "pending",
+      "engine_scenarios": [],
+      "unverified_rules": "[Reaction] (Play any time, even before spells and abilities resolve.)\nMove an enemy unit that moved this turn."
+    },
+    "RAD-102/167": {
+      "engine_id": 1104,
+      "status": "pending",
+      "engine_scenarios": [],
+      "unverified_rules": "[Hidden] (Hide now for :rb_rune_rainbow: to react with later for :rb_energy_0:.)\nChoose a friendly unit, then choose one —Move it to an open battlefield.Give it [Ganking] this turn if there are no open battlefields. (It can move from battlefield to battlefield.)"
+    },
+    "RAD-103/167": {
+      "engine_id": 1105,
+      "status": "pending",
+      "engine_scenarios": [],
+      "unverified_rules": "[Hidden] (Hide now for :rb_rune_rainbow: to react with later for :rb_energy_0:.)\n[Show Off] a card with [Hidden]. (As you play me, you may reveal such a card from hand or pick another friendly one on the board.)\nWhen you play me, if you showed off, [Add] :rb_rune_rainbow:."
+    },
+    "RAD-104/167": {
+      "engine_id": 1106,
+      "status": "pending",
+      "engine_scenarios": [],
+      "unverified_rules": ":rb_exhaust:: [Stun] an enemy unit. (It doesn't deal combat damage this turn.)"
+    },
+    "RAD-108/167": {
+      "engine_id": 1107,
+      "status": "pending",
+      "engine_scenarios": [],
+      "unverified_rules": "[Deploy] (Play this only to a battlefield. When an opponent holds here, kill this.)\nWhile you or an ally control this battlefield, that player may hide an additional card here."
+    },
+    "RAD-109/167": {
+      "engine_id": 1108,
+      "status": "pending",
+      "engine_scenarios": [],
+      "unverified_rules": "[Disarm] (When I attack, give an enemy unit here -1 :rb_might: this turn.)\nWhen I hold, if you control a facedown card here, score 1 point."
+    },
+    "RAD-110/167": {
+      "engine_id": 1109,
+      "status": "pending",
+      "engine_scenarios": [],
+      "unverified_rules": "When I move, you may have another unit's base Might become 4 this turn."
+    },
+    "RAD-111/167": {
+      "engine_id": 1110,
+      "status": "pending",
+      "engine_scenarios": [],
+      "unverified_rules": "At the start of your Beginning Phase, each player reveals the top card of their Main Deck. If you revealed a card with the lowest Energy cost, draw it. Recycle the rest."
+    },
+    "RAD-112/167": {
+      "engine_id": 1111,
+      "status": "pending",
+      "engine_scenarios": [],
+      "unverified_rules": ":rb_energy_1:, :rb_exhaust:: Play a Bomb gear token to a battlefield. (It has [Deploy]. When it dies, deal 2 to an enemy there and kill your other Bombs there.)\nWhen I defend, you may kill a friendly gear to give me +2 :rb_might: this turn."
+    },
+    "RAD-113/167": {
+      "engine_id": 1112,
+      "status": "pending",
+      "engine_scenarios": [],
+      "unverified_rules": "[Deflect] (Opponents must pay :rb_rune_rainbow: to choose me with a spell or ability.)\n:rb_exhaust:: Choose an opponent. They must move a unit they control to my battlefield."
+    },
+    "RAD-114/167": {
+      "engine_id": 1113,
+      "status": "pending",
+      "engine_scenarios": [],
+      "unverified_rules": "When another friendly unit becomes exhausted, give me +1 :rb_might: this turn.\nExhaust a friendly unit: Ready a unit. Use this ability only once each turn."
+    },
+    "RAD-115/167": {
+      "engine_id": 1114,
+      "status": "pending",
+      "engine_scenarios": [],
+      "unverified_rules": ":rb_rune_chaos:, :rb_exhaust:: Return a friendly unit to its owner's hand. You may play a unit with less Might than that unit had, ignoring its cost."
+    },
+    "RAD-120/167": {
+      "engine_id": 1115,
+      "status": "pending",
+      "engine_scenarios": [],
+      "unverified_rules": "When you play a card with Energy cost :rb_energy_7: or more, you may play me from your trash for :rb_rune_order:."
+    },
+    "RAD-123/167": {
+      "engine_id": 1116,
+      "status": "pending",
+      "engine_scenarios": [],
+      "unverified_rules": "[Quick-Draw] (This has [Reaction]. When you play it, attach it to a unit you control.)\n[Equip] :rb_energy_1: (:rb_energy_1:: Attach this to a unit you control.)"
+    },
+    "RAD-124/167": {
+      "engine_id": 1117,
+      "status": "pending",
+      "engine_scenarios": [],
+      "unverified_rules": "Banish a unit with 3 :rb_might: or less or a gear. [Burn 2]. (Put the top 2 cards of your Main Deck into your trash.)"
+    },
+    "RAD-125/167": {
+      "engine_id": 1118,
+      "status": "pending",
+      "engine_scenarios": [],
+      "unverified_rules": "You may kill a friendly unit as an additional cost to play me. If you do, I cost :rb_energy_2: less.\n[Deflect] (Opponents must pay :rb_rune_rainbow: to choose me with a spell or ability.)"
+    },
+    "RAD-127/167": {
+      "engine_id": 1119,
+      "status": "pending",
+      "engine_scenarios": [],
+      "unverified_rules": "[Show Off] a card with Energy cost :rb_energy_7: or more. (As you play this, you may reveal such a card from hand or pick a friendly one.)\nPlay two 1 :rb_might: Recruit unit tokens to your base. If you showed off, play four to your base instead.disa"
+    },
+    "RAD-129/167": {
+      "engine_id": 1120,
+      "status": "pending",
+      "engine_scenarios": [],
+      "unverified_rules": "When you play me, look at the top 4 cards of your Main Deck. You may reveal from among them a unit or gear with Energy cost no more than :rb_energy_3: and with Power cost no more than :rb_rune_rainbow: and draw it. Recycle the rest."
+    },
+    "RAD-130/167": {
+      "engine_id": 1121,
+      "status": "pending",
+      "engine_scenarios": [],
+      "unverified_rules": "When a friendly gear at a battlefield dies, you may pay :rb_energy_1: to return it to its owner's hand."
+    },
+    "RAD-131/167": {
+      "engine_id": 1122,
+      "status": "pending",
+      "engine_scenarios": [],
+      "unverified_rules": "When one or more friendly units die, [Buff] a friendly unit. (Give it a +1 :rb_might: buff if it doesn't have one.)"
+    },
+    "RAD-132/167": {
+      "engine_id": 1123,
+      "status": "pending",
+      "engine_scenarios": [],
+      "unverified_rules": "If you would play a unit token to a location while I'm at a battlefield, you may play a 3 :rb_might: Mech unit token to that same location instead."
+    },
+    "RAD-134/167": {
+      "engine_id": 1124,
+      "status": "pending",
+      "engine_scenarios": [],
+      "unverified_rules": "Ready your units and give them +3 :rb_might: this turn."
+    },
+    "RAD-135/167": {
+      "engine_id": 1125,
+      "status": "pending",
+      "engine_scenarios": [],
+      "unverified_rules": "Play up to 3 units and/or gear from your trash, each with Energy cost no more than :rb_energy_3: and Power cost no more than :rb_rune_rainbow:, ignoring their costs."
+    },
+    "RAD-136/167": {
+      "engine_id": 1126,
+      "status": "pending",
+      "engine_scenarios": [],
+      "unverified_rules": "[Deploy] (Play this only to a battlefield. When an opponent holds here, kill this.)\nWhen you play this, banish a unit here.\nWhen you hold here, kill this to play the banished card, ignoring its cost. (Tokens aren't cards.)"
+    },
+    "RAD-137/167": {
+      "engine_id": 1127,
+      "status": "pending",
+      "engine_scenarios": [],
+      "unverified_rules": "When you play me or when I attack, you may discard 1 to kill a unit or gear."
+    },
+    "RAD-138/167": {
+      "engine_id": 1128,
+      "status": "pending",
+      "engine_scenarios": [],
+      "unverified_rules": "When you play me or when I become exhausted, play a 1 :rb_might: Recruit unit token to your base.\nI have +1 :rb_might: for each other exhausted unit you control."
+    },
+    "RAD-158/167": {
+      "engine_id": 1129,
+      "status": "pending",
+      "engine_scenarios": [],
+      "unverified_rules": ":rb_rune_rainbow::rb_rune_rainbow:: Draw 1. Each player may use this ability once on their turn (even if they don't control this battlefield)."
+    },
+    "RAD-163/167": {
+      "engine_id": 1130,
+      "status": "pending",
+      "engine_scenarios": [],
+      "unverified_rules": "For each player, the first unit or gear they play here on their turn costs :rb_energy_1: less."
+    },
+    "RAD-167/167": {
+      "engine_id": 1131,
+      "status": "pending",
+      "engine_scenarios": [],
+      "unverified_rules": "(Neutral cards can go in decks of any Domain.)\nIf Neeko is in your deck, choose 3 different legends in addition to your starting legend. (Different means none match names.)\nWhen you play me, choose one of those legends and add it to your Legend Zone while I'm on the board."
+    }
+  }
+}
