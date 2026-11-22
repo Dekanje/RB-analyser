@@ -19,7 +19,10 @@ CardDef rad10b(int id,int n,const char* name,CardType type,int energy,int power,
   d.name=name;d.set_code="RAD";d.set_name="Radiance";d.collector_number=n;
   d.card_type=type;d.energy_cost=energy;d.power_cost=power;d.might=might;
   d.domains=std::move(domains);d.rarity=rarity;d.ability_text=rules;
-  for(auto kw:keywords)d.keywords.set(kw);return d;
+  for(auto kw:keywords)d.keywords.set(kw);
+  if(d.keywords.has(Keyword::Assault))d.assault_value=1;
+  if(d.keywords.has(Keyword::Deflect))d.deflect_value=1;
+  return d;
 }
 std::vector<GameObjectId> units10b(const GameState& s,PlayerId p,bool friendly) {
   std::vector<GameObjectId> v;for(const auto& [id,o]:s.objects.onBoard())
@@ -29,8 +32,10 @@ std::vector<GameObjectId> units10b(const GameState& s,PlayerId p,bool friendly) 
 class Radiance10_1058 final:public UnitCard {
 public:
  const CardDef& def()const override{return d_;}
-    // Conditional ready if a friendly unit or gear died this turn:
-    // awaits authoritative turn-death history query and edge-case tests.
+    bool entersReadyOnPlay(const GameState& state,PlayerId player)const override {
+       return state.player(player).unit_died_this_turn;
+    }
+    // Friendly gear-death tracking is not yet available in this version.
 private:
  const CardDef d_=rad10b(1058,5,"Lingering Animus",CardType::Unit,2,0,2,{Domain::Fury},Rarity::Common,"I enter ready if a friendly unit or gear died this turn.",{});
 };
@@ -127,8 +132,8 @@ public:
     void onResolve(CardContext& c,const std::vector<GameObjectId>&)override {
       auto ally=units10b(c.state,c.controller,true);
       auto enemy=units10b(c.state,c.controller,false);
-      auto a=pickTarget(c,"One-Two Punch: buff a friendly unit",ally);
-      auto e=pickTarget(c,"One-Two Punch: stun an enemy unit",enemy);
+      auto [a,e]=pickTargetPair(c,"One-Two Punch: buff friend then stun enemy",
+        ally,[&](GameObjectId){return units10b(c.state,c.controller,false);});
       if(finalizingChoices(c))return;
       if(a!=kInvalidId)c.executor.buffUnit(a);
       if(e!=kInvalidId)c.executor.stunUnitBy(e,c.source);
