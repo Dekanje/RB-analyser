@@ -158,4 +158,81 @@ TEST_F(RadianceBatch8Test, ConservatorReadiesAfterPlayingSevenEnergyCard) {
     EXPECT_FALSE(state.getObject(conservator).is_exhausted);
 }
 
+
+TEST_F(RadianceBatch8Test, RaptorDrawsWhenStunnedEnemyDiesAtSameBattlefield) {
+    addUnit(P1,CardDefId{1020},6,0);
+    auto enemy=addUnit(P2,kInvalidId,2,0);
+    state.getObject(enemy).is_stunned=true;
+    addToDeck(P1,CardDefId{1012});
+    const auto before=state.player(P1).hand.size();
+    resolveThroughEngine([&](EffectExecutor& e,GameState&){e.killObject(enemy);});
+    EXPECT_EQ(state.player(P1).hand.size(),before+1);
+}
+TEST_F(RadianceBatch8Test, WardBuffsOwnUnitsThenDiesWhenUnitPlayed) {
+    auto battlefieldAlly=addUnit(P1,kInvalidId,3,0);
+    auto baseAlly=addUnit(P1,kInvalidId,3);
+    auto enemy=addUnit(P2,kInvalidId,3,0);
+    auto ward=addToHand(P1,CardDefId{1021});
+    playThroughEngine(ward);
+    recalc();
+    EXPECT_EQ(state.getObject(battlefieldAlly).current_might,5);
+    EXPECT_EQ(state.getObject(baseAlly).current_might,5);
+    EXPECT_EQ(state.getObject(enemy).current_might,3);
+    auto unit=addToHand(P1,CardDefId{1012});
+    playThroughEngine(unit);
+    EXPECT_EQ(state.getObject(ward).zone,ZoneType::Trash);
+    recalc();
+    EXPECT_EQ(state.getObject(battlefieldAlly).current_might,3);
+}
+TEST_F(RadianceBatch8Test, ExtractorCreatesGoldExhaustedWhenBattlefieldControlled) {
+    addUnit(P1,kInvalidId,3,0);
+    auto extractor=addToHand(P1,CardDefId{1022});
+    playThroughEngine(extractor,nullptr,LocationId{BattlefieldLocation{state.battlefields[0].id}});
+    ASSERT_TRUE(state.getObject(extractor).isAtBattlefield());
+    state.battlefields[0].controller=P1;
+    fireTriggerThroughEngine(extractor,TriggerType::AtEndOfTurn);
+    int gold=0;
+    for(const auto& [id,g]:state.objects.onBoard()){
+        if(!g.isGear()||g.name!="Gold"||g.controller!=P1)continue;
+        ++gold;
+        EXPECT_TRUE(g.is_exhausted);
+        EXPECT_EQ(g.card_def_id,kGoldGearCardDefId);
+    }
+    EXPECT_EQ(gold,1);
+}
+TEST_F(RadianceBatch8Test, ProjectileDealsPrintedEnergyCostDamageOfFriendlyGear) {
+    auto gear=addToHand(P1,CardDefId{1021}); // Ephemeral Ward has printed cost 4.
+    playThroughEngine(gear);
+    auto target=addUnit(P2,kInvalidId,8,0);
+    auto spell=addToHand(P1,CardDefId{1023});
+    playThroughEngine(spell);
+    EXPECT_EQ(state.getObject(target).damage_marked,4);
+}
+TEST_F(RadianceBatch8Test, WatersWageNormalPlayMakesOneExhaustedGold) {
+    auto spell=addToHand(P1,CardDefId{1024});
+    playThroughEngine(spell);
+    int gold=0;
+    for(const auto& [id,g]:state.objects.onBoard()){
+        if(!g.isGear()||g.name!="Gold"||g.controller!=P1)continue;
+        ++gold; EXPECT_TRUE(g.is_exhausted);
+    }
+    EXPECT_EQ(gold,1);
+}
+TEST_F(RadianceBatch8Test, WatersWageFacedownOnOwnTurnMakesThreeReadyGold) {
+    auto spell=addToHand(P1,CardDefId{1024});
+    state.getObject(spell).card_counters["__played_from_facedown"]=1;
+    state.getObject(spell).card_counters["__facedown_play_turn"]=state.turn.turn_number;
+    resolveThroughEngine([&](EffectExecutor& ex,GameState& s){
+        CardContext ctx{s,events,ex,P1,spell};
+        ctx.registry=&card_registry;
+        card_registry.get(CardDefId{1024})->onResolve(ctx,{});
+    });
+    int gold=0;
+    for(const auto& [id,g]:state.objects.onBoard()){
+        if(!g.isGear()||g.name!="Gold"||g.controller!=P1)continue;
+        ++gold; EXPECT_FALSE(g.is_exhausted);
+    }
+    EXPECT_EQ(gold,3);
+}
+
 } // namespace riftbound::test::radiance_batch8
