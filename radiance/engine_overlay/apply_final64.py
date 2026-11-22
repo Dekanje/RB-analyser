@@ -63,6 +63,27 @@ replace_trigger=anchor_trigger+"""
 """
 trigger.write_text(t.replace(anchor_trigger,replace_trigger,1))
 
+
+# Bloodscent Swarm reduces cost only for battlefield CONQUESTS, not holds.
+# Keep that fact independent of the existing "scored (conquer or hold)" set.
+state_path=engine/"src/core/game_state.h"
+gs=state_path.read_text()
+set_decl="    std::set<BattlefieldId> battlefields_scored_this_turn;"
+assert gs.count(set_decl)==1
+gs=gs.replace(set_decl,set_decl+"\n    std::set<BattlefieldId> battlefields_conquered_this_turn;",1)
+reset="        battlefields_scored_this_turn.clear();"
+assert gs.count(reset)==1
+gs=gs.replace(reset,reset+"\n        battlefields_conquered_this_turn.clear();",1)
+state_path.write_text(gs)
+tr=trigger.read_text()
+score_decl="""void TriggerManager::onScore(const ScoreEvent& e) {
+    const TriggerEventScope event_scope(state_.chain);"""
+assert tr.count(score_decl)==1
+tr=tr.replace(score_decl,score_decl+"""
+    if(e.method==ScoreMethod::Conquer)
+        state_.player(e.player).battlefields_conquered_this_turn.insert(e.battlefield);""",1)
+trigger.write_text(tr)
+
 init=engine/"src/cards/cards_init.cpp"
 s=init.read_text()
 last_decl="void register_card_1067(CardRegistry&);"
