@@ -1,5 +1,5 @@
 name: Radiance Batch 8 - mechanics-based C++ implementation
-# Final full acceptance, 15 cards, 59 focused tests.
+# Final full acceptance, 15 cards, 59 focused tests; finalized choice declarations verified.
 # Targeted run covers all authored Batch 8 cards before full acceptance.
 on:
   push:
