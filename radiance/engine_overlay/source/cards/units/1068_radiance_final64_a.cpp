@@ -121,7 +121,17 @@ private:
 class R64_1075 final : public UnitCard {
 public:
  const CardDef& def() const override { return d_; }
- // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
+
+ bool entersReadyOnPlay()const override{return true;}
+ TriggerType triggerType()const override{return TriggerType::WhenYouPlayMe;}
+ void onTrigger(CardContext& c,const std::vector<GameObjectId>&)override{
+   std::vector<GameObjectId> enemies;
+   for(const auto& [id,o]:c.state.objects.onBoard())
+     if(o.isUnit()&&o.controller!=c.controller&&o.location)enemies.push_back(id);
+   for(auto id:enemies)c.executor.readyObject(id);
+ }
+ // MECHANICS_INCOMPLETE: remaining continuous effect needs engine hook.
+
 private:
  const CardDef d_=[] {
   auto d=mkFinal64_a(1075,19,R"RB(Firebrand Raider)RB",CardType::Unit,6,1,6,{Domain::Fury},Rarity::Rare,R"RB(I enter ready.
@@ -150,7 +160,27 @@ Kill a friendly unit, [E]: Play a 3 [M] Mech unit token.)RB");
 class R64_1077 final : public UnitCard {
 public:
  const CardDef& def() const override { return d_; }
- // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
+
+ TriggerType triggerType()const override{return TriggerType::WhenYouPlayMe;}
+ unsigned choicesAtFinalization()const override{return kFinalizeTrigger;}
+ void onTrigger(CardContext& c,const std::vector<GameObjectId>&)override{
+   if(!c.state.objectExists(c.source)){(void)finalizingChoices(c);return;}
+   const auto& self=c.state.getObject(c.source);
+   if(!self.isAtBattlefield()){(void)finalizingChoices(c);return;}
+   std::vector<GameObjectId> alternatives;
+   for(const auto& [id,o]:c.state.objects.onBoard())
+     if(id!=c.source&&o.isUnit()&&o.controller==c.controller&&o.isAtBattlefield()&&
+        o.battlefieldId()==self.battlefieldId())alternatives.push_back(id);
+   std::sort(alternatives.begin(),alternatives.end());
+   const int yes=confirmOptional(c,"Stoic Ferryman: move another friendly unit here to base?",
+      [&](){return !alternatives.empty();});
+   if(yes<0)return;
+   if(yes==0){(void)finalizingChoices(c);return;}
+   const auto target=pickTarget(c,"Stoic Ferryman: friendly unit to base",alternatives);
+   if(finalizingChoices(c))return;
+   if(target!=kInvalidId)c.executor.moveToBase(target);
+ }
+
 private:
  const CardDef d_=[] {
   auto d=mkFinal64_a(1077,31,R"RB(Stoic Ferryman)RB",CardType::Unit,4,0,2,{Domain::Calm},Rarity::Common,R"RB([Shield 3] (+3 [M] while I'm a defender.)
@@ -192,7 +222,37 @@ private:
 class R64_1080 final : public GearCard {
 public:
  const CardDef& def() const override { return d_; }
- // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
+
+ TriggerType triggerType()const override{return TriggerType::WhenYouPlayThis;}
+ unsigned choicesAtFinalization()const override{return kFinalizeTrigger;}
+ void onTrigger(CardContext& c,const std::vector<GameObjectId>&)override{
+   if(!c.state.objectExists(c.source)){(void)finalizingChoices(c);return;}
+   const auto& self=c.state.getObject(c.source);
+   if(!self.isAtBattlefield()){(void)finalizingChoices(c);return;}
+   std::vector<GameObjectId> enemies;
+   for(const auto& [id,o]:c.state.objects.onBoard())
+     if(o.isUnit()&&o.controller!=c.controller&&o.location &&
+        (!o.battlefieldId()||o.battlefieldId()!=self.battlefieldId()))
+       enemies.push_back(id);
+   std::sort(enemies.begin(),enemies.end());
+   const int yes=confirmOptional(c,"Hunting Blind: move enemy here?",
+      [&](){return !enemies.empty();});
+   if(yes<0)return;
+   if(yes==0){(void)finalizingChoices(c);return;}
+   const auto target=pickTarget(c,"Hunting Blind: enemy unit to move",enemies);
+   if(finalizingChoices(c))return;
+   if(target!=kInvalidId)c.executor.moveToBattlefield(target,*self.battlefieldId());
+ }
+ void applyPassiveAura(GameState& s,PlayerId p)const override {
+   forEachSelfOnce(*this,s,p,[&](GameObjectId source,GameObject& gear){
+     if(!gear.isAtBattlefield())return;
+     for(auto& [id,unit]:s.objects.onBoard())
+       if(unit.isUnit()&&unit.controller==p&&unit.isAtBattlefield()&&
+          unit.battlefieldId()==gear.battlefieldId())
+         auraKeyword(unit,source,Keyword::Shield,2);
+   });
+ }
+
 private:
  const CardDef d_=[] {
   auto d=mkFinal64_a(1080,44,R"RB(Hunting Blind)RB",CardType::Gear,4,2,0,{Domain::Calm},Rarity::Epic,R"RB([Deploy] (Play this only to a battlefield. When an opponent holds here, kill this.)
