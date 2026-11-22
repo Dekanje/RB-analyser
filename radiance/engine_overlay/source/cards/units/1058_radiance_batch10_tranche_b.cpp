@@ -89,7 +89,7 @@ public:
    if(!finalizingChoices(c)&&target!=kInvalidId)c.executor.stunUnitBy(target,c.source);
  }
 private:
- const CardDef d_=rad10b(1060,28,"Ki Burst",CardType::Spell,1,0,0,{Domain::Calm},Rarity::Common,"[Action] (Play on your turn or in showdowns.)\\nAs an additional cost to play this, exhaust a friendly unit.\\n[Stun] a unit. (It doesn't deal combat damage this turn.)",{Keyword::Action});
+ const CardDef d_=rad10b(1060,28,"Ki Burst",CardType::Spell,1,0,0,{Domain::Calm},Rarity::Common,"[Action] (Play on your turn or in showdowns.)\nAs an additional cost to play this, exhaust a friendly unit.\n[Stun] a unit. (It doesn't deal combat damage this turn.)",{Keyword::Action});
 };
 class Radiance10_1061 final:public SpellCard {
 public:
@@ -110,7 +110,7 @@ public:
    c.executor.channelRunes(c.controller,1,true);
  }
 private:
- const CardDef d_=rad10b(1061,29,"Life from Stone",CardType::Spell,1,0,0,{Domain::Calm},Rarity::Common,"[Reaction] (Play any time, even before spells and abilities resolve.)\\nAs an additional cost to play this, exhaust a friendly unit.\\nDraw 1 and channel 1 rune exhausted.",{Keyword::Reaction});
+ const CardDef d_=rad10b(1061,29,"Life from Stone",CardType::Spell,1,0,0,{Domain::Calm},Rarity::Common,"[Reaction] (Play any time, even before spells and abilities resolve.)\nAs an additional cost to play this, exhaust a friendly unit.\nDraw 1 and channel 1 rune exhausted.",{Keyword::Reaction});
 };
 class Radiance10_1062 final:public UnitCard {
 public:
