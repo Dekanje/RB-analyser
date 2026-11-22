@@ -137,6 +137,17 @@ TEST_F(RadianceBatch10Test, SkystrikeSquadronCanReturnGearForEnergyDiscount) {
  EXPECT_TRUE(inHand(P1,gear));
  EXPECT_TRUE(state.getObject(squad).location.has_value());
 }
+TEST_F(RadianceBatch10Test, ConcertPosterPaidPlayTriggerCreatesRecruitInBase) {
+ state.player(P1).rune_pool.energy+=1;
+ const auto poster=addToHand(P1,CardDefId{1066});
+ EnginePathAgent accepts(EnginePathAgent::accepting());
+ playThroughEngine(poster,&accepts,LocationId{BattlefieldLocation{state.battlefields[0].id}});
+ int recruit=0;
+ for(const auto& [id,o]:state.objects.onBoard())
+   if(o.controller==P1&&o.name=="Recruit"&&o.isUnit()
+       &&o.location&&o.zone==ZoneType::Base)++recruit;
+ EXPECT_EQ(recruit,1);
+}
 TEST_F(RadianceBatch10Test, HoldEmGrantsThreeMightToChosenUnit) {
  auto unit=addUnit(P1,kInvalidId,2,0);
  auto spell=addToHand(P1,CardDefId{1052});
