@@ -24,6 +24,9 @@ WAVE1 = {
     "RAD-122/167": ["AllSevenIdentitiesAndPrintedKeywordsAreCorrect","PartyCrasherDiscountCountsOnlyExhaustedFriendlyUnits"],
     "RAD-128/167": ["AllSevenIdentitiesAndPrintedKeywordsAreCorrect","SteadfastOutriderRequiresTwoOtherAlliesAtSameBattlefield"],
     "RAD-037/167": ["AllSevenIdentitiesAndPrintedKeywordsAreCorrect","WatchfulCuratorGrantsDeflectOnlyToFriendlyGear"],
+    "RAD-076/167": ["AllSevenIdentitiesAndPrintedKeywordsAreCorrect","SneakyZeeblesConquerAbilityAddsUnreactableUniversalPower"],
+    "RAD-117/167": ["AllSevenIdentitiesAndPrintedKeywordsAreCorrect","ForDemaciaGrantsShieldAtChosenBattlefieldOnly"],
+    "RAD-101/167": ["AllSevenIdentitiesAndPrintedKeywordsAreCorrect","AnOfferKillsChosenGearAndCreatesExhaustedGold"],
 }
 # Evidence gaps must remain explicit until deterministic gameplay interactions pass.
 KNOWN_GAPS = {
@@ -46,6 +49,9 @@ KNOWN_GAPS = {
     "RAD-122/167": ["Real played-energy cost after discounts, Tank combat, and cost/payment interactions not yet covered"],
     "RAD-128/167": ["Friendly gear counted at battlefield, movement, Tank combat and replacement not yet tested"],
     "RAD-037/167": ["Deflect payment, preexisting Deflect stacking and counter-interactions not yet tested"],
+    "RAD-076/167": ["Real conquer/point-resolution integration and resource timing not yet exercised"],
+    "RAD-117/167": ["Shield defender combat bonus, duration, alternate battlefield and counter/reaction timing not yet tested"],
+    "RAD-101/167": ["Opponent-owned gear and replacement/death-trigger/Deflect interaction not yet tested"],
 }
 
 def main():
