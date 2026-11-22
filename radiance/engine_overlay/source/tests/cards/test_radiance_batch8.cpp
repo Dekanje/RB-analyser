@@ -15,7 +15,7 @@ TEST_F(RadianceBatch8Test, IdentitiesUniqueAndPrintedCosts) {
         {1014,"RAD-118/167",5,0},{1015,"RAD-095/167",4,0},
     };
     for(const auto& w:expected){
-        const auto& d=card_db.get(CardDefId{w.id});
+        const auto& d=card_db.get(CardDefId::fromRaw(w.id));
         EXPECT_EQ(d.public_code,w.code);
         EXPECT_EQ(d.energy_cost,w.energy);
         EXPECT_EQ(d.power_cost,w.power);
