@@ -49,6 +49,9 @@ TEST_F(RadianceWave1Test, StaunchSurvivorHasPrintedAssaultAndShieldTwo) {
 }
 
 TEST_F(RadianceWave1Test, SupernovaDealsTenToChosenUnitAndDrawsTwo) {
+    // Printed RAD-059 is Mind, despite the 2026-10 gallery snapshot saying Order.
+    ASSERT_EQ(card_db.get(991).domains.size(),1u);
+    EXPECT_EQ(card_db.get(991).domains.front(),Domain::Mind);
     const auto victim=addUnit(P2,kInvalidId,3,0);
     addToDeck(P1,4);
     addToDeck(P1,4);
