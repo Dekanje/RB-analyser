@@ -148,6 +148,26 @@ private:
 class Radiance10_1053 final:public GearCard {
 public:
  const CardDef& def()const override{return d_;}
+ unsigned choicesAtFinalization()const override{return kFinalizeTrigger;}
+ TriggerType triggerType()const override{return TriggerType::WhenYouPlayThis;}
+ void onTrigger(CardContext& c,const std::vector<GameObjectId>&)override {
+   if(!c.state.objectExists(c.source))return;
+   auto here=c.state.getObject(c.source).battlefieldId();
+   if(!here)return;
+   std::vector<GameObjectId> units;
+   for(const auto& [id,o]:c.state.objects.onBoard())
+     if(o.isUnit()&&o.battlefieldId()==here)units.push_back(id);
+   std::sort(units.begin(),units.end());
+   const int yes=confirmOptional(c,"Portable Portal: pay [O] to ready a unit here?",
+     [&](){return !units.empty()&&c.executor.canPayWithAdds(c.controller,0,1,
+               resource::maskOf(Domain::Body));});
+   if(yes<1)return;
+   if(costDueNow(c)&&!c.executor.payResources(c.controller,0,1,
+           resource::maskOf(Domain::Body)))return;
+   const auto unit=pickTarget(c,"Portable Portal: ready a unit here",units);
+   if(finalizingChoices(c))return;
+   if(unit!=kInvalidId)c.executor.readyObject(unit);
+ }
     void applyPassiveAura(GameState& s,PlayerId player)const override {
       forEachSelfOnce(*this,s,player,[&](GameObjectId source,GameObject& gear) {
         if(!gear.isAtBattlefield())return;
