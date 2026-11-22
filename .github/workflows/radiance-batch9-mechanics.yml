@@ -79,7 +79,7 @@ jobs:
         run: |
           python3 -m py_compile radiance/engine_overlay/apply.py radiance/engine_overlay/apply_wave2.py radiance/engine_overlay/apply_wave3.py radiance/engine_overlay/apply_wave4.py radiance/engine_overlay/apply_batch6.py radiance/engine_overlay/apply_batch7.py radiance/engine_overlay/apply_batch8.py radiance/engine_overlay/apply_batch9.py radiance/verify_batch8_registry.py radiance/verify_batch9_registry.py radiance/coverage_ledger.py radiance/audit_wave5_catalog_registry.py
           python3 -m unittest discover -s radiance -p 'test_wave5_catalog_audit.py' -v
-          grep -F 'range(1025,1040)' radiance/engine_overlay/apply_batch9.py
+          grep -F '[1025,1026,1027,1029,1030,1034,1035]' radiance/engine_overlay/apply_batch9.py
           test -f radiance/engine_overlay/source/cards/units/1010_radiance_batch8.cpp
           test -f radiance/engine_overlay/source/tests/cards/test_radiance_batch9.cpp
           test -f radiance/engine_overlay/source/cards/units/1025_radiance_batch9_tranche1.cpp
