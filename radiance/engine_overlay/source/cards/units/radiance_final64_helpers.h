@@ -84,6 +84,22 @@ inline int f64ShownOffValue(const GameState& s,GameObjectId id,const char* key){
  return it==c.end()?0:it->second;
 }
 
+
+inline GameObjectId f64RevealTop(CardContext& c,PlayerId owner){
+ c.executor.lookBeforeReveal(owner);
+ auto& deck=c.state.player(owner).main_deck;
+ if(deck.empty())return kInvalidId;
+ const auto top=deck.back();
+ if(!c.state.objectExists(top))return kInvalidId;
+ (void)c.executor.seenOnTopOfDeck(owner,top);
+ if(!c.state.objectExists(top)||c.state.getObject(top).zone!=ZoneType::MainDeck)
+   return kInvalidId; // replacement moved or banished the card
+ const auto& obj=c.state.getObject(top);
+ c.events.emit(CardRevealedEvent{top,obj.card_def_id,obj.owner,true,
+                                 PlayerId::None,ZoneType::MainDeck});
+ return top;
+}
+
 inline int f64TotalFriendlyExhausted(const GameState& s,PlayerId p,GameObjectId exclude=kInvalidId){
  int n=0;
  for(const auto& [id,o]:s.objects.onBoard())
