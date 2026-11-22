@@ -67,6 +67,21 @@ KNOWN_GAPS = {
     "RAD-076/167": ["Real conquer/point-resolution integration and resource timing not yet exercised"],
     "RAD-117/167": ["Shield defender combat bonus, duration, alternate battlefield and counter/reaction timing not yet tested"],
     "RAD-101/167": ["Opponent-owned gear and replacement/death-trigger/Deflect interaction not yet tested"],
+    "RAD-002/167": ["Assault combat scoring and counter or removal timing not separately exercised"],
+    "RAD-025/167": ["Shield duration, countered spell and Predict recycle branch not separately tested"],
+    "RAD-026/167": ["Moving during the restriction and interaction with other ready effects not tested"],
+    "RAD-034/167": ["Reaction timing and replacement or illegal target interactions not tested"],
+    "RAD-118/167": ["Multiple simultaneous base-Might alterations and expiration not tested"],
+    "RAD-095/167": ["Actual off-turn hand-to-board play and beginning-phase death timing not tested"],
+    "RAD-007/167": ["Multiple eligible enemy battlefields and token combat aftermath not tested"],
+    "RAD-024/167": ["Full combat victory resolution and intervening removal not separately tested"],
+    "RAD-027/167": ["Paid ability target legality, exhausting cost and enemy Deflect not fully tested"],
+    "RAD-030/167": ["Spell-resolved timing and discounts versus printed Energy cost not separately tested"],
+    "RAD-036/167": ["Simultaneous lethal deaths and stun replacement interactions not tested"],
+    "RAD-039/167": ["Counterplay to self-kill trigger and independent stacking of multiple Wards not tested"],
+    "RAD-052/167": ["Actual end-turn phase dispatch and lost battlefield control in response not tested"],
+    "RAD-056/167": ["Deflect on both choices and mistargeted or countered spell interactions not tested"],
+    "RAD-100/167": ["Actual Hidden-zone reveal-play action and Gold replacement or ready effects not tested"],
 }
 
 def main():
