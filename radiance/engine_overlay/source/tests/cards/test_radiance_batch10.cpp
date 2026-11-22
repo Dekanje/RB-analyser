@@ -117,6 +117,15 @@ TEST_F(RadianceBatch10Test, HoldEmDiscountsAfterBattlefieldUnitPlay) {
  ASSERT_NE(hold,nullptr);
  EXPECT_EQ(hold->selfCostReduction(state,P1),2);
 }
+TEST_F(RadianceBatch10Test, PortablePortalPaidTriggerReadiesUnitAtItsBattlefield) {
+ auto ally=addUnit(P1,kInvalidId,4,0);
+ state.getObject(ally).is_exhausted=true;
+ addRune(P1,Domain::Body);
+ auto gear=addToHand(P1,CardDefId{1053});
+ EnginePathAgent accepts(EnginePathAgent::accepting());
+ playThroughEngine(gear,&accepts,LocationId{BattlefieldLocation{state.battlefields[0].id}});
+ EXPECT_FALSE(state.getObject(ally).is_exhausted);
+}
 TEST_F(RadianceBatch10Test, InvigoratingBloomMightyExhaustActivationDrawsOne) {
  auto mighty=addUnit(P1,kInvalidId,5,-1);
  addToDeck(P1,CardDefId{1058});
