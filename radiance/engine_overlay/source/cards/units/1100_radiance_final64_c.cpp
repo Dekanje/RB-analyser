@@ -250,7 +250,16 @@ private:
 class R64_1107 final : public GearCard {
 public:
  const CardDef& def() const override { return d_; }
- // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
+
+ void applyPassiveAura(GameState& s,PlayerId p)const override {
+   forEachSelfOnce(*this,s,p,[&](GameObjectId,GameObject& trap){
+     if(!trap.isAtBattlefield())return;
+     for(auto& bf:s.battlefields)
+       if(bf.id==trap.battlefieldId()&&bf.controller==p)
+         ++bf.facedown_max_occupancy;
+   });
+ }
+
 private:
  const CardDef d_=[] {
   auto d=mkFinal64_c(1107,108,R"RB(Bushwhack Trap)RB",CardType::Gear,1,0,0,{Domain::Chaos},Rarity::Rare,R"RB([Deploy] (Play this only to a battlefield. When an opponent holds here, kill this.)
