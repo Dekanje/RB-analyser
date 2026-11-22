@@ -62,7 +62,7 @@ public:
       {"Bomb"},keywords,loc,false,{},CardDefId{982});
  }
 private:
- const CardDef d_=rad10b(1059,1,"Amateur Demolitionist",CardType::Unit,2,1,1,
+ const CardDef d_=rad10b(1059,1,"Amateur Demolitionist",CardType::Unit,2,0,1,
     {Domain::Fury},Rarity::Common,
     "When you play me, play a Bomb gear token to a battlefield. (It has [Deploy]. When it dies, deal 2 to an enemy there and kill your other Bombs there.)",{});
 };
