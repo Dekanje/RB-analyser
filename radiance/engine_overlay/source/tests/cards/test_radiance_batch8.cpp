@@ -79,4 +79,83 @@ TEST_F(RadianceBatch8Test, EntrenchedBoarDefaultsToExhaustedWhenReadyNotChosen) 
     EXPECT_TRUE(state.getObject(c).location.has_value());
     EXPECT_TRUE(state.getObject(c).is_exhausted);
 }
+
+TEST_F(RadianceBatch8Test, TrancheTwoPrintedCardDataAndKeywords) {
+    struct Identity{int id;const char* code;int energy;int power;};
+    const Identity expected[]={
+      {1016,"RAD-007/167",3,1},{1017,"RAD-024/167",2,0},
+      {1018,"RAD-027/167",3,0},{1019,"RAD-030/167",5,0},
+      {1020,"RAD-036/167",6,0},{1021,"RAD-039/167",4,2},
+      {1022,"RAD-052/167",1,0},{1023,"RAD-056/167",3,1},
+      {1024,"RAD-100/167",1,0}
+    };
+    for(const auto& want:expected){
+        const auto& d=card_db.get(CardDefId::fromRaw(want.id));
+        EXPECT_EQ(d.public_code,want.code);
+        EXPECT_EQ(d.energy_cost,want.energy);
+        EXPECT_EQ(d.power_cost,want.power);
+    }
+    EXPECT_TRUE(card_db.get(CardDefId{1017}).keywords.has(Keyword::Deploy));
+    EXPECT_TRUE(card_db.get(CardDefId{1020}).keywords.has(Keyword::Deflect));
+    EXPECT_TRUE(card_db.get(CardDefId{1022}).keywords.has(Keyword::Deploy));
+    EXPECT_TRUE(card_db.get(CardDefId{1023}).keywords.has(Keyword::Action));
+    EXPECT_TRUE(card_db.get(CardDefId{1024}).keywords.has(Keyword::Hidden));
+}
+TEST_F(RadianceBatch8Test, RallyForWarMakesThreeRecruitsAtOccupiedEnemyBattlefield) {
+    addUnit(P2,kInvalidId,5,0);
+    state.battlefields[0].controller=P2;
+    addUnit(P1,kInvalidId,2,1);
+    auto spell=addToHand(P1,CardDefId{1016});
+    playThroughEngine(spell);
+    int recruits=0;
+    for(const auto& [id,u]:state.objects.onBoard())
+        if(u.isUnit()&&u.isToken()&&u.name=="Recruit"&&u.controller==P1&&
+           u.battlefieldId()==state.battlefields[0].id) ++recruits;
+    EXPECT_EQ(recruits,3);
+}
+TEST_F(RadianceBatch8Test, DreamrootDrawsForVictoryHereButNotAtAnotherBattlefield) {
+    addUnit(P1,kInvalidId,3,0);
+    auto dreamroot=addToHand(P1,CardDefId{1017});
+    playThroughEngine(dreamroot,nullptr,LocationId{BattlefieldLocation{state.battlefields[0].id}});
+    ASSERT_TRUE(state.getObject(dreamroot).isAtBattlefield());
+    addToDeck(P1,CardDefId{1012});
+    auto start=state.player(P1).hand.size();
+    resolveThroughEngine([&](EffectExecutor&,GameState&){
+        events.emit(CombatResultEvent{state.battlefields[1].id,P1});
+    });
+    EXPECT_EQ(state.player(P1).hand.size(),start);
+    resolveThroughEngine([&](EffectExecutor&,GameState&){
+        events.emit(CombatResultEvent{state.battlefields[0].id,P1});
+    });
+    EXPECT_EQ(state.player(P1).hand.size(),start+1);
+}
+TEST_F(RadianceBatch8Test, AvianBuffsUnbuffedUnitThenAddsTwoTemporaryMight) {
+    auto avian=addUnit(P1,CardDefId{1018},3,0);
+    auto unit=addUnit(P1,kInvalidId,2,0);
+    auto* card=card_registry.get(CardDefId{1018});
+    ASSERT_NE(card,nullptr);
+    EXPECT_TRUE(card->hasActivatedAbility());
+    EXPECT_TRUE(card->getActivationCost().exhaust);
+    resolveThroughEngine([&](EffectExecutor& executor,GameState& state){
+        CardContext ctx{state,events,executor,P1,avian};
+        ctx.registry=&card_registry;
+        card->onActivate(ctx,{unit});
+    });
+    EXPECT_EQ(state.getObject(unit).buff_count,1);
+    resolveThroughEngine([&](EffectExecutor& executor,GameState& state){
+        CardContext ctx{state,events,executor,P1,avian};
+        ctx.registry=&card_registry;
+        card->onActivate(ctx,{unit});
+    });
+    EXPECT_EQ(state.getObject(unit).buff_count,1);
+    EXPECT_GE(state.getObject(unit).current_might,5);
+}
+TEST_F(RadianceBatch8Test, ConservatorReadiesAfterPlayingSevenEnergyCard) {
+    auto conservator=addUnit(P1,CardDefId{1019},5,0);
+    state.getObject(conservator).is_exhausted=true;
+    auto expensive=addToHand(P1,CardDefId{416}); // Direwing: seven Energy.
+    playThroughEngine(expensive);
+    EXPECT_FALSE(state.getObject(conservator).is_exhausted);
+}
+
 } // namespace riftbound::test::radiance_batch8
