@@ -88,3 +88,31 @@ The Batch 9 overlay adds `Keyword::Disarm` (bit 25), a name mapping, and an atta
 ## Duplicate identity reconciliation (2026-11-22)
 
 The first 15-card draft contained **eight identities already implemented** in prior batches: RAD-049, RAD-072, RAD-076, RAD-083, RAD-099, RAD-117, RAD-119 and RAD-128. The registry is corrected to use their original canonical IDs (996, 1004, 1008, 1000, 993, 1009, 999, 1006). Duplicate registration is prohibited. Only **seven distinct new identities** are currently eligible for Batch 9 registration: RAD-057, RAD-126, RAD-073, RAD-050, RAD-055, RAD-093 and RAD-097. The seven-card target would yield 1,031 engine definitions and 75/167 unique Radiance base identities; those numbers remain **unverified until the strict compiled audit passes**. To reach the intended 15 distinct new cards, **eight additional previously unregistered cards** must be implemented and tested. The new Disarm dispatcher still requires dedicated combat/stack-timing and Deflect tests.
+
+## Tranche 3 — eight distinct battlefield cards (candidate)
+
+These previously unregistered printed identities have new C++ classes and
+an engine-overlay integration at `radiance/engine_overlay/apply_batch9_battlefields.py`.
+
+| Printed ID | Name | Engine ID | Behavior in initial tests |
+| --- | --- | ---: | --- |
+| RAD-157 | Bandle Scouts' Academy | 1040 | A card hidden **here** creates one exhausted Gold |
+| RAD-159 | Black Rose Sanctum | 1041 | Per-player first nontoken unit death **here** each turn creates a Recruit |
+| RAD-160 | Cosmic Vista | 1042 | Holding here scores a bonus point only with an empty Rune Deck |
+| RAD-161 | Durand Memorial | 1043 | Defending here grants a chosen friendly unit Tank for the combat |
+| RAD-162 | Firelights' Hideout | 1044 | Conquering grants the *next* unit played this turn Accelerate |
+| RAD-164 | Packed Amphitheater | 1045 | Champion units **here**, of either player, have +1 Might |
+| RAD-165 | Rakelstake | 1046 | Each player's first unit/gear play here each turn triggers Predict |
+| RAD-166 | Ruined Monastery | 1047 | Conquer: optional discard one to channel one rune exhausted |
+
+**Acceptance targets:** 1,039 compiled card definitions; 83/167 numbered
+Radiance base identities (84 absent); 15 distinct new Batch 9 identities,
+**no duplicates**. An acceptance run must pass strict registry/catalog checks,
+the dedicated battlefield and Disarm tests, then the full AlphaRune
+regression suite. Authoring/registration alone is insufficient.
+
+The initial battlefield tests use the live AlphaRune engine's trigger and
+combat event dispatcher. They cover positive and negative branches but do
+not exhaust all combinations of Hidden timing, multiple simultaneous
+deaths, unusual control transfers, or counterplay. Deflect and Disarm
+reaction timing also require explicit adversarial simulation tests.
