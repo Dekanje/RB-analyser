@@ -24,7 +24,7 @@
       "engine_id": 1071,
       "status": "pending",
       "engine_scenarios": [],
-      "unverified_rules": "When you play this or when this leaves the board, banish the top card of your Main Deck. Until your next Ending Phase, you may play that card. (You still pay its costs.)\n:rb_energy_2::rb_rune_chaos:, :rb_exhaust:: Kill this."
+      "unverified_rules": "When you play this or when this leaves the board, banish the top card of your Main Deck. Until your next Ending Phase, you may play that card. (You still pay its costs.)\n:rb_energy_2::rb_rune_fury:, :rb_exhaust:: Kill this."
     },
     "RAD-015/167": {
       "engine_id": 1072,
