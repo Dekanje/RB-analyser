@@ -38,6 +38,19 @@ p=perf.read_text()
 assert p.count(old)==1, "Unexpected Wave 3 death-batch scan anchor"
 perf.write_text(p.replace(old,new,1))
 
+# Explicit 997-card seed-1 fingerprint measured from real GitHub Actions run
+# 45003763684, DeckFuzz.DeckOfSeedOneIsPinned. Keep all earlier pool hashes.
+decktest=engine/"tests/test_deck_fuzz.cpp"
+p=decktest.read_text()
+old="""    constexpr uint64_t kRadiance995DeckOfSeedOne = 6757871164987904898ull;
+    const uint64_t expected = registry_->size()==995 ? kRadiance995DeckOfSeedOne"""
+new="""    constexpr uint64_t kRadiance995DeckOfSeedOne = 6757871164987904898ull;
+    constexpr uint64_t kRadiance997DeckOfSeedOne = 17916410112993108747ull;
+    const uint64_t expected = registry_->size()==997 ? kRadiance997DeckOfSeedOne
+                             : registry_->size()==995 ? kRadiance995DeckOfSeedOne"""
+assert p.count(old)==1, "Unexpected Wave 3 seed fingerprint anchor"
+decktest.write_text(p.replace(old,new,1))
+
 # A new card pool changes random-deck generation, including seed 1.
 # DO NOT suppress or change the existing pinned fingerprints. The latest
 # 997-card hash must be measured in the compiled CI test and added explicitly
