@@ -99,6 +99,34 @@ TEST_F(RadianceBatch10Test, HearteningSoulLegendCanActivateGrantedMightAbility) 
  EXPECT_TRUE(state.getObject(legend).is_exhausted);
  EXPECT_EQ(state.getObject(target).temp_might_bonus,3);
 }
+TEST_F(RadianceBatch10Test, AllFourFinalizeSpellsDeclareTargetsAndRequireLegalChoices) {
+ for(int id:{1048,1051,1055,1067}){
+   const auto* card=card_registry.get(CardDefId::fromRaw(id));
+   ASSERT_NE(card,nullptr);
+   EXPECT_NE(card->mayChooseAtFinalization(state,P1,kInvalidId),
+             Card::FinalizeChoice::Undeclared)<<id;
+ }
+ const auto* lost=card_registry.get(CardDefId{1048});
+ const auto* parallel=card_registry.get(CardDefId{1051});
+ const auto* satchel=card_registry.get(CardDefId{1055});
+ const auto* oneTwo=card_registry.get(CardDefId{1067});
+ EXPECT_FALSE(lost->canBePlayed(state,P1));
+ EXPECT_FALSE(parallel->canBePlayed(state,P1));
+ EXPECT_FALSE(satchel->canBePlayed(state,P1));
+ EXPECT_FALSE(oneTwo->canBePlayed(state,P1));
+ addUnit(P1,kInvalidId,2,-1);
+ EXPECT_TRUE(satchel->canBePlayed(state,P1));
+ EXPECT_FALSE(parallel->canBePlayed(state,P1));
+ addUnit(P2,kInvalidId,3,0);
+ EXPECT_TRUE(lost->canBePlayed(state,P1));
+ EXPECT_TRUE(parallel->canBePlayed(state,P1));
+ EXPECT_TRUE(oneTwo->canBePlayed(state,P1));
+}
+TEST_F(RadianceBatch10Test, BedevilingStrangerWithoutFourUnitsFinalizesCleanly) {
+ auto card=addToHand(P1,CardDefId{1057});
+ playThroughEngine(card);
+ EXPECT_TRUE(state.getObject(card).location.has_value());
+}
 TEST_F(RadianceBatch10Test, TwentyNewUniqueCardsHaveCanonicalPrintedMetadata) {
  const std::vector<Printed> want={
   {1048,13,3,1,0,"Lost to the Sands",CardType::Spell},
