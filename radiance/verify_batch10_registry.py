@@ -18,7 +18,7 @@ NEW={
     "RAD-106/167": ("The Good Stuff", "gear", 1056),
     "RAD-107/167": ("Bedeviling Stranger", "unit", 1057),
     "RAD-005/167": ("Lingering Animus", "unit", 1058),
-    "RAD-021/167": ("Ekko, Revolutionary", "unit", 1059),
+    "RAD-001/167": ("Amateur Demolitionist", "unit", 1059),
     "RAD-028/167": ("Ki Burst", "spell", 1060),
     "RAD-029/167": ("Life from Stone", "spell", 1061),
     "RAD-040/167": ("Heartening Soul", "unit", 1062),
@@ -49,6 +49,8 @@ def verify(rows):
         if code:
             assert code not in codes,("Duplicate public card code",code)
             codes[code]=row
+    ekko=codes.get("RAD-021/167")
+    assert ekko and (ekko["name"],ekko["card_type"],ekko["card_id"]) == ("Ekko, Revolutionary","unit",967), "Existing Ekko printing must remain ID 967"
     for code,(name,kind,id_) in {**BATCH8,**BATCH9,**NEW}.items():
         card=codes.get(code)
         assert card is not None,(code,"Missing")
