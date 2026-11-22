@@ -285,7 +285,26 @@ When I attack or defend, double the [Shield] of a unit you control here this tur
 class R64_1082 final : public GearCard {
 public:
  const CardDef& def() const override { return d_; }
- // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
+
+ std::vector<ActivatedAbility> activatedAbilities()const override{
+   ActivatedAbility a;a.cost.exhaust=true;return {a};
+ }
+ TriggerType triggerType()const override{return TriggerType::WhenIBecomeExhausted;}
+ unsigned choicesAtFinalization()const override{return kFinalizeTrigger;}
+ void onActivate(CardContext& c,int,const std::vector<GameObjectId>&)override{
+   c.executor.drawCards(c.controller,1);
+   c.executor.channelRunes(c.controller,1,true);
+ }
+ void onTrigger(CardContext& c,const std::vector<GameObjectId>&)override{
+   std::vector<GameObjectId> allies;
+   for(const auto& [id,o]:c.state.objects.onBoard())
+     if(o.isUnit()&&o.controller==c.controller&&o.location)allies.push_back(id);
+   std::sort(allies.begin(),allies.end());
+   const auto target=pickTarget(c,"Resplendent Rostrum: give +3 Might",allies);
+   if(finalizingChoices(c))return;
+   if(target!=kInvalidId)c.executor.giveTemporaryMight(target,3);
+ }
+
 private:
  const CardDef d_=[] {
   auto d=mkFinal64_a(1082,46,R"RB(Resplendent Rostrum)RB",CardType::Gear,8,1,0,{Domain::Calm},Rarity::Epic,R"RB([E]: Draw 1 and channel 1 rune exhausted.
@@ -298,7 +317,12 @@ When I become exhausted, give a friendly unit +3 [M] this turn.)RB");
 class R64_1083 final : public UnitCard {
 public:
  const CardDef& def() const override { return d_; }
- // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
+
+ TriggerType triggerType()const override{return TriggerType::WhenIBecomeExhausted;}
+ void onTrigger(CardContext& c,const std::vector<GameObjectId>&)override{
+   c.executor.predict(c.controller,1);
+ }
+
 private:
  const CardDef d_=[] {
   auto d=mkFinal64_a(1083,53,R"RB(Strigian Oracle)RB",CardType::Unit,2,0,2,{Domain::Mind},Rarity::Common,R"RB(When I become exhausted, [Predict]. (Look at the top card of your Main Deck. You may recycle it.))RB");
