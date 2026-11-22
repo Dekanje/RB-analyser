@@ -117,6 +117,15 @@ TEST_F(RadianceBatch10Test, HoldEmDiscountsAfterBattlefieldUnitPlay) {
  ASSERT_NE(hold,nullptr);
  EXPECT_EQ(hold->selfCostReduction(state,P1),2);
 }
+TEST_F(RadianceBatch10Test, LingeringAnimusEntersReadyAfterFriendlyGearDies) {
+ auto gear=addToHand(P1,CardDefId{1049});
+ playThroughEngine(gear);
+ withEngine([&](GameEngine& e){e.testHook_executor().killObject(gear);});
+ EXPECT_TRUE(state.player(P1).gear_died_this_turn);
+ const auto animus=addToHand(P1,CardDefId{1058});
+ playThroughEngine(animus);
+ EXPECT_FALSE(state.getObject(animus).is_exhausted);
+}
 TEST_F(RadianceBatch10Test, BedevilingStrangerChoosesCrowdedBattlefieldToBounceEnemy) {
  addUnit(P1,kInvalidId,2,0);
  addUnit(P1,kInvalidId,2,0);
