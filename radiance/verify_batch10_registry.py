@@ -38,6 +38,8 @@ def verify(rows):
         x.get("public_code") for x in rows if x.get("public_code")
     ).items() if n>1}
     print("BATCH10_DUPLICATE_DIAGNOSTIC",json.dumps(collisions,sort_keys=True),flush=True)
+    observed={x.get("public_code") for x in rows if x.get("public_code")}
+    print("BATCH10_PRESENT_BASE_CODES",json.dumps(sorted(observed & {f"RAD-{i:03d}/167" for i in range(1,168)})),flush=True)
     codes={};ids=set()
     for row in rows:
         cid=row["card_id"]
