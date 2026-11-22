@@ -74,6 +74,25 @@ TEST_F(RadianceBatch10Test, HearteningSoulGrantsExhaustAbilityOnlyToFriendlyLege
  EXPECT_TRUE(card->canActivateAbilityAt(state,P1,legend,0));
  EXPECT_FALSE(card->canActivateAbilityAt(state,P1,soul,0));
 }
+TEST_F(RadianceBatch10Test, HearteningSoulLegendCanActivateGrantedMightAbility) {
+ auto legend=state.createObject();
+ auto& obj=state.getObject(legend);
+ obj.owner=P1;obj.controller=P1;obj.card_type=CardType::Legend;
+ obj.card_def_id=CardDefId{966};obj.zone=ZoneType::LegendZone;
+ state.player(P1).legend_zone=legend;
+ addUnit(P1,CardDefId{1062},7,-1);
+ const auto target=addUnit(P1,kInvalidId,2,-1);
+ withEngine([&](GameEngine& e){e.testHook_recalculateAuras();});
+ Intent ability;ability.type=IntentType::ActivateAbility;ability.player=P1;
+ ability.ability_source=legend;ability.granted_ability_def=CardDefId{1062};
+ ability.ability_index=0;
+ EnginePathAgent choose(EnginePathAgent::choosing(target));
+ withEngineDefaultTurn([&](GameEngine& e){
+   e.testHook_executeIntent(ability);settleLikeTheEngine(e);
+ },&choose,nullptr,P1);
+ EXPECT_TRUE(state.getObject(legend).is_exhausted);
+ EXPECT_EQ(state.getObject(target).temp_might_bonus,3);
+}
 TEST_F(RadianceBatch10Test, TwentyNewUniqueCardsHaveCanonicalPrintedMetadata) {
  const std::vector<Printed> want={
   {1048,13,3,1,0,"Lost to the Sands",CardType::Spell},
