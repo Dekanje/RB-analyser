@@ -33,6 +33,11 @@ assert not (set(NEW)&set(BATCH9)), "Batch 10 duplicates Batch 9"
 
 def verify(rows):
     assert len(rows)==1059,(len(rows),"Expected exactly 1,059 compiled cards")
+    from collections import Counter
+    collisions={code:n for code,n in Counter(
+        x.get("public_code") for x in rows if x.get("public_code")
+    ).items() if n>1}
+    print("BATCH10_DUPLICATE_DIAGNOSTIC",json.dumps(collisions,sort_keys=True),flush=True)
     codes={};ids=set()
     for row in rows:
         cid=row["card_id"]
