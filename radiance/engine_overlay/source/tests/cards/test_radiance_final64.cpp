@@ -284,6 +284,69 @@ TEST_F(RadianceFinal64Test, ScorchedEarthDealsExactlyFiveAllocatedDamageAtOneBat
  EXPECT_EQ(state.getObject(target).damage_marked,5);
  EXPECT_EQ(state.getObject(unaffected).damage_marked,0);
 }
+TEST_F(RadianceFinal64Test, TrinketPeddlerSharedDisarmReducesEnemyMight){
+ auto peddler=addUnit(P1,CardDefId{1084},3,0);
+ auto enemy=addUnit(P2,kInvalidId,5,0);
+ EnginePathAgent choice(EnginePathAgent::choosing(enemy));
+ resolveThroughEngine([&](EffectExecutor&,GameState&){
+   events.emit(CombatStartedEvent{state.battlefields[0].id,P1,P2});
+ },&choice);
+ EXPECT_TRUE(state.getObject(peddler).hasKeyword(Keyword::Disarm));
+ EXPECT_EQ(state.getObject(enemy).temp_might_bonus,-1);
+}
+TEST_F(RadianceFinal64Test, GravityFieldDeathknellDrawsOneCard){
+ addToDeck(P1,CardDefId{1084});
+ auto gear=addToHand(P1,CardDefId{1086});
+ playThroughEngine(gear,nullptr,LocationId{BattlefieldLocation{state.battlefields[0].id}});
+ const auto deck=state.player(P1).main_deck.size();
+ withEngine([&](GameEngine& e){e.testHook_executor().killObject(gear);
+   settleLikeTheEngine(e);});
+ EXPECT_EQ(state.player(P1).main_deck.size()+1,deck);
+}
+TEST_F(RadianceFinal64Test, SpiritOfForgeReturnsGearAsCostAndGainsItsEnergyAsMight){
+ auto gear=addToHand(P1,CardDefId{1088});
+ playThroughEngine(gear);
+ auto spirit=addToHand(P1,CardDefId{1089});
+ EnginePathAgent accept(EnginePathAgent::accepting());
+ playThroughEngine(spirit,&accept);
+ EXPECT_TRUE(inHand(P1,gear));
+ EXPECT_FALSE(state.getObject(spirit).is_exhausted);
+ EXPECT_EQ(state.getObject(spirit).temp_might_bonus,2);
+}
+TEST_F(RadianceFinal64Test, ZeroPointInflectionDrawsTwoAfterPlayingAnotherCard){
+ for(int i=0;i<3;i++)addToDeck(P1,CardDefId{1084});
+ auto inflection=addToHand(P1,CardDefId{1092});
+ playThroughEngine(inflection);
+ auto unit=addToHand(P1,CardDefId{1084});
+ playThroughEngine(unit);
+ EXPECT_EQ(state.player(P1).main_deck.size(),1u);
+}
+TEST_F(RadianceFinal64Test, ArmoredTuskerOptionalMoveTriggerDealsShieldDamage){
+ auto tusker=addUnit(P1,CardDefId{1094},4,-1);
+ auto enemy=addUnit(P2,kInvalidId,12,1);
+ EnginePathAgent accept(EnginePathAgent::accepting());
+ resolveThroughEngine([&](EffectExecutor& exec,GameState&){
+   exec.moveToBattlefield(tusker,state.battlefields[1].id);
+ },&accept);
+ EXPECT_EQ(state.getObject(enemy).damage_marked,3);
+}
+TEST_F(RadianceFinal64Test, BloodscentSwarmDiscountCountsConquestsNotHolds){
+ const auto* card=card_registry.get(CardDefId{1095});
+ ASSERT_NE(card,nullptr);
+ EXPECT_EQ(card->selfCostReduction(state,P1),0);
+ state.player(P1).battlefields_scored_this_turn.insert(state.battlefields[0].id);
+ EXPECT_EQ(card->selfCostReduction(state,P1),0);
+ state.player(P1).battlefields_conquered_this_turn.insert(state.battlefields[0].id);
+ EXPECT_EQ(card->selfCostReduction(state,P1),2);
+}
+TEST_F(RadianceFinal64Test, GravesDealDamageOnAttackTriggerButNoCombatDamage){
+ auto graves=addUnit(P1,CardDefId{1098},5,0);
+ auto enemy=addUnit(P2,kInvalidId,12,0);
+ withEngine([&](GameEngine& e){e.testHook_recalculateAuras();});
+ EXPECT_TRUE(state.getObject(graves).dealsNoCombatDamage());
+ fireTriggerThroughEngine(graves,TriggerType::WhenIAttackOrDefend);
+ EXPECT_EQ(state.getObject(enemy).damage_marked,5);
+}
 TEST_F(RadianceFinal64Test, SixtyFourUniqueCardDefinitionsHaveCanonicalMetadata){
  ASSERT_EQ(expected.size(),64u);
  std::set<int> ids,numbers;std::set<std::string> public_codes;
