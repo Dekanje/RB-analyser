@@ -11,6 +11,24 @@ class RadianceBatch10Test:public CardTestFixture {};
 struct Printed {
  int id,number,energy,power,might; const char* name; CardType type;
 };
+TEST_F(RadianceBatch10Test, HearteningSoulGrantsExhaustAbilityOnlyToFriendlyLegend) {
+ const auto legend=state.createObject();
+ auto& obj=state.getObject(legend);
+ obj.owner=P1;obj.controller=P1;obj.card_type=CardType::Legend;
+ obj.card_def_id=CardDefId{966};obj.zone=ZoneType::LegendZone;
+ state.player(P1).legend_zone=legend;
+ const auto soul=addUnit(P1,CardDefId{1062},7,-1);
+ withEngine([&](GameEngine& e){e.testHook_recalculateAuras();});
+ const auto& grants=state.getObject(legend).granted_abilities;
+ bool found=false;
+ for(const auto& grant:grants)
+   if(grant.source_def_id==CardDefId{1062}&&grant.ability_index==0)found=true;
+ EXPECT_TRUE(found);
+ const auto* card=card_registry.get(CardDefId{1062});
+ ASSERT_NE(card,nullptr);
+ EXPECT_TRUE(card->canActivateAbilityAt(state,P1,legend,0));
+ EXPECT_FALSE(card->canActivateAbilityAt(state,P1,soul,0));
+}
 TEST_F(RadianceBatch10Test, TwentyNewUniqueCardsHaveCanonicalPrintedMetadata) {
  const std::vector<Printed> want={
   {1048,13,3,1,0,"Lost to the Sands",CardType::Spell},
