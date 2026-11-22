@@ -68,6 +68,16 @@ TEST_F(RadianceBatch10Test, OriginalEkkoRemainsRegisteredWithActivatedAbility) {
  EXPECT_EQ(ekko.name,"Ekko, Revolutionary");
  EXPECT_EQ(ekko.public_code,"RAD-021/167");
 }
+TEST_F(RadianceBatch10Test, AmateurDemolitionistHasPrintedFuryDomainAndTags) {
+ const auto& d=card_db.get(CardDefId{1059});
+ EXPECT_EQ(d.public_code,"RAD-001/167");
+ ASSERT_EQ(d.domains.size(),1u);
+ EXPECT_EQ(d.domains.front(),Domain::Fury);
+ EXPECT_EQ(d.energy_cost,2);
+ EXPECT_EQ(d.power_cost,0);
+ EXPECT_EQ(d.might,1);
+ EXPECT_EQ(d.tags,std::vector<std::string>({"Bandle City","Yordle"}));
+}
 TEST_F(RadianceBatch10Test, AmateurDemolitionistCreatesBombAtBattlefield) {
  auto card=addToHand(P1,CardDefId{1059});
  playThroughEngine(card);
