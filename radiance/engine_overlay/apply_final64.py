@@ -84,6 +84,37 @@ tr=tr.replace(score_decl,score_decl+"""
         state_.player(e.player).battlefields_conquered_this_turn.insert(e.battlefield);""",1)
 trigger.write_text(tr)
 
+
+# Seraphic Wyvern channel-replacement: original runes keep their printed
+# ready/exhausted instruction; each extra rune enters exhausted.
+executor_path=engine/"src/engine/effect_executor.cpp"
+exe=executor_path.read_text()
+start=exe.index("void EffectExecutor::channelRunes(")
+end=exe.index("\n}\n",start)+2
+body=exe[start:end]
+head="""void EffectExecutor::channelRunes(PlayerId player, int count, bool enter_exhausted) {
+    RIFT_TRACE"""
+replacement="""void EffectExecutor::channelRunes(PlayerId player, int count, bool enter_exhausted) {
+    const int original_count=count;
+    if(count>0) {
+        for(const auto& [id,obj]:state_.objects.onBoard())
+            if(obj.card_def_id==CardDefId{1101} && obj.isUnit() &&
+               obj.controller==player && obj.location.has_value())
+                ++count;
+    }
+    RIFT_TRACE"""
+assert body.count(head)==1, "Wyvern channel entry anchor changed"
+body=body.replace(head,replacement,1)
+e="        rune.is_exhausted = enter_exhausted;"
+assert body.count(e)==1
+body=body.replace(e,"        const bool rune_enters_exhausted=enter_exhausted||i>=original_count;\n"+
+                     "        rune.is_exhausted = rune_enters_exhausted;",1)
+e='                         (enter_exhausted ? ", exhausted" : ", ready") + ")");'
+assert body.count(e)==1
+body=body.replace(e,'                         (rune_enters_exhausted ? ", exhausted" : ", ready") + ")");',1)
+exe=exe[:start]+body+exe[end:]
+executor_path.write_text(exe)
+
 init=engine/"src/cards/cards_init.cpp"
 s=init.read_text()
 last_decl="void register_card_1067(CardRegistry&);"
