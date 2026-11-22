@@ -269,28 +269,35 @@ private:
 class Radiance10_1057 final:public UnitCard {
 public:
  const CardDef& def()const override{return d_;}
-    TriggerType triggerType()const override{return TriggerType::WhenYouPlayMe;}
-    void onTrigger(CardContext& c,const std::vector<GameObjectId>&)override {
-      // Four or more units at the chosen battlefield are required; location
-      // choice should be locked at trigger finalization (follow-up test).
-      std::vector<GameObjectId> v;
-      for(const auto& bf:c.state.battlefields) {
-        int total=0;
-        for(const auto& [id,o]:c.state.objects.onBoard())
-          if(o.isUnit()&&o.isAtBattlefield()&&o.battlefieldId()==bf.id)++total;
-        if(total<4)continue;
-        for(const auto& [id,o]:c.state.objects.onBoard())
-          if(o.isUnit()&&o.controller!=c.controller&&o.battlefieldId()==bf.id)v.push_back(id);
-      }
-      std::sort(v.begin(),v.end());
-      if(v.empty())return;
-      int yes=confirmOptional(c,"Bedeviling Stranger: return an enemy unit?",[&](){return true;});
-      if(yes<1)return;
-      auto id=pickTarget(c,"Bedeviling Stranger: enemy unit to bounce",v);
-      if(!finalizingChoices(c)&&id!=kInvalidId)c.executor.bounceToHand(id);
-    }
+ unsigned choicesAtFinalization()const override{return kFinalizeTrigger;}
+ TriggerType triggerType()const override{return TriggerType::WhenYouPlayMe;}
+ void onTrigger(CardContext& c,const std::vector<GameObjectId>&)override {
+   if(c.state.battlefields.empty())return;
+   std::vector<std::string> labels;
+   for(const auto& bf:c.state.battlefields)
+     labels.push_back("Battlefield #"+std::to_string(bf.id.raw()));
+   const int choice=pickMode(c,"Bedeviling Stranger: choose a battlefield",
+      static_cast<int>(labels.size()),labels);
+   if(choice<0||static_cast<size_t>(choice)>=c.state.battlefields.size())return;
+   const auto bf=c.state.battlefields[choice].id;
+   std::vector<GameObjectId> enemies;int units=0;
+   for(const auto& [id,o]:c.state.objects.onBoard()) {
+     if(!o.isUnit()||!o.isAtBattlefield()||o.battlefieldId()!=bf)continue;
+     ++units;
+     if(o.controller!=c.controller)enemies.push_back(id);
+   }
+   if(units<4||enemies.empty())return;
+   std::sort(enemies.begin(),enemies.end());
+   const int yes=confirmOptional(c,"Bedeviling Stranger: return an enemy unit at chosen battlefield?",
+      [&](){return units>=4&&!enemies.empty();});
+   if(yes<1)return;
+   const auto id=pickTarget(c,"Bedeviling Stranger: enemy unit to bounce",enemies);
+   if(finalizingChoices(c))return;
+   if(id!=kInvalidId)c.executor.bounceToHand(id);
+ }
 private:
- const CardDef d_=rad10a(1057,107,"Bedeviling Stranger",CardType::Unit,2,0,2,{Domain::Chaos},Rarity::Rare,"[Hidden] (Hide now for [A] to react with later for [0].)\nWhen you play me, choose a battlefield. If there are 4 or more units there, you may return an enemy unit there to its owner's hand.",{Keyword::Hidden});
+ const CardDef d_=rad10a(1057,107,"Bedeviling Stranger",CardType::Unit,2,0,2,
+   {Domain::Chaos},Rarity::Rare,"[Hidden] (Hide now for [A] to react with later for [0].)\nWhen you play me, choose a battlefield. If there are 4 or more units there, you may return an enemy unit there to its owner's hand.",{Keyword::Hidden});
 };
 } // anonymous
 void register_card_1048(CardRegistry& r){r.registerCard(1048,std::make_unique<Radiance10_1048>());}
