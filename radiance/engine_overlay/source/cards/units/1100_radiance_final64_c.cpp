@@ -32,7 +32,7 @@ public:
  // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
 private:
  const CardDef d_=[] {
-  auto d=mkFinal64(1100,91,R"RB(Jarvan IV - Martial Paragon)RB",CardType::Unit,4,1,4,{Domain::Body},Rarity::Epic,R"RB(Your gear with [Deploy] have [Action]. (They can be played on your turn or in showdowns.)
+  auto d=mkFinal64(1100,91,R"RB(Jarvan IV, Martial Paragon)RB",CardType::Unit,4,1,4,{Domain::Body},Rarity::Epic,R"RB(Your gear with [Deploy] have [Action]. (They can be played on your turn or in showdowns.)
 When I conquer, if there is a friendly gear with [Deploy] here, channel 1 rune exhausted.)RB");
   d.super_type=SuperType::Champion;
   d.tags={R"RB(Demacia)RB",R"RB(Jarvan IV)RB"};
@@ -86,7 +86,7 @@ public:
  // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
 private:
  const CardDef d_=[] {
-  auto d=mkFinal64(1104,102,R"RB(Demon Shade)RB",CardType::Spell,3,0,0,{Domain::Fury},Rarity::Uncommon,R"RB([Hidden] (Hide now for [A] to react with later for [0].)
+  auto d=mkFinal64(1104,102,R"RB(Demon Shade)RB",CardType::Spell,3,0,0,{Domain::Chaos},Rarity::Uncommon,R"RB([Hidden] (Hide now for [A] to react with later for [0].)
 Choose a friendly unit, then choose one —Move it to an open battlefield.
 Give it [Ganking] this turn if there are no open battlefields. (It can move from battlefield to battlefield.))RB");
   d.image_url=R"RB(https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/e9dd313886624aafc7e0c7f9e1689225c042b484-744x1039.png?accountingTag=RB)RB";
@@ -116,19 +116,19 @@ public:
  // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
 private:
  const CardDef d_=[] {
-  auto d=mkFinal64(1106,104,R"RB(Pitiless Stalker)RB",CardType::Unit,5,1,5,{},Rarity::Uncommon,R"RB([E]: [Stun] an enemy unit. (It doesn't deal combat damage this turn.))RB");
+  auto d=mkFinal64(1106,104,R"RB(Pitiless Stalker)RB",CardType::Unit,5,1,5,{Domain::Chaos},Rarity::Uncommon,R"RB([E]: [Stun] an enemy unit. (It doesn't deal combat damage this turn.))RB");
   d.image_url=R"RB(https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/fc61b244fb3ed01d61617c3c2633a71424604130-744x1039.png?accountingTag=RB)RB";
   return d;
  }();
 };
 
-class R64_1107 final : public UnitCard {
+class R64_1107 final : public GearCard {
 public:
  const CardDef& def() const override { return d_; }
  // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
 private:
  const CardDef d_=[] {
-  auto d=mkFinal64(1107,108,R"RB(Bushwhack Trap)RB",CardType::Unit,1,0,0,{Domain::Fury},Rarity::Rare,R"RB([Deploy] (Play this only to a battlefield. When an opponent holds here, kill this.)
+  auto d=mkFinal64(1107,108,R"RB(Bushwhack Trap)RB",CardType::Gear,1,0,0,{Domain::Chaos},Rarity::Rare,R"RB([Deploy] (Play this only to a battlefield. When an opponent holds here, kill this.)
 While you or an ally control this battlefield, that player may hide an additional card here.)RB");
   d.tags={R"RB(Device)RB"};
   d.image_url=R"RB(https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/120762e23a599ee14d3f88856fcf707154338fb0-744x1039.png?accountingTag=RB)RB";
@@ -143,7 +143,7 @@ public:
  // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
 private:
  const CardDef d_=[] {
-  auto d=mkFinal64(1108,109,R"RB(Evelynn - In Control)RB",CardType::Unit,4,1,4,{Domain::Chaos},Rarity::Rare,R"RB([Disarm] (When I attack, give an enemy unit here -1 [M] this turn.)
+  auto d=mkFinal64(1108,109,R"RB(Evelynn, In Control)RB",CardType::Unit,4,1,4,{Domain::Chaos},Rarity::Rare,R"RB([Disarm] (When I attack, give an enemy unit here -1 [M] this turn.)
 When I hold, if you control a facedown card here, score 1 point.)RB");
   d.super_type=SuperType::Champion;
   d.tags={R"RB(Evelynn)RB"};
@@ -159,7 +159,7 @@ public:
  // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
 private:
  const CardDef d_=[] {
-  auto d=mkFinal64(1109,110,R"RB(Lulu - Whimsical)RB",CardType::Unit,3,0,3,{Domain::Chaos},Rarity::Rare,R"RB(When I move, you may have another unit's base Might become 4 this turn.)RB");
+  auto d=mkFinal64(1109,110,R"RB(Lulu, Whimsical)RB",CardType::Unit,3,0,3,{Domain::Chaos},Rarity::Rare,R"RB(When I move, you may have another unit's base Might become 4 this turn.)RB");
   d.super_type=SuperType::Champion;
   d.tags={R"RB(Yordle)RB",R"RB(Bandle City)RB",R"RB(Lulu)RB"};
   d.image_url=R"RB(https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/defd09480671a1e394725f21b6c3448ebec77913-744x1039.png?accountingTag=RB)RB";
@@ -173,7 +173,7 @@ public:
  // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
 private:
  const CardDef d_=[] {
-  auto d=mkFinal64(1110,111,R"RB(Mechanical Bandit)RB",CardType::Gear,4,1,0,{Domain::Fury},Rarity::Rare,R"RB(At the start of your Beginning Phase, each player reveals the top card of their Main Deck. If you revealed a card with the lowest Energy cost, draw it. Recycle the rest.)RB");
+  auto d=mkFinal64(1110,111,R"RB(Mechanical Bandit)RB",CardType::Gear,4,1,0,{Domain::Chaos},Rarity::Rare,R"RB(At the start of your Beginning Phase, each player reveals the top card of their Main Deck. If you revealed a card with the lowest Energy cost, draw it. Recycle the rest.)RB");
   d.tags={R"RB(Device)RB"};
   d.image_url=R"RB(https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/cb2a419b61b6f1e6d138c3c3b07b393a4037237b-744x1039.png?accountingTag=RB)RB";
   return d;
@@ -186,7 +186,7 @@ public:
  // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
 private:
  const CardDef d_=[] {
-  auto d=mkFinal64(1111,112,R"RB(Ziggs - Explosive)RB",CardType::Unit,4,0,4,{Domain::Chaos},Rarity::Rare,R"RB([1], [E]: Play a Bomb gear token to a battlefield. (It has [Deploy]. When it dies, deal 2 to an enemy there and kill your other Bombs there.)
+  auto d=mkFinal64(1111,112,R"RB(Ziggs, Explosive)RB",CardType::Unit,4,0,4,{Domain::Chaos},Rarity::Rare,R"RB([1], [E]: Play a Bomb gear token to a battlefield. (It has [Deploy]. When it dies, deal 2 to an enemy there and kill your other Bombs there.)
 When I defend, you may kill a friendly gear to give me +2 [M] this turn.)RB");
   d.super_type=SuperType::Champion;
   d.tags={R"RB(Bandle City)RB",R"RB(Ziggs)RB"};
@@ -216,7 +216,7 @@ public:
  // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
 private:
  const CardDef d_=[] {
-  auto d=mkFinal64(1113,114,R"RB(Riven - Deserter)RB",CardType::Unit,5,1,5,{Domain::Chaos},Rarity::Epic,R"RB(When another friendly unit becomes exhausted, give me +1 [M] this turn.
+  auto d=mkFinal64(1113,114,R"RB(Riven, Deserter)RB",CardType::Unit,5,1,5,{Domain::Chaos},Rarity::Epic,R"RB(When another friendly unit becomes exhausted, give me +1 [M] this turn.
 Exhaust a friendly unit: Ready a unit. Use this ability only once each turn.)RB");
   d.super_type=SuperType::Champion;
   d.tags={R"RB(Riven)RB"};
@@ -237,13 +237,13 @@ private:
  }();
 };
 
-class R64_1115 final : public GearCard {
+class R64_1115 final : public UnitCard {
 public:
  const CardDef& def() const override { return d_; }
  // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
 private:
  const CardDef d_=[] {
-  auto d=mkFinal64(1115,120,R"RB(Meticulous Restorationist)RB",CardType::Gear,2,0,2,{Domain::Order},Rarity::Common,R"RB(When you play a card with Energy cost [7] or more, you may play me from your trash for [O].)RB");
+  auto d=mkFinal64(1115,120,R"RB(Meticulous Restorationist)RB",CardType::Unit,2,0,2,{Domain::Order},Rarity::Common,R"RB(When you play a card with Energy cost [7] or more, you may play me from your trash for [O].)RB");
   d.tags={R"RB(Device)RB"};
   d.image_url=R"RB(https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/ee50fbf5e902e7109a3d54b417edc440b5a37198-744x1039.png?accountingTag=RB)RB";
   return d;
