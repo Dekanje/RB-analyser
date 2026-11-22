@@ -102,7 +102,22 @@ While I'm in a showdown, your spells have [Reaction]. (Play them any time, even 
 class R64_1088 final : public GearCard {
 public:
  const CardDef& def() const override { return d_; }
- // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
+
+ std::vector<ActivatedAbility> activatedAbilities()const override{
+   ActivatedAbility a;a.cost.energy=1;a.cost.exhaust=true;return {a};
+ }
+ void onActivate(CardContext& c,int,const std::vector<GameObjectId>&)override{
+   const auto guessed=c.executor.chooseValueNow(opponent(c.controller),
+      {"Unit","Gear","Spell"},"Scrutinizing Scope: guess top-card type");
+   const auto top=f64RevealTop(c,c.controller);
+   if(top==kInvalidId)return;
+   const auto type=c.state.getObject(top).card_type;
+   const int actual=type==CardType::Unit?0:type==CardType::Gear?1:
+                    type==CardType::Spell?2:-1;
+   if(guessed==actual)c.executor.recycleCards(c.controller,{top},knowledge::everyone());
+   else c.executor.drawCards(c.controller,1);
+ }
+
 private:
  const CardDef d_=[] {
   auto d=mkFinal64_b(1088,64,R"RB(Scrutinizing Scope)RB",CardType::Gear,2,0,0,{Domain::Mind},Rarity::Rare,R"RB([1], [E]: Choose an opponent. They guess a card type. Reveal the top card of your Main Deck. If it has that type, recycle it. Otherwise, draw it. (Unit, gear, and spell are types.))RB");
@@ -169,7 +184,18 @@ When you draw 1 or more cards with 9 or more other cards in your hand, discard y
 class R64_1093 final : public UnitCard {
 public:
  const CardDef& def() const override { return d_; }
- // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
+
+ TriggerType triggerType()const override{return TriggerType::WhenIMove;}
+ void onTrigger(CardContext& c,const std::vector<GameObjectId>&)override{
+   const auto top=f64RevealTop(c,c.controller);
+   if(top==kInvalidId)return;
+   const auto& obj=c.state.getObject(top);
+   const bool mighty=obj.isUnit()&&obj.card_def_id!=kInvalidId&&
+        c.executor.cardDB().get(obj.card_def_id).might>=5;
+   if(mighty)c.executor.drawCards(c.controller,1);
+   else c.executor.recycleCards(c.controller,{top},knowledge::everyone());
+ }
+
 private:
  const CardDef d_=[] {
   auto d=mkFinal64_b(1093,74,R"RB(Raving Witness)RB",CardType::Unit,3,0,3,{Domain::Body},Rarity::Common,R"RB(When I move, reveal the top card of your Main Deck. If it's [Mighty], draw it. Otherwise, recycle it. (A unit is Mighty while it has 5+ [M].))RB");
