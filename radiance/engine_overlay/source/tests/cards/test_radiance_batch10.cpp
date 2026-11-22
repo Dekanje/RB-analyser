@@ -184,6 +184,16 @@ TEST_F(RadianceBatch10Test, LifeFromStonePaysExhaustAsAdditionalCastCost) {
  playThroughEngine(spell);
  EXPECT_TRUE(state.getObject(ally).is_exhausted);
 }
+TEST_F(RadianceBatch10Test, HoldEmDiscountsAfterBattlefieldTokenUnitPlay) {
+ const auto where=BattlefieldLocation{state.battlefields[0].id};
+ withEngine([&](GameEngine& e) {
+   e.testHook_executor().createToken(P1,CardType::Unit,"Recruit",1,
+       {"Recruit"},KeywordSet{},where,false);
+ });
+ const auto* hold=card_registry.get(CardDefId{1052});
+ ASSERT_NE(hold,nullptr);
+ EXPECT_EQ(hold->selfCostReduction(state,P1),2);
+}
 TEST_F(RadianceBatch10Test, HoldEmDoesNotDiscountAfterBasePlay) {
  const auto unit=addToHand(P1,CardDefId{1058});
  playThroughEngine(unit);
