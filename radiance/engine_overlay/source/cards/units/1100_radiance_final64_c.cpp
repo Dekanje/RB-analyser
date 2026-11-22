@@ -133,7 +133,18 @@ Give it [Ganking] this turn if there are no open battlefields. (It can move from
 class R64_1105 final : public UnitCard {
 public:
  const CardDef& def() const override { return d_; }
- // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
+
+ void asYouPlayChoices(CardContext& c)override{
+   (void)f64ShowOff(c,[](const GameObject& o,const CardDef& d){
+     return d.keywords.has(Keyword::Hidden)||o.hasKeyword(Keyword::Hidden);
+   },"Gutter Guardian: Show Off a Hidden card");
+ }
+ TriggerType triggerType()const override{return TriggerType::WhenYouPlayMe;}
+ void onTrigger(CardContext& c,const std::vector<GameObjectId>&)override {
+   if(f64WasShownOff(c.state,c.source))
+     c.executor.addFloatingUniversalPower(c.controller,1);
+ }
+
 private:
  const CardDef d_=[] {
   auto d=mkFinal64_c(1105,103,R"RB(Gutter Guardian)RB",CardType::Unit,3,0,3,{Domain::Chaos},Rarity::Uncommon,R"RB([Hidden] (Hide now for [A] to react with later for [0].)
