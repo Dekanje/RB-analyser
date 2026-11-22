@@ -24,7 +24,7 @@ jobs:
         run: |
           python3 -m py_compile radiance/engine_overlay/apply.py radiance/engine_overlay/apply_wave2.py radiance/engine_overlay/apply_wave3.py radiance/engine_overlay/apply_wave4.py radiance/engine_overlay/apply_batch6.py radiance/engine_overlay/apply_batch7.py radiance/verify_batch7_registry.py radiance/coverage_ledger.py radiance/audit_wave5_catalog_registry.py
           python3 -m unittest discover -s radiance -p 'test_wave5_catalog_audit.py' -v
-          grep -F 'range(1001,1008)' radiance/engine_overlay/apply_batch7.py
+          grep -F 'range(1001,1011)' radiance/engine_overlay/apply_batch7.py
           test -f radiance/engine_overlay/source/cards/units/1001_radiance_batch7_supported_effects.cpp
           test -f radiance/engine_overlay/source/tests/cards/test_radiance_batch7.cpp
   compiled-card-check:
@@ -79,16 +79,16 @@ jobs:
           import json
           from pathlib import Path
           x=json.loads(Path("results/radiance_batch7_catalog_audit.json").read_text())
-          assert x["compiled_registry_size"]==1007
-          assert x["registered_base_count"]==51
-          assert x["missing_base_count"]==116
+          assert x["compiled_registry_size"]==1010
+          assert x["registered_base_count"]==54
+          assert x["missing_base_count"]==113
           assert x["all_mechanics_verified"] is False
           print("BATCH7_CATALOG_GATE_PASS_NOT_FULL_MECHANICS_CERTIFICATION")
           PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: radiance-batch7-1007-card-registry-and-tests
+          name: radiance-batch7-1010-card-registry-and-tests
           path: results/
           retention-days: 30
           if-no-files-found: ignore
