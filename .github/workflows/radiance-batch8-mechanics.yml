@@ -102,27 +102,25 @@ jobs:
           python3 radiance/engine_overlay/apply_batch6.py
           python3 radiance/engine_overlay/apply_batch7.py
           python3 radiance/engine_overlay/apply_batch8.py
-      - name: Restore and save C++ compiler cache (also on failed tests)
-        uses: actions/cache@v4
+      - name: Restore incremental C++ compiler cache
+        id: ccache-restore
+        uses: actions/cache/restore@v4
         with:
           path: ~/.cache/ccache
-          key: rad8-staged-ec90f0f-ubuntu-gcc13-release-${{ github.sha }}
-          save-always: true
+          key: rad8-pch-safe-linux-gcc13-${{ github.sha }}
           restore-keys: |
-            rad8-staged-ec90f0f-ubuntu-gcc13-release-
-            rad8-ec90f0f-ubuntu-gcc13-release-
-            rad6-ec90f0f-ubuntu-gcc13-release-
-            radiance-alpharune-ec90f0f-gcc13-release-v1-
-            radiance-wave5-audit-
-            radiance-wave4-ccache-
+            rad8-pch-safe-linux-gcc13-
       - name: Compile actual AlphaRune engine with Batch 8 cards
         run: |
-          ccache -M 1G
-          cmake -S alpharune -B alpharune/build -G Ninja -DCMAKE_BUILD_TYPE=Release -DRIFTBOUND_BUILD_JOBS=2 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+          # Reuse compiled objects safely when AlphaRune uses precompiled headers.
+          # Direct ccache previously classified 121/123 calls as uncacheable.
+          ccache -M 3G
+          ccache --zero-stats
+          cmake -S alpharune -B alpharune/build -G Ninja -DCMAKE_BUILD_TYPE=Release -DRIFTBOUND_BUILD_JOBS=3 "-DCMAKE_CXX_COMPILER_LAUNCHER=env;CCACHE_SLOPPINESS=pch_defines,time_macros;${PWD}/alpharune/scripts/ccache_pch_safe.sh"
           if [ "$VALIDATION_MODE" = targeted ]; then
-            cmake --build alpharune/build --target riftbound_tests -j 2
+            cmake --build alpharune/build --target riftbound_tests -j 3
           else
-            cmake --build alpharune/build --target riftbound riftbound_tests -j 2
+            cmake --build alpharune/build --target riftbound riftbound_tests -j 3
           fi
           ccache -s
       - name: Targeted test - only the failing GoogleTest cases
@@ -165,6 +163,17 @@ jobs:
         if: ${{ needs.preflight.outputs.mode == 'full' }}
         run: |
           RIFTBOUND_ROOT=alpharune alpharune/build/riftbound_tests --gtest_brief=1 --gtest_output=xml:results/radiance_batch8_full_regression.xml
+      - name: Show compiler-cache statistics (also after failed compilation)
+        if: always()
+        run: |
+          ccache -s || true
+      - name: Save incremental C++ compiler cache even when a test fails
+        if: always()
+        uses: actions/cache/save@v4
+        continue-on-error: true
+        with:
+          path: ~/.cache/ccache
+          key: rad8-pch-safe-linux-gcc13-${{ github.sha }}
       - uses: actions/upload-artifact@v4
         if: always()
         with:
