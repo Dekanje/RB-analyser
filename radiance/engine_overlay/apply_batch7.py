@@ -33,6 +33,17 @@ s=s.replace(registration,registration+"\n"+"\n".join(
     f"    register_card_{i}(registry);" for i in range(1001,1010)),1)
 init.write_text(s)
 
-# Batch 6 CI must supply the exact 1000-card seed-1 fingerprint before final
-# regression; similarly Batch 7's 1010-card value is measured, never guessed.
-print("RADIANCE_BATCH7_APPLIED: nine new C++ effects, IDs 1001..1009")
+# The full Batch 7 CI run 45054554807 measured the deterministic
+# seed-1 hash for the 1009-definition registry. This exact value may equal
+# a previous pool's hash; retain ALL earlier snapshots and pin by pool size.
+decktest=engine/"tests/test_deck_fuzz.cpp"
+p=decktest.read_text()
+before="""    constexpr uint64_t kRadiance1000DeckOfSeedOne = 16217678500199303007ull;
+    const uint64_t expected = registry_->size()==1000 ? kRadiance1000DeckOfSeedOne"""
+after="""    constexpr uint64_t kRadiance1000DeckOfSeedOne = 16217678500199303007ull;
+    constexpr uint64_t kRadiance1009DeckOfSeedOne = 16217678500199303007ull;
+    const uint64_t expected = registry_->size()==1009 ? kRadiance1009DeckOfSeedOne
+                             : registry_->size()==1000 ? kRadiance1000DeckOfSeedOne"""
+assert p.count(before)==1, "Batch 7 seed-1 test anchor changed"
+decktest.write_text(p.replace(before,after,1))
+print("RADIANCE_BATCH7_APPLIED: nine new C++ effects, IDs 1001..1009; pinned measured 1009-card seed-1 deck")
