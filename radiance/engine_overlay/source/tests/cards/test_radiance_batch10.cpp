@@ -30,9 +30,15 @@ TEST_F(RadianceBatch10Test, GoodStuffPlayDiscardsOneAndDrawsThree) {
  EXPECT_EQ(state.player(P1).main_deck.size(),0u);
 }
 TEST_F(RadianceBatch10Test, GoodStuffBouncesWhenControllerHoldsItsBattlefield) {
+ // The play trigger draws three: keep the deck nonempty, otherwise Burnout
+ // ends the test game before its later Hold trigger can resolve.
+ addUnit(P1,kInvalidId,2,0);
+ for(int i=0;i<3;i++)addToDeck(P1,CardDefId{1058});
  auto gear=addToHand(P1,CardDefId{1056});
  addToHand(P1,CardDefId{1058});
  playThroughEngine(gear,nullptr,LocationId{BattlefieldLocation{state.battlefields[0].id}});
+ ASSERT_TRUE(state.getObject(gear).isAtBattlefield());
+ ASSERT_FALSE(state.game_over);
  fireTriggerThroughEngine(gear,TriggerType::WhenYouHoldHere);
  EXPECT_TRUE(inHand(P1,gear));
 }
