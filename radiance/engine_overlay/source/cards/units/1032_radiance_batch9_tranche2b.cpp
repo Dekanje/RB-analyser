@@ -65,9 +65,12 @@ private:
 class DisposalExpert9 final:public UnitCard {
 public:
     const CardDef& def()const override{return d_;}
-    bool entersReadyOnPlay(const GameState& state,PlayerId player)const override {
+    bool entersReadyOnPlay(const GameState& state,PlayerId player,
+                           const GameObject& self)const override {
+        // The entering card can already be on the battlefield when this
+        // condition is checked. Only OTHER friendly units prevent ready.
         for(const auto& [id,unit]:state.objects.onBoard())
-            if(unit.location&&unit.isUnit()&&unit.controller==player)
+            if(id!=self.id&&unit.location&&unit.isUnit()&&unit.controller==player)
                 return false;
         return true;
     }
