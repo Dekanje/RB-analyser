@@ -43,7 +43,19 @@ private:
 class R64_1085 final : public UnitCard {
 public:
  const CardDef& def() const override { return d_; }
- // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
+
+ void asYouPlayChoices(CardContext& c)override{
+   (void)f64ShowOff(c,[](const GameObject&,const CardDef&){return true;},
+     "The Empyrean: Show Off a card");
+ }
+ TriggerType triggerType()const override{return TriggerType::WhenYouPlayMe;}
+ void onTrigger(CardContext& c,const std::vector<GameObjectId>&)override{
+   if(!f64WasShownOff(c.state,c.source))return;
+   const int power=f64ShownOffValue(c.state,c.source,"__final64_showoff_power");
+   if(power>0)c.executor.predict(c.controller,power);
+   c.executor.drawCards(c.controller,2);
+ }
+
 private:
  const CardDef d_=[] {
   auto d=mkFinal64_b(1085,60,R"RB(The Empyrean)RB",CardType::Unit,8,0,8,{Domain::Mind},Rarity::Uncommon,R"RB([Show Off] a card. (As you play me, you may reveal a card from hand or pick another friendly one.)
@@ -198,7 +210,28 @@ private:
 class R64_1096 final : public SpellCard {
 public:
  const CardDef& def() const override { return d_; }
- // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
+
+ void asYouPlayChoices(CardContext& c)override{
+   (void)f64ShowOff(c,[](const GameObject& o,const CardDef& d){
+     return d.card_type==CardType::Unit||o.isUnit();
+   },"Primordial Roar: Show Off a unit");
+ }
+ unsigned choicesAtFinalization()const override{return kFinalizeResolve;}
+ FinalizeChoice mayChooseAtFinalization(const GameState& s,PlayerId,GameObjectId id)const override{
+   if(!s.objectExists(id))return FinalizeChoice::No;
+   const auto& o=s.getObject(id);
+   return o.isUnit()&&o.location?FinalizeChoice::Yes:FinalizeChoice::No;
+ }
+ void onResolve(CardContext& c,const std::vector<GameObjectId>&)override{
+   if(!f64WasShownOff(c.state,c.source)){(void)finalizingChoices(c);return;}
+   const auto units=boardObjects(c.state,[](const GameObject& o){return o.isUnit();});
+   const auto target=pickTarget(c,"Primordial Roar: damage a unit",units);
+   if(finalizingChoices(c))return;
+   if(target!=kInvalidId)
+     c.executor.dealDamage(target,
+       f64ShownOffValue(c.state,c.source,"__final64_showoff_might"),c.source);
+ }
+
 private:
  const CardDef d_=[] {
   auto d=mkFinal64_b(1096,82,R"RB(Primordial Roar)RB",CardType::Spell,4,2,0,{Domain::Body},Rarity::Uncommon,R"RB([Show Off] a unit. (As you play this, you may reveal a unit from hand or pick a friendly unit.)
