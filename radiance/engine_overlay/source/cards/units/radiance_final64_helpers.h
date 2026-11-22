@@ -35,6 +35,55 @@ inline GameObjectId f64Bomb(CardContext& c,LocationId where){
  return c.executor.createToken(c.controller,CardType::Gear,"Bomb",0,
     {"Bomb"},kw,where,false,{},CardDefId{982});
 }
+
+template <typename Predicate>
+inline bool f64ShowOff(CardContext& c,Predicate&& eligible,
+                       const std::string& label) {
+ if(!c.state.objectExists(c.source))return false;
+ auto& played=c.state.getObject(c.source);
+ played.card_counters["__final64_showoff"]=0;
+ std::vector<GameObjectId> candidates;
+ for(const auto id:c.state.player(c.controller).hand) {
+   if(id==c.source || !c.state.objectExists(id))continue;
+   const auto& o=c.state.getObject(id);
+   if(o.card_def_id==kInvalidId)continue;
+   const auto& d=c.executor.cardDB().get(o.card_def_id);
+   if(eligible(o,d))candidates.push_back(id);
+ }
+ for(const auto& [id,o]:c.state.objects.onBoard()){
+   if(id==c.source||o.controller!=c.controller||!o.location||
+      o.card_def_id==kInvalidId)continue;
+   const auto& d=c.executor.cardDB().get(o.card_def_id);
+   if(eligible(o,d))candidates.push_back(id);
+ }
+ std::sort(candidates.begin(),candidates.end());
+ if(candidates.empty()||!c.executor.confirmNow(c.controller,label))return false;
+ const auto chosen=c.executor.chooseObjectNow(c.controller,candidates,label);
+ if(chosen==kInvalidId)return false;
+ const auto& card=c.state.getObject(chosen);
+ const auto& def=c.executor.cardDB().get(card.card_def_id);
+ const bool fromHand=(card.zone==ZoneType::Hand);
+ if(fromHand)c.events.emit(CardRevealedEvent{chosen,card.card_def_id,card.owner,true,
+                                            PlayerId::None,ZoneType::Hand});
+ played.card_counters["__final64_showoff"]=1;
+ played.card_counters["__final64_showoff_energy"]=def.energy_cost;
+ played.card_counters["__final64_showoff_power"]=def.power_cost;
+ played.card_counters["__final64_showoff_might"]=fromHand?def.might:card.current_might;
+ return true;
+}
+inline bool f64WasShownOff(const GameState& s,GameObjectId id){
+ if(!s.objectExists(id))return false;
+ const auto& counters=s.getObject(id).card_counters;
+ const auto it=counters.find("__final64_showoff");
+ return it!=counters.end()&&it->second==1;
+}
+inline int f64ShownOffValue(const GameState& s,GameObjectId id,const char* key){
+ if(!s.objectExists(id))return 0;
+ const auto& c=s.getObject(id).card_counters;
+ const auto it=c.find(key);
+ return it==c.end()?0:it->second;
+}
+
 inline int f64TotalFriendlyExhausted(const GameState& s,PlayerId p,GameObjectId exclude=kInvalidId){
  int n=0;
  for(const auto& [id,o]:s.objects.onBoard())
