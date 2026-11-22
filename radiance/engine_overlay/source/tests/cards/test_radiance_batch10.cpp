@@ -59,6 +59,7 @@ TEST_F(RadianceBatch10Test, PrintedKeywordsAreRegistered) {
  EXPECT_TRUE(card_db.get(CardDefId{1056}).keywords.has(Keyword::Deploy));
  EXPECT_TRUE(card_db.get(CardDefId{1057}).keywords.has(Keyword::Hidden));
  EXPECT_TRUE(card_db.get(CardDefId{967}).keywords.has(Keyword::Assault));
+ EXPECT_EQ(card_db.get(CardDefId{1064}).super_type,SuperType::Champion);
  EXPECT_TRUE(card_db.get(CardDefId{1064}).keywords.has(Keyword::Ganking));
  EXPECT_TRUE(card_db.get(CardDefId{1065}).keywords.has(Keyword::Deflect));
  EXPECT_TRUE(card_db.get(CardDefId{1066}).keywords.has(Keyword::Deploy));
