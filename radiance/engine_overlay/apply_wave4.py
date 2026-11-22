@@ -29,6 +29,15 @@ s=s.replace(declaration,declaration+"\nvoid register_card_996(CardRegistry&);\nv
 s=s.replace(registration,registration+"\n    register_card_996(registry);\n    register_card_997(registry);",1)
 init.write_text(s)
 
+# Keep the death-batch source scanner exact: Bilgewater Tracker adds one
+# legitimately batched lethal-helper call. No test exclusion or weak bound.
+perf=engine/"tests/test_review_fix_perf_engine.cpp"
+old="    EXPECT_EQ(helper, 30);   // 28 verified 988-card sites + Supernova and Avalanche (Wave 1)"
+new="    EXPECT_EQ(helper, 31);   // 30 Wave 1–3 sites + Bilgewater Tracker (Wave 4)"
+p=perf.read_text()
+assert p.count(old)==1, "Unexpected Wave 3 death-batch scan anchor"
+perf.write_text(p.replace(old,new,1))
+
 # A new card pool changes random-deck generation, including seed 1.
 # DO NOT suppress or change the existing pinned fingerprints. The latest
 # 997-card hash must be measured in the compiled CI test and added explicitly
