@@ -252,4 +252,29 @@ TEST_F(RadianceBatch8Test, MomentaryCompanionGetsTemporaryWhenPlayedOffTurn) {
     EXPECT_TRUE(state.getObject(companion).hasKeyword(Keyword::Temporary));
 }
 
+
+TEST_F(RadianceBatch8Test, AvianExhaustAbilityResolvesViaEngineIntent) {
+    auto avian=addUnit(P1,CardDefId{1018},3,0);
+    auto target=addUnit(P1,kInvalidId,2,0);
+    Intent activation;
+    activation.type=IntentType::ActivateAbility;
+    activation.player=P1;
+    activation.ability_source=avian;
+    activation.targets={target};
+    withEngine([&](GameEngine& e){
+        e.testHook_executeIntent(activation);
+        settleLikeTheEngine(e);
+    });
+    EXPECT_TRUE(state.getObject(avian).is_exhausted);
+    EXPECT_EQ(state.getObject(target).buff_count,1);
+}
+TEST_F(RadianceBatch8Test, RaptorDoesNotDrawFromUnstunnedEnemyDeath) {
+    addUnit(P1,CardDefId{1020},6,0);
+    auto enemy=addUnit(P2,kInvalidId,2,0);
+    addToDeck(P1,CardDefId{1012});
+    auto before=state.player(P1).hand.size();
+    resolveThroughEngine([&](EffectExecutor& e,GameState&){e.killObject(enemy);});
+    EXPECT_EQ(state.player(P1).hand.size(),before);
+}
+
 } // namespace riftbound::test::radiance_batch8
