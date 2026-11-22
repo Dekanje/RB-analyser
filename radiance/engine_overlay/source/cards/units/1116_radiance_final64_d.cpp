@@ -32,7 +32,7 @@ public:
  // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
 private:
  const CardDef d_=[] {
-  auto d=mkFinal64(1116,123,R"RB(Protector's Shield)RB",CardType::Gear,2,1,1,{},Rarity::Common,R"RB([Quick-Draw] (This has [Reaction]. When you play it, attach it to a unit you control.)
+  auto d=mkFinal64(1116,123,R"RB(Protector's Shield)RB",CardType::Gear,2,1,1,{Domain::Order},Rarity::Common,R"RB([Quick-Draw] (This has [Reaction]. When you play it, attach it to a unit you control.)
 [Equip] [1] ([1]: Attach this to a unit you control.))RB");
   d.image_url=R"RB(https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/97618bc30e9b65a2e5223e6f94db58d7098d30a6-744x1039.png?accountingTag=RB)RB";
   d.keywords.set(Keyword::QuickDraw);
@@ -41,13 +41,13 @@ private:
  }();
 };
 
-class R64_1117 final : public GearCard {
+class R64_1117 final : public SpellCard {
 public:
  const CardDef& def() const override { return d_; }
  // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
 private:
  const CardDef d_=[] {
-  auto d=mkFinal64(1117,124,R"RB(Burn Away)RB",CardType::Gear,3,1,0,{Domain::Body},Rarity::Uncommon,R"RB(Banish a unit with 3 [M] or less or a gear. [Burn 2]. (Put the top 2 cards of your Main Deck into your trash.))RB");
+  auto d=mkFinal64(1117,124,R"RB(Burn Away)RB",CardType::Spell,3,1,0,{Domain::Order},Rarity::Uncommon,R"RB(Banish a unit with 3 [M] or less or a gear. [Burn 2]. (Put the top 2 cards of your Main Deck into your trash.))RB");
   d.image_url=R"RB(https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/751629a34ee6ba6476ce2f0a821b9f84b5562acd-744x1039.png?accountingTag=RB)RB";
   return d;
  }();
@@ -93,25 +93,25 @@ private:
  }();
 };
 
-class R64_1121 final : public SpellCard {
+class R64_1121 final : public UnitCard {
 public:
  const CardDef& def() const override { return d_; }
  // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
 private:
  const CardDef d_=[] {
-  auto d=mkFinal64(1121,130,R"RB(Battlefield Armorer)RB",CardType::Spell,3,0,3,{Domain::Order},Rarity::Rare,R"RB(When a friendly gear at a battlefield dies, you may pay [1] to return it to its owner's hand.)RB");
+  auto d=mkFinal64(1121,130,R"RB(Battlefield Armorer)RB",CardType::Unit,3,0,3,{Domain::Order},Rarity::Rare,R"RB(When a friendly gear at a battlefield dies, you may pay [1] to return it to its owner's hand.)RB");
   d.image_url=R"RB(https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/eb04c39763de8fb8e56153d1f0e4f799e15dced9-744x1039.png?accountingTag=RB)RB";
   return d;
  }();
 };
 
-class R64_1122 final : public SpellCard {
+class R64_1122 final : public UnitCard {
 public:
  const CardDef& def() const override { return d_; }
  // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
 private:
  const CardDef d_=[] {
-  auto d=mkFinal64(1122,131,R"RB(Demacian Illuminators)RB",CardType::Spell,3,1,3,{Domain::Order},Rarity::Rare,R"RB(When one or more friendly units die, [Buff] a friendly unit. (Give it a +1 [M] buff if it doesn't have one.))RB");
+  auto d=mkFinal64(1122,131,R"RB(Demacian Illuminators)RB",CardType::Unit,3,1,3,{Domain::Order},Rarity::Rare,R"RB(When one or more friendly units die, [Buff] a friendly unit. (Give it a +1 [M] buff if it doesn't have one.))RB");
   d.image_url=R"RB(https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/127c2700ee4e2557dfd463ed84c45f4600ad9723-744x1039.png?accountingTag=RB)RB";
   return d;
  }();
@@ -123,7 +123,7 @@ public:
  // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
 private:
  const CardDef d_=[] {
-  auto d=mkFinal64(1123,132,R"RB(Heimerdinger - Academy Instructor)RB",CardType::Unit,6,1,5,{Domain::Order},Rarity::Rare,R"RB(If you would play a unit token to a location while I'm at a battlefield, you may play a 3 [M] Mech unit token to that same location instead.)RB");
+  auto d=mkFinal64(1123,132,R"RB(Heimerdinger, Academy Instructor)RB",CardType::Unit,6,1,5,{Domain::Order},Rarity::Rare,R"RB(If you would play a unit token to a location while I'm at a battlefield, you may play a 3 [M] Mech unit token to that same location instead.)RB");
   d.super_type=SuperType::Champion;
   d.tags={R"RB(Yordle)RB",R"RB(Heimerdinger)RB",R"RB(Piltover)RB"};
   d.image_url=R"RB(https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/1795e905171c74b84b4b7f84a57fecbb4bbd6f75-744x1039.png?accountingTag=RB)RB";
@@ -137,7 +137,7 @@ public:
  // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
 private:
  const CardDef d_=[] {
-  auto d=mkFinal64(1124,134,R"RB(Raucous Anthem)RB",CardType::Spell,7,1,0,{},Rarity::Rare,R"RB(Ready your units and give them +3 [M] this turn.)RB");
+  auto d=mkFinal64(1124,134,R"RB(Raucous Anthem)RB",CardType::Spell,7,1,0,{Domain::Order},Rarity::Rare,R"RB(Ready your units and give them +3 [M] this turn.)RB");
   d.image_url=R"RB(https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/0c307d5f4785efc4f0a4c8e486b53735f8cf04aa-744x1039.png?accountingTag=RB)RB";
   return d;
  }();
@@ -155,13 +155,13 @@ private:
  }();
 };
 
-class R64_1126 final : public UnitCard {
+class R64_1126 final : public GearCard {
 public:
  const CardDef& def() const override { return d_; }
  // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
 private:
  const CardDef d_=[] {
-  auto d=mkFinal64(1126,136,R"RB(Dockside Lock-Up)RB",CardType::Unit,6,2,0,{Domain::Order},Rarity::Epic,R"RB([Deploy] (Play this only to a battlefield. When an opponent holds here, kill this.)
+  auto d=mkFinal64(1126,136,R"RB(Dockside Lock-Up)RB",CardType::Gear,6,2,0,{Domain::Order},Rarity::Epic,R"RB([Deploy] (Play this only to a battlefield. When an opponent holds here, kill this.)
 When you play this, banish a unit here.
 When you hold here, kill this to play the banished card, ignoring its cost. (Tokens aren't cards.))RB");
   d.tags={R"RB(Device)RB"};
@@ -177,7 +177,7 @@ public:
  // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
 private:
  const CardDef d_=[] {
-  auto d=mkFinal64(1127,137,R"RB(Mordekaiser - Dominating)RB",CardType::Unit,9,2,8,{Domain::Order},Rarity::Epic,R"RB(When you play me or when I attack, you may discard 1 to kill a unit or gear.)RB");
+  auto d=mkFinal64(1127,137,R"RB(Mordekaiser, Dominating)RB",CardType::Unit,9,2,8,{Domain::Order},Rarity::Epic,R"RB(When you play me or when I attack, you may discard 1 to kill a unit or gear.)RB");
   d.super_type=SuperType::Champion;
   d.tags={R"RB(Noxus)RB",R"RB(Mordekaiser)RB"};
   d.image_url=R"RB(https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/43068166258356908b364566abcfc57123e96caa-744x1039.png?accountingTag=RB)RB";
@@ -191,7 +191,7 @@ public:
  // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
 private:
  const CardDef d_=[] {
-  auto d=mkFinal64(1128,138,R"RB(Seraphine - Not Alone)RB",CardType::Unit,5,1,1,{Domain::Order},Rarity::Epic,R"RB(When you play me or when I become exhausted, play a 1 [M] Recruit unit token to your base.
+  auto d=mkFinal64(1128,138,R"RB(Seraphine, Not Alone)RB",CardType::Unit,5,1,1,{Domain::Order},Rarity::Epic,R"RB(When you play me or when I become exhausted, play a 1 [M] Recruit unit token to your base.
 I have +1 [M] for each other exhausted unit you control.)RB");
   d.super_type=SuperType::Champion;
   d.tags={R"RB(Piltover)RB",R"RB(Seraphine)RB"};
@@ -230,7 +230,7 @@ public:
  // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
 private:
  const CardDef d_=[] {
-  auto d=mkFinal64(1131,167,R"RB(Neeko - Blending In)RB",CardType::Unit,6,1,4,{},Rarity::Epic,R"RB((Neutral cards can go in decks of any Domain.)
+  auto d=mkFinal64(1131,167,R"RB(Neeko, Blending In)RB",CardType::Unit,6,1,4,{},Rarity::Epic,R"RB((Neutral cards can go in decks of any Domain.)
 If Neeko is in your deck, choose 3 different legends in addition to your starting legend. (Different means none match names.)
 When you play me, choose one of those legends and add it to your Legend Zone while I'm on the board.)RB");
   d.super_type=SuperType::Champion;
