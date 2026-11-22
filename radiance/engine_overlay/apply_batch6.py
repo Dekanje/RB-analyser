@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Overlay for the in-progress mechanics-based Radiance Batch 6.
+"""Overlay for the mechanics-based Radiance Batch 6.
 
 Apply after the pinned Waves 1–4 overlays. Intentionally no full-regression
 fingerprint adjustment here: any new card pool must first be measured in a
