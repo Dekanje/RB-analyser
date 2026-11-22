@@ -101,6 +101,34 @@ TEST_F(RadianceBatch10Test, LifeFromStonePaysExhaustAsAdditionalCastCost) {
  playThroughEngine(spell);
  EXPECT_TRUE(state.getObject(ally).is_exhausted);
 }
+TEST_F(RadianceBatch10Test, FanfareDrawsExactlyForNextThreeFriendlyUnitPlays) {
+ for(int i=0;i<4;i++)addToDeck(P1,CardDefId{1058});
+ const auto spell=addToHand(P1,CardDefId{1063});
+ playThroughEngine(spell);
+ const auto before=state.player(P1).main_deck.size();
+ for(int i=0;i<4;i++) {
+   const auto unit=addToHand(P1,CardDefId{1058});
+   playThroughEngine(unit);
+ }
+ EXPECT_EQ(state.player(P1).main_deck.size()+3,before);
+}
+TEST_F(RadianceBatch10Test, EkkoIngeniousReturnsFriendlyUnitAsMandatoryPlayCost) {
+ const auto ally=addUnit(P1,kInvalidId,2,-1);
+ const auto ekko=addToHand(P1,CardDefId{1064});
+ playThroughEngine(ekko);
+ EXPECT_TRUE(inHand(P1,ally));
+ EXPECT_TRUE(state.getObject(ekko).location.has_value());
+}
+TEST_F(RadianceBatch10Test, SkystrikeSquadronCanReturnGearForEnergyDiscount) {
+ const auto gear=addToHand(P1,CardDefId{1049});
+ playThroughEngine(gear);
+ ASSERT_TRUE(state.getObject(gear).location.has_value());
+ const auto squad=addToHand(P1,CardDefId{1065});
+ EnginePathAgent agent(EnginePathAgent::accepting());
+ playThroughEngine(squad,&agent);
+ EXPECT_TRUE(inHand(P1,gear));
+ EXPECT_TRUE(state.getObject(squad).location.has_value());
+}
 TEST_F(RadianceBatch10Test, HoldEmGrantsThreeMightToChosenUnit) {
  auto unit=addUnit(P1,kInvalidId,2,0);
  auto spell=addToHand(P1,CardDefId{1052});
