@@ -8,26 +8,26 @@ Pinned upstream AlphaRune engine: `ec90f0fed002aed374d06249fa95e83e3cfbd386`.
 
 | Engine ID | Canonical code | Card | Functional status |
 |---|---|---|---|
-| 1048 | RAD-013 | Lost to the Sands | Initial spell effect; mode and targeting timing to verify |
+| 1048 | RAD-013 | Lost to the Sands | Choose eligible gear or battlefield unit at finalization; effect test added, CI pending |
 | 1049 | RAD-035 | Invigorating Bloom | Play-time +3 Might plus Mighty-unit exhaust activation and draw; test pending |
-| 1050 | RAD-038 | Ahri, Confident | Disarm keyword; reaction to enemy Might reduction pending |
+| 1050 | RAD-038 | Ahri, Confident | Disarm and new reactive enemy-Might-reduction event at same battlefield; gameplay test pending |
 | 1051 | RAD-051 | Parallel Convergence | Mandatory friendly-unit return is a play-time cost; battlefield damage chosen at finalization; test pending |
 | 1052 | RAD-070 | Hold 'Em | +3 Might and -2 Energy conditional on tracked battlefield permanent play; tests pending |
 | 1053 | RAD-087 | Portable Portal | Deploy/Ganking aura and optional Body Power ready effect at trigger finalization; test pending |
-| 1054 | RAD-089 | Titanic Shrine | Play trigger draft; reaction timing/choice pending |
+| 1054 | RAD-089 | Titanic Shrine | Pay exhaust at trigger finalization, then draw on resolution; test pending |
 | 1055 | RAD-096 | Satchel Charge | Play-time selected friendly move and Bomb gear token placement; test pending |
-| 1056 | RAD-106 | The Good Stuff | Deploy and play/hold triggers; choices to verify |
+| 1056 | RAD-106 | The Good Stuff | Deploy, discard/draw play trigger and self-return hold trigger; tests pending |
 | 1057 | RAD-107 | Bedeviling Stranger | Battlefield choice finalized before reactions; conditional optional enemy bounce; test pending |
 | 1058 | RAD-005 | Lingering Animus | Enter-ready checks friend unit or killed gear this turn, with gear death event hook; test pending |
 | 1059 | RAD-001 | Amateur Demolitionist | Play-time Bomb gear token using existing token effect; targeted gameplay test added |
 | 1060 | RAD-028 | Ki Burst | Exhaust-friendly-unit as cast-time additional cost; target/stun integration tests added, validation pending |
 | 1061 | RAD-029 | Life from Stone | Exhaust-friendly-unit as cast-time additional cost; draw/channel integration test added, validation pending |
-| 1062 | RAD-040 | Heartening Soul | Ready legend; legend activated-ability grant pending |
+| 1062 | RAD-040 | Heartening Soul | Readies friendly legend and grants exhausted +3-Might activated ability; engine-path tests pending |
 | 1063 | RAD-047 | Fanfare | Delayed repeat trigger draws for up to three unit plays this turn; gameplay test pending |
 | 1064 | RAD-061 | Ekko, Ingenious | Mandatory return-unit-as-play-cost and Champion metadata implemented; test pending |
 | 1065 | RAD-075 | Skystrike Squadron | Optional friendly-gear bounce for -2 Energy implemented; test pending |
 | 1066 | RAD-116 | Concert Poster | Optional 1 Energy cost at trigger finalization and Recruit token in base implemented; test pending |
-| 1067 | RAD-121 | One-Two Punch | Initial Buff/Stun effect; lock/play-time targeting to verify |
+| 1067 | RAD-121 | One-Two Punch | Friendly Buff / enemy Stun targets locked at spell finalization; test pending |
 
 The above is a **staged implementation, not twenty fully verified rules implementations**.
 Every card has source-level printed identity and keyword metadata. Some have initial
@@ -70,3 +70,13 @@ CI run and full AlphaRune regression pass, and their edge cases are audited.
 Further engine-path tests have been added for Bloom's Mighty activation,
 Satchel Charge movement, Hold 'Em conditional discount, Portable Portal,
 Bedeviling Stranger, and Lingering Animus. These are unaccepted until CI proof.
+
+## Final mechanics-wave changes still under test
+
+Added actual event-based Ahri Might-reduction trigger (new trigger enum appended to
+preserve earlier IDs), legend-granted activated ability for Heartening Soul,
+finalization timing and focused cases for Lost to the Sands, Titanic Shrine,
+One-Two Punch, and existing The Good Stuff play/hold clauses. These additions
+require compiled gameplay tests and the full regression; they are not certified
+by the strict identity registry alone. The coverage ledger intentionally does
+not claim all 167 cards or all variants are implemented.
