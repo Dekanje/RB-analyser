@@ -100,3 +100,17 @@ collects the target before paying, with payment immediately before the finalize
 marker. The Good Stuff hold test had an empty deck and could encounter Burnout
 from its mandatory three-card draw; the corrected test supplies three cards and
 keeps battlefield control. These fixes are **unverified until full CI**.
+
+## Full-regression corrections (run 45077255357)
+
+The 1,059-definition build and all focused mechanics/registry checks passed, but
+full AlphaRune regression passed 3,754/3,763 tests (nine failures). This wave
+addresses the measured root causes: mandatory choice playability for One-Two
+Punch/Lost to the Sands/Parallel Convergence; declared finalize-choice eligibility
+for four spells; completed Bedeviling Stranger finalization for no-target/decline;
+Satchel Charge's ID-independent public-state unit ordering; corrected Lost to
+the Sands sentence break; and the **measured** seed-1 deck fingerprint
+`11226295876980254031` for the 1,059-card registry. The prior fingerprint
+branches are preserved. Independent regression tests were added for these
+contracts. Acceptance remains pending until the next full run passes without
+skipped tests or relaxed assertions.
