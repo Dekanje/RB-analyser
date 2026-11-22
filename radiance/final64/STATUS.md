@@ -28,3 +28,14 @@ symbol failure identified in run 45082063224. Implementations and initial
 engine-path tests are in place for Raucous Anthem, Burn Away, Demacian
 Illuminators, Explosimian, Evelynn In Control, and Pitiless Stalker.
 This is a **work-in-progress test run**, not final gameplay acceptance.
+
+## Second mechanics expansion
+
+Adds shared Show Off choices and public reveal accounting; genuine deck-top
+reveal handling; reactable exhaustion triggers; effects for Incorrigible
+Construct, Forbidden Technique (normal cast), Coalesced Energy, Firebrand
+Raider (entry/play), Stoic Ferryman, Hunting Blind, Rostrum, Oracle,
+Empyrean, Scope, Raving Witness, Primordial Roar, Cataclysm, Evelynn,
+Jarvan IV, Explosimian, Gutter Guardian, Stalker, Lulu pending, Mechanical
+Bandit, Riven's exhaustion trigger, Rousing Display, Seraphine and more.
+Some listed cards have pending additional clauses; **no 64-card acceptance yet**.
