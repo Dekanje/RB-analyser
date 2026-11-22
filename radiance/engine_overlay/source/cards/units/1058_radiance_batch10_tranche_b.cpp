@@ -215,15 +215,22 @@ private:
 class Radiance10_1066 final:public GearCard {
 public:
  const CardDef& def()const override{return d_;}
-    std::vector<TriggerType> triggerTypes()const override {
-       return {TriggerType::WhenYouPlayThis,TriggerType::WhenYouConquerHere};
-    }
-    void onTrigger(CardContext& c,const std::vector<GameObjectId>&)override {
-       // Optional [1] payment to create a Recruit is not yet connected.
-       (void)c;
-    }
+ unsigned choicesAtFinalization()const override{return kFinalizeTrigger;}
+ std::vector<TriggerType> triggerTypes()const override {
+   return {TriggerType::WhenYouPlayThis,TriggerType::WhenYouConquerHere};
+ }
+ void onTrigger(CardContext& c,const std::vector<GameObjectId>&)override {
+   const int yes=confirmOptional(c,"Concert Poster: pay 1 Energy to create Recruit?",
+     [&](){return canPayEnergy(c,c.controller,1);});
+   if(yes<1)return;
+   if(costDueNow(c)&&!payEnergy(c,c.controller,1))return;
+   if(finalizingChoices(c))return;
+   c.executor.createToken(c.controller,CardType::Unit,"Recruit",1,{"Recruit"},
+      KeywordSet{},BaseLocation{c.controller},false);
+ }
 private:
- const CardDef d_=rad10b(1066,116,"Concert Poster",CardType::Gear,1,0,0,{Domain::Order},Rarity::Common,"[Deploy] (Play this only to a battlefield. When an opponent holds here, kill this.)\nWhen you play this or when you conquer here, you may pay [1] to play a 1 [M] Recruit unit token to your base.",{Keyword::Deploy});
+ const CardDef d_=rad10b(1066,116,"Concert Poster",CardType::Gear,1,0,0,{Domain::Order},
+   Rarity::Common,"[Deploy] (Play this only to a battlefield. When an opponent holds here, kill this.)\nWhen you play this or when you conquer here, you may pay [1] to play a 1 [M] Recruit unit token to your base.",{Keyword::Deploy});
 };
 class Radiance10_1067 final:public SpellCard {
 public:
