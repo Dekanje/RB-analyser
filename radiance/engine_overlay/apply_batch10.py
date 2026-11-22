@@ -90,10 +90,11 @@ body=body.replace(emit,emit+"""
         state_.chain.resuming.has_value()) {
         const PlayerId reducer = state_.chain.resuming->controller;
         if (reducer != PlayerId::None && reducer != obj.controller) {
-            const auto what = reducer == PlayerId::Player1
-                ? "radiance_enemy_might_reduced_p1"
-                : "radiance_enemy_might_reduced_p2";
-            events_.emit(ObjectStateChangedEvent{target, what});
+            // StateChangeKey only accepts literal char arrays (not const char*).
+            if (reducer == PlayerId::Player1)
+                events_.emit(ObjectStateChangedEvent{target, "radiance_enemy_might_reduced_p1"});
+            else
+                events_.emit(ObjectStateChangedEvent{target, "radiance_enemy_might_reduced_p2"});
         }
     }""",1)
 es=es[:start]+body+es[end:]
