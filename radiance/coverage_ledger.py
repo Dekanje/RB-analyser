@@ -27,6 +27,21 @@ WAVE1 = {
     "RAD-076/167": ["NineNewIdentitiesAndPreexistingOfferAreCorrect","SneakyZeeblesConquerAbilityAddsUnreactableUniversalPower"],
     "RAD-117/167": ["NineNewIdentitiesAndPreexistingOfferAreCorrect","ForDemaciaGrantsShieldAtChosenBattlefieldOnly"],
     "RAD-101/167": ["NineNewIdentitiesAndPreexistingOfferAreCorrect","AnOfferKillsChosenGearAndCreatesExhaustedGold"],
+    "RAD-002/167": ["IdentitiesUniqueAndPrintedCosts","BannerGrantsAssaultOnlyToFriendlyUnitsAtItsBattlefield"],
+    "RAD-025/167": ["IdentitiesUniqueAndPrintedCosts","ConsultShieldsUnitAndPredictsTopOfDeck"],
+    "RAD-026/167": ["IdentitiesUniqueAndPrintedCosts","EntrenchedBoarDefaultsToExhaustedWhenReadyNotChosen","EntrenchedBoarMayEnterReadyAtCostOfBeingUnableToMove"],
+    "RAD-034/167": ["IdentitiesUniqueAndPrintedCosts","HunkerReadiesOnlyFriendlyTargetAndDraws"],
+    "RAD-118/167": ["IdentitiesUniqueAndPrintedCosts","HeraldChangesBaseMightWithoutOverwritingPrintedMight"],
+    "RAD-095/167": ["IdentitiesUniqueAndPrintedCosts","MomentaryCompanionHasHiddenAndNotTemporaryByDefault","MomentaryCompanionGetsTemporaryWhenPlayedOffTurn"],
+    "RAD-007/167": ["TrancheTwoPrintedCardDataAndKeywords","RallyForWarMakesThreeRecruitsAtOccupiedEnemyBattlefield"],
+    "RAD-024/167": ["TrancheTwoPrintedCardDataAndKeywords","DreamrootDrawsForVictoryHereButNotAtAnotherBattlefield"],
+    "RAD-027/167": ["TrancheTwoPrintedCardDataAndKeywords","AvianBuffsUnbuffedUnitThenAddsTwoTemporaryMight","AvianExhaustAbilityResolvesViaEngineIntent"],
+    "RAD-030/167": ["TrancheTwoPrintedCardDataAndKeywords","ConservatorReadiesAfterPlayingSevenEnergyCard"],
+    "RAD-036/167": ["TrancheTwoPrintedCardDataAndKeywords","RaptorDrawsWhenStunnedEnemyDiesAtSameBattlefield","RaptorDoesNotDrawFromUnstunnedEnemyDeath"],
+    "RAD-039/167": ["TrancheTwoPrintedCardDataAndKeywords","WardBuffsOwnUnitsThenDiesWhenUnitPlayed"],
+    "RAD-052/167": ["TrancheTwoPrintedCardDataAndKeywords","ExtractorCreatesGoldExhaustedWhenBattlefieldControlled"],
+    "RAD-056/167": ["TrancheTwoPrintedCardDataAndKeywords","ProjectileDealsPrintedEnergyCostDamageOfFriendlyGear"],
+    "RAD-100/167": ["TrancheTwoPrintedCardDataAndKeywords","WatersWageNormalPlayMakesOneExhaustedGold","WatersWageFacedownOnOwnTurnMakesThreeReadyGold"],
 }
 # Evidence gaps must remain explicit until deterministic gameplay interactions pass.
 KNOWN_GAPS = {
