@@ -30,7 +30,8 @@ CardDef mkFinal64_b(int id,int num,const char* name,CardType type,int energy,int
 class R64_1084 final : public UnitCard {
 public:
  const CardDef& def() const override { return d_; }
- // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
+ // Printed Disarm is executed by the shared, fully reactable engine keyword dispatcher.
+
 private:
  const CardDef d_=[] {
   auto d=mkFinal64_b(1084,54,R"RB(Trinket Peddler)RB",CardType::Unit,3,0,3,{Domain::Mind},Rarity::Common,R"RB([Disarm] (When I attack, give an enemy unit here -1 [M] this turn.))RB");
@@ -69,7 +70,13 @@ When you play me, if you showed off a card, [Predict] equal to its Power cost, t
 class R64_1086 final : public GearCard {
 public:
  const CardDef& def() const override { return d_; }
- // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
+
+ TriggerType triggerType()const override{return TriggerType::WhenIDie;}
+ void onTrigger(CardContext& c,const std::vector<GameObjectId>&)override{
+   c.executor.drawCards(c.controller,1);
+ }
+ // MECHANICS_INCOMPLETE: surcharge for opponents moving to this battlefield.
+
 private:
  const CardDef d_=[] {
   auto d=mkFinal64_b(1086,62,R"RB(Gravity Field)RB",CardType::Gear,5,1,0,{Domain::Mind},Rarity::Rare,R"RB([Deploy] (Play this only to a battlefield. When an opponent holds here, kill this.)
@@ -129,7 +136,41 @@ private:
 class R64_1089 final : public UnitCard {
 public:
  const CardDef& def() const override { return d_; }
- // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
+
+ AdditionalPlayCost additionalPlayCost(const GameState& s,const CardDB&,PlayerId p,GameObjectId)const override{
+   AdditionalPlayCost extra;extra.exists=true;
+   extra.payable=!f64Gears(s,p).empty();
+   return extra;
+ }
+ PlayCostAdjust payAdditionalPlayCost(CardContext& c,
+        const std::function<bool(const PlayCostAdjust&)>&)override{
+   auto gears=f64Gears(c.state,c.controller);
+   if(gears.empty()||!c.executor.confirmNow(c.controller,
+        "Spirit of the Forge: return a gear as optional play cost?"))return {};
+   const auto choice=c.executor.chooseObjectNow(c.controller,gears,
+          "Spirit of the Forge: friendly gear to return");
+   if(choice==kInvalidId||!c.state.objectExists(choice))return {};
+   const auto defId=c.state.getObject(choice).card_def_id;
+   if(defId==kInvalidId)return {};
+   const int energy=c.executor.cardDB().get(defId).energy_cost;
+   c.executor.bounceToHand(choice);
+   if(c.state.objectExists(c.source))
+     c.state.getObject(c.source).card_counters["__f64_returned_gear_energy"]=energy+1;
+   return {};
+ }
+ bool entersReadyOnPlay(const GameState& s,PlayerId,const GameObject& self)const override{
+   const auto it=self.card_counters.find("__f64_returned_gear_energy");
+   return it!=self.card_counters.end()&&it->second>0;
+ }
+ TriggerType triggerType()const override{return TriggerType::WhenYouPlayMe;}
+ void onTrigger(CardContext& c,const std::vector<GameObjectId>&)override{
+   if(!c.state.objectExists(c.source))return;
+   const auto& counters=c.state.getObject(c.source).card_counters;
+   const auto it=counters.find("__f64_returned_gear_energy");
+   if(it!=counters.end()&&it->second>0)
+     c.executor.giveTemporaryMight(c.source,it->second-1);
+ }
+
 private:
  const CardDef d_=[] {
   auto d=mkFinal64_b(1089,66,R"RB(Spirit of the Forge)RB",CardType::Unit,6,1,4,{Domain::Mind},Rarity::Rare,R"RB(You may return a friendly gear to its owner's hand as an additional cost to play me.
@@ -142,7 +183,33 @@ When you play me, if you paid the additional cost, ready me and give me +[M] thi
 class R64_1090 final : public UnitCard {
 public:
  const CardDef& def() const override { return d_; }
- // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
+
+ std::vector<TriggerType> triggerTypes()const override{
+   return {TriggerType::WhenYouPlayMe,TriggerType::WhenIHold,TriggerType::WhenIDie};
+ }
+ void onTrigger(CardContext& c,const std::vector<GameObjectId>&)override{
+   if(c.firing_trigger!=TriggerType::WhenIDie){
+     c.executor.predict(c.controller,3);
+     return;
+   }
+   const auto top=f64RevealTop(c,c.controller);
+   if(top==kInvalidId)return;
+   c.executor.banishObject(top,c.controller);
+   if(!c.state.objectExists(top) ||
+      !c.executor.confirmNow(c.controller,
+           "Clocktower Guardian Deathknell: play banished card without Energy cost?"))
+     return;
+   const auto& obj=c.state.getObject(top);
+   std::optional<LocationId> where;
+   if(obj.isUnit()||obj.isGear()){
+      auto opts=playLocations(c.state,c.controller);
+      if(!opts.locations.empty())where=c.executor.chooseLocationNow(c.controller,
+          opts.locations,"Clocktower Guardian: free-Energy location");
+   }
+   (void)c.executor.playPayingCost(c.controller,top,where,
+       EffectPlayCost{.ignore_energy=true});
+ }
+
 private:
  const CardDef d_=[] {
   auto d=mkFinal64_b(1090,67,R"RB(Clocktower Guardian)RB",CardType::Unit,8,2,8,{Domain::Mind},Rarity::Epic,R"RB(When you play me or when I hold, [Predict 3].
@@ -171,7 +238,24 @@ private:
 class R64_1092 final : public GearCard {
 public:
  const CardDef& def() const override { return d_; }
- // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
+
+ std::vector<TriggerType> triggerTypes()const override{
+   return {TriggerType::WhenYouPlayACard,TriggerType::WhenYouDrawACard};
+ }
+ void onTrigger(CardContext& c,const std::vector<GameObjectId>&)override{
+   if(!c.state.objectExists(c.source))return;
+   if(c.firing_trigger==TriggerType::WhenYouPlayACard){
+     c.executor.drawCards(c.controller,2);
+     return;
+   }
+   if(c.firing_trigger!=TriggerType::WhenYouDrawACard ||
+      c.state.player(c.controller).hand.size()<10)return;
+   const int cards=static_cast<int>(c.state.player(c.controller).hand.size());
+   if(cards>0)c.executor.discardCards(c.controller,cards);
+   c.executor.killObject(c.source);
+   c.executor.scorePoints(opponent(c.controller),1);
+ }
+
 private:
  const CardDef d_=[] {
   auto d=mkFinal64_b(1092,69,R"RB(Zero Point Inflection)RB",CardType::Gear,9,2,0,{Domain::Mind},Rarity::Epic,R"RB(When you play a card, draw 2.
@@ -207,7 +291,25 @@ private:
 class R64_1094 final : public UnitCard {
 public:
  const CardDef& def() const override { return d_; }
- // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
+
+ TriggerType triggerType()const override{return TriggerType::WhenIMove;}
+ unsigned choicesAtFinalization()const override{return kFinalizeTrigger;}
+ void onTrigger(CardContext& c,const std::vector<GameObjectId>&)override{
+   if(!c.state.objectExists(c.source)){(void)finalizingChoices(c);return;}
+   const auto& self=c.state.getObject(c.source);
+   auto options=boardObjects(c.state,[](const GameObject& o){
+      return o.isUnit()&&o.isAtBattlefield();
+   });
+   const int confirm=confirmOptional(c,
+      "Armored Tusker: deal Shield value as damage to battlefield unit?",
+      [&](){return !options.empty()&&self.shield_value>0;});
+   if(confirm<0)return;
+   if(confirm==0){(void)finalizingChoices(c);return;}
+   const auto target=pickTarget(c,"Armored Tusker: deal Shield damage",options);
+   if(finalizingChoices(c))return;
+   if(target!=kInvalidId)c.executor.dealDamage(target,self.shield_value,c.source);
+ }
+
 private:
  const CardDef d_=[] {
   auto d=mkFinal64_b(1094,78,R"RB(Armored Tusker)RB",CardType::Unit,6,1,4,{Domain::Body},Rarity::Uncommon,R"RB([Shield 3] (+3 [M] while I'm a defender.)
@@ -224,7 +326,11 @@ When I move, you may deal damage equal to my [Shield] to a unit at a battlefield
 class R64_1095 final : public UnitCard {
 public:
  const CardDef& def() const override { return d_; }
- // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
+
+ int selfCostReduction(const GameState& s,PlayerId p)const override {
+   return static_cast<int>(2*s.player(p).battlefields_conquered_this_turn.size());
+ }
+
 private:
  const CardDef d_=[] {
   auto d=mkFinal64_b(1095,80,R"RB(Bloodscent Swarm)RB",CardType::Unit,8,2,8,{Domain::Body},Rarity::Uncommon,R"RB(I cost [2] less for each battlefield you've conquered this turn.)RB");
@@ -324,7 +430,28 @@ Move a friendly unit to an occupied enemy battlefield.)RB");
 class R64_1098 final : public UnitCard {
 public:
  const CardDef& def() const override { return d_; }
- // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
+
+ TriggerType triggerType()const override{return TriggerType::WhenIAttackOrDefend;}
+ void onTrigger(CardContext& c,const std::vector<GameObjectId>&)override{
+   if(!c.state.objectExists(c.source))return;
+   const auto& graves=c.state.getObject(c.source);
+   if(!graves.isAtBattlefield())return;
+   const auto enemies=boardObjects(c.state,[&](const GameObject& o){
+      return o.isUnit()&&o.controller!=c.controller&&o.battlefieldId()==graves.battlefieldId();
+   });
+   const int damage=graves.current_might;
+   for(auto id:enemies)
+     if(c.state.objectExists(id))c.executor.dealDamage(id,damage,c.source);
+ }
+ void applyPassiveAura(GameState& s,PlayerId p)const override{
+   forEachSelfOnce(*this,s,p,[&](GameObjectId source,GameObject& graves){
+     if(!graves.location)return;
+     GameObject::AuraEffect noDamage;
+     noDamage.source=source;noDamage.suppress_combat_damage=true;
+     graves.aura_effects.push_back(noDamage);
+   });
+ }
+
 private:
  const CardDef d_=[] {
   auto d=mkFinal64_b(1098,85,R"RB(Graves, Blasting Through)RB",CardType::Unit,5,1,4,{Domain::Body},Rarity::Rare,R"RB(When I attack or defend, deal damage equal to my Might to all enemy units here.
