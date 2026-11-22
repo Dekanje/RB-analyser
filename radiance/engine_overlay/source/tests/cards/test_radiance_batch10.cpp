@@ -101,6 +101,14 @@ TEST_F(RadianceBatch10Test, LifeFromStonePaysExhaustAsAdditionalCastCost) {
  playThroughEngine(spell);
  EXPECT_TRUE(state.getObject(ally).is_exhausted);
 }
+TEST_F(RadianceBatch10Test, ParallelConvergencePaysBounceAtCastTime) {
+ const auto ally=addUnit(P1,kInvalidId,2,-1);
+ const auto enemy=addUnit(P2,kInvalidId,3,0);
+ const auto spell=addToHand(P1,CardDefId{1051});
+ playThroughEngine(spell);
+ EXPECT_TRUE(inHand(P1,ally));
+ EXPECT_FALSE(state.getObject(enemy).isAtBattlefield());
+}
 TEST_F(RadianceBatch10Test, FanfareDrawsExactlyForNextThreeFriendlyUnitPlays) {
  for(int i=0;i<4;i++)addToDeck(P1,CardDefId{1058});
  const auto spell=addToHand(P1,CardDefId{1063});
