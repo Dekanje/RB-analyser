@@ -133,7 +133,8 @@ jobs:
           key: rad10-pch-safe-linux-gcc13-${{ github.sha }}
           restore-keys: |
             rad10-pch-safe-linux-gcc13-
-            rad9-pch-safe-linux-gcc13-\n            rad8-pch-safe-linux-gcc13-
+            rad9-pch-safe-linux-gcc13-
+            rad8-pch-safe-linux-gcc13-
       - name: Compile actual AlphaRune engine with Batch 9 cards
         run: |
           # Reuse compiled objects safely when AlphaRune uses precompiled headers.
