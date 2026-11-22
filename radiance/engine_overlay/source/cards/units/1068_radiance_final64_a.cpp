@@ -13,7 +13,7 @@
 
 namespace riftbound {
 namespace {
-CardDef mkFinal64(int id,int num,const char* name,CardType type,int energy,int power,int might,
+CardDef mkFinal64_a(int id,int num,const char* name,CardType type,int energy,int power,int might,
               std::vector<Domain> domains,Rarity rarity,const char* rules) {
  CardDef d;
  d.id=CardDefId::fromRaw(id);
@@ -32,7 +32,7 @@ public:
  // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
 private:
  const CardDef d_=[] {
-  auto d=mkFinal64(1068,6,R"RB(Scorched Earth)RB",CardType::Spell,4,1,0,{Domain::Fury},Rarity::Common,R"RB([Action] (Play on your turn or in showdowns.)
+  auto d=mkFinal64_a(1068,6,R"RB(Scorched Earth)RB",CardType::Spell,4,1,0,{Domain::Fury},Rarity::Common,R"RB([Action] (Play on your turn or in showdowns.)
 Deal 5 damage split among units at a single battlefield.)RB");
   d.image_url=R"RB(https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/e646f9850571e20eca22e07af5d4dd68813fdd19-744x1039.png?accountingTag=RB)RB";
   d.keywords.set(Keyword::Action);
@@ -46,7 +46,7 @@ public:
  // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
 private:
  const CardDef d_=[] {
-  auto d=mkFinal64(1069,10,R"RB(Forbidden Technique)RB",CardType::Spell,2,0,0,{Domain::Fury},Rarity::Uncommon,R"RB(Ready a unit.
+  auto d=mkFinal64_a(1069,10,R"RB(Forbidden Technique)RB",CardType::Spell,2,0,0,{Domain::Fury},Rarity::Uncommon,R"RB(Ready a unit.
 When you play a card with Energy cost [7] or more, you may play this from your trash for [1][F][F]. Banish this.)RB");
   d.image_url=R"RB(https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/293518dcf6c2f9e3f59a2e259826fd813436b3a5-744x1039.png?accountingTag=RB)RB";
   return d;
@@ -59,7 +59,7 @@ public:
  // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
 private:
  const CardDef d_=[] {
-  auto d=mkFinal64(1070,11,R"RB(Incorrigible Construct)RB",CardType::Unit,4,0,4,{Domain::Fury},Rarity::Uncommon,R"RB([Show Off] a Mech. (As you play me, you may reveal a Mech from hand or pick another friendly Mech.)
+  auto d=mkFinal64_a(1070,11,R"RB(Incorrigible Construct)RB",CardType::Unit,4,0,4,{Domain::Fury},Rarity::Uncommon,R"RB([Show Off] a Mech. (As you play me, you may reveal a Mech from hand or pick another friendly Mech.)
 I enter ready if you showed off.)RB");
   d.image_url=R"RB(https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/e95470d5c2fbc9f7f8ab0b1c19f32fd704918c83-744x1039.png?accountingTag=RB)RB";
   return d;
@@ -72,7 +72,7 @@ public:
  // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
 private:
  const CardDef d_=[] {
-  auto d=mkFinal64(1071,12,R"RB(Runeblade Anvil)RB",CardType::Gear,1,0,0,{Domain::Fury},Rarity::Uncommon,R"RB(When you play this or when this leaves the board, banish the top card of your Main Deck. Until your next Ending Phase, you may play that card. (You still pay its costs.)
+  auto d=mkFinal64_a(1071,12,R"RB(Runeblade Anvil)RB",CardType::Gear,1,0,0,{Domain::Fury},Rarity::Uncommon,R"RB(When you play this or when this leaves the board, banish the top card of your Main Deck. Until your next Ending Phase, you may play that card. (You still pay its costs.)
 [2][F], [E]: Kill this.)RB");
   d.image_url=R"RB(https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/11e2ddea70ec4dd8e562681a1ab1dfbc2b2dca0f-744x1039.png?accountingTag=RB)RB";
   return d;
@@ -85,7 +85,7 @@ public:
  // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
 private:
  const CardDef d_=[] {
-  auto d=mkFinal64(1072,15,R"RB(Akali, Brash)RB",CardType::Unit,5,1,5,{Domain::Fury},Rarity::Rare,R"RB(The first time I move each turn, [Add] [1][A].
+  auto d=mkFinal64_a(1072,15,R"RB(Akali, Brash)RB",CardType::Unit,5,1,5,{Domain::Fury},Rarity::Rare,R"RB(The first time I move each turn, [Add] [1][A].
 The second time I move each turn, banish the top card of your Main Deck. Until your next Ending Phase, you may play that card. (You still pay its costs.))RB");
   d.super_type=SuperType::Champion;
   d.tags={R"RB(Ionia)RB",R"RB(Akali)RB"};
@@ -100,7 +100,7 @@ public:
  // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
 private:
  const CardDef d_=[] {
-  auto d=mkFinal64(1073,16,R"RB(Coalesced Energy)RB",CardType::Unit,4,2,4,{Domain::Fury},Rarity::Rare,R"RB(At the end of your turn, recycle all your runes, then channel 4 runes exhausted.)RB");
+  auto d=mkFinal64_a(1073,16,R"RB(Coalesced Energy)RB",CardType::Unit,4,2,4,{Domain::Fury},Rarity::Rare,R"RB(At the end of your turn, recycle all your runes, then channel 4 runes exhausted.)RB");
   d.image_url=R"RB(https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/59e551045ca75d932ff76c4820d873d4a2cde9e8-744x1039.png?accountingTag=RB)RB";
   return d;
  }();
@@ -112,7 +112,7 @@ public:
  // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
 private:
  const CardDef d_=[] {
-  auto d=mkFinal64(1074,18,R"RB(Drakehound Packmaster)RB",CardType::Unit,9,2,9,{Domain::Fury},Rarity::Rare,R"RB(When you play me, reveal the top card of each opponent's Main Deck. Choose one and banish it, then play it, ignoring its cost. Recycle the rest.)RB");
+  auto d=mkFinal64_a(1074,18,R"RB(Drakehound Packmaster)RB",CardType::Unit,9,2,9,{Domain::Fury},Rarity::Rare,R"RB(When you play me, reveal the top card of each opponent's Main Deck. Choose one and banish it, then play it, ignoring its cost. Recycle the rest.)RB");
   d.image_url=R"RB(https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/9ddc2759cf8b039bc1ee77e32326c5475cc001e8-744x1039.png?accountingTag=RB)RB";
   return d;
  }();
@@ -124,7 +124,7 @@ public:
  // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
 private:
  const CardDef d_=[] {
-  auto d=mkFinal64(1075,19,R"RB(Firebrand Raider)RB",CardType::Unit,6,1,6,{Domain::Fury},Rarity::Rare,R"RB(I enter ready.
+  auto d=mkFinal64_a(1075,19,R"RB(Firebrand Raider)RB",CardType::Unit,6,1,6,{Domain::Fury},Rarity::Rare,R"RB(I enter ready.
 When you play me, ready all enemy units.
 Other units enter ready.
 Units don't ready during the Awaken Phase.)RB");
@@ -139,7 +139,7 @@ public:
  // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
 private:
  const CardDef d_=[] {
-  auto d=mkFinal64(1076,22,R"RB(Whirling Twirligig)RB",CardType::Gear,4,1,0,{Domain::Fury},Rarity::Epic,R"RB([E]: Play a Gold gear token exhausted. (It has "[Reaction][>] Kill this, [E]: [Add] [A].")
+  auto d=mkFinal64_a(1076,22,R"RB(Whirling Twirligig)RB",CardType::Gear,4,1,0,{Domain::Fury},Rarity::Epic,R"RB([E]: Play a Gold gear token exhausted. (It has "[Reaction][>] Kill this, [E]: [Add] [A].")
 Kill a friendly gear, [E]: Play a 1 [M] Recruit unit token.
 Kill a friendly unit, [E]: Play a 3 [M] Mech unit token.)RB");
   d.image_url=R"RB(https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/a05ff95e5bb933664e09656973c72f4d39d8e701-744x1039.png?accountingTag=RB)RB";
@@ -153,7 +153,7 @@ public:
  // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
 private:
  const CardDef d_=[] {
-  auto d=mkFinal64(1077,31,R"RB(Stoic Ferryman)RB",CardType::Unit,4,0,2,{Domain::Calm},Rarity::Common,R"RB([Shield 3] (+3 [M] while I'm a defender.)
+  auto d=mkFinal64_a(1077,31,R"RB(Stoic Ferryman)RB",CardType::Unit,4,0,2,{Domain::Calm},Rarity::Common,R"RB([Shield 3] (+3 [M] while I'm a defender.)
 When you play me to a battlefield, you may move another unit you control here to your base.)RB");
   d.image_url=R"RB(https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/8513fbe02a37f957b2a98bcee5badfdc56f41e82-744x1039.png?accountingTag=RB)RB";
   d.keywords.set(Keyword::Shield);
@@ -168,7 +168,7 @@ public:
  // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
 private:
  const CardDef d_=[] {
-  auto d=mkFinal64(1078,33,R"RB(Command: Attack)RB",CardType::Spell,1,1,0,{Domain::Calm},Rarity::Uncommon,R"RB(Choose one —Move a friendly gear with [Deploy] to a battlefield.
+  auto d=mkFinal64_a(1078,33,R"RB(Command: Attack)RB",CardType::Spell,1,1,0,{Domain::Calm},Rarity::Uncommon,R"RB(Choose one —Move a friendly gear with [Deploy] to a battlefield.
 Look at the top 5 cards of your Main Deck. You may reveal a gear from among them and draw it. Recycle the rest.)RB");
   d.image_url=R"RB(https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/b025756992e22af480902e13b01e25acbc747221-744x1039.png?accountingTag=RB)RB";
   return d;
@@ -181,7 +181,7 @@ public:
  // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
 private:
  const CardDef d_=[] {
-  auto d=mkFinal64(1079,43,R"RB(Riven, Broken Blade)RB",CardType::Unit,4,0,4,{Domain::Calm},Rarity::Rare,R"RB(When I become exhausted, choose one that hasn't been chosen this turn —[Buff] me. (Give me a +1 [M] buff if I don't have one.)Spend my buff to [Stun] an enemy unit. (It doesn't deal combat damage this turn.)Spend my buff to ready me.)RB");
+  auto d=mkFinal64_a(1079,43,R"RB(Riven, Broken Blade)RB",CardType::Unit,4,0,4,{Domain::Calm},Rarity::Rare,R"RB(When I become exhausted, choose one that hasn't been chosen this turn —[Buff] me. (Give me a +1 [M] buff if I don't have one.)Spend my buff to [Stun] an enemy unit. (It doesn't deal combat damage this turn.)Spend my buff to ready me.)RB");
   d.super_type=SuperType::Champion;
   d.tags={R"RB(Riven)RB"};
   d.image_url=R"RB(https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/0c9ac0da1c144f46a1e0c5423f51f9b8f6ba295b-744x1039.png?accountingTag=RB)RB";
@@ -195,7 +195,7 @@ public:
  // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
 private:
  const CardDef d_=[] {
-  auto d=mkFinal64(1080,44,R"RB(Hunting Blind)RB",CardType::Gear,4,2,0,{Domain::Calm},Rarity::Epic,R"RB([Deploy] (Play this only to a battlefield. When an opponent holds here, kill this.)
+  auto d=mkFinal64_a(1080,44,R"RB(Hunting Blind)RB",CardType::Gear,4,2,0,{Domain::Calm},Rarity::Epic,R"RB([Deploy] (Play this only to a battlefield. When an opponent holds here, kill this.)
 When you play this, you may move an enemy unit to this battlefield.
 Friendly units here have [Shield 2]. (+2 [M] while they're defenders.))RB");
   d.tags={R"RB(Device)RB"};
@@ -211,7 +211,7 @@ public:
  // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
 private:
  const CardDef d_=[] {
-  auto d=mkFinal64(1081,45,R"RB(K'Sante, Dauntless)RB",CardType::Unit,4,1,4,{Domain::Calm},Rarity::Epic,R"RB([Shield] (+1 [M] while I'm a defender.)
+  auto d=mkFinal64_a(1081,45,R"RB(K'Sante, Dauntless)RB",CardType::Unit,4,1,4,{Domain::Calm},Rarity::Epic,R"RB([Shield] (+1 [M] while I'm a defender.)
 When I attack or defend, double the [Shield] of a unit you control here this turn.)RB");
   d.super_type=SuperType::Champion;
   d.tags={R"RB(Shurima)RB",R"RB(K'Sante)RB"};
@@ -228,7 +228,7 @@ public:
  // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
 private:
  const CardDef d_=[] {
-  auto d=mkFinal64(1082,46,R"RB(Resplendent Rostrum)RB",CardType::Gear,8,1,0,{Domain::Calm},Rarity::Epic,R"RB([E]: Draw 1 and channel 1 rune exhausted.
+  auto d=mkFinal64_a(1082,46,R"RB(Resplendent Rostrum)RB",CardType::Gear,8,1,0,{Domain::Calm},Rarity::Epic,R"RB([E]: Draw 1 and channel 1 rune exhausted.
 When I become exhausted, give a friendly unit +3 [M] this turn.)RB");
   d.image_url=R"RB(https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/df1c12e65cc3c63c96fb6c96b2071795f37f30a6-744x1039.png?accountingTag=RB)RB";
   return d;
@@ -241,7 +241,7 @@ public:
  // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
 private:
  const CardDef d_=[] {
-  auto d=mkFinal64(1083,53,R"RB(Strigian Oracle)RB",CardType::Unit,2,0,2,{Domain::Mind},Rarity::Common,R"RB(When I become exhausted, [Predict]. (Look at the top card of your Main Deck. You may recycle it.))RB");
+  auto d=mkFinal64_a(1083,53,R"RB(Strigian Oracle)RB",CardType::Unit,2,0,2,{Domain::Mind},Rarity::Common,R"RB(When I become exhausted, [Predict]. (Look at the top card of your Main Deck. You may recycle it.))RB");
   d.image_url=R"RB(https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/5973b5036060f29e24f8778949bf6f01f360c0a4-744x1039.png?accountingTag=RB)RB";
   return d;
  }();
