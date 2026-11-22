@@ -102,6 +102,21 @@ TEST_F(RadianceBatch10Test, LifeFromStonePaysExhaustAsAdditionalCastCost) {
  playThroughEngine(spell);
  EXPECT_TRUE(state.getObject(ally).is_exhausted);
 }
+TEST_F(RadianceBatch10Test, HoldEmDoesNotDiscountAfterBasePlay) {
+ const auto unit=addToHand(P1,CardDefId{1058});
+ playThroughEngine(unit);
+ const auto* hold=card_registry.get(CardDefId{1052});
+ ASSERT_NE(hold,nullptr);
+ EXPECT_EQ(hold->selfCostReduction(state,P1),0);
+}
+TEST_F(RadianceBatch10Test, HoldEmDiscountsAfterBattlefieldUnitPlay) {
+ addUnit(P1,kInvalidId,2,0);
+ const auto unit=addToHand(P1,CardDefId{1058});
+ playThroughEngine(unit,nullptr,LocationId{BattlefieldLocation{state.battlefields[0].id}});
+ const auto* hold=card_registry.get(CardDefId{1052});
+ ASSERT_NE(hold,nullptr);
+ EXPECT_EQ(hold->selfCostReduction(state,P1),2);
+}
 TEST_F(RadianceBatch10Test, SatchelChargeMovesFriendlyUnitAndPlaysBombToken) {
  const auto ally=addUnit(P1,kInvalidId,2,-1);
  const auto spell=addToHand(P1,CardDefId{1055});
