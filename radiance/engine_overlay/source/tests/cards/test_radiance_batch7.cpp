@@ -25,6 +25,11 @@ TEST_F(RadianceBatch7Test, AllSevenIdentitiesAndPrintedKeywordsAreCorrect) {
     EXPECT_EQ(card_db.get(1006).public_code,"RAD-128/167");
     EXPECT_TRUE(card_db.get(1006).keywords.has(Keyword::Tank));
     EXPECT_EQ(card_db.get(1007).public_code,"RAD-037/167");
+    EXPECT_EQ(card_db.get(1008).public_code,"RAD-076/167");
+    EXPECT_EQ(card_db.get(1009).public_code,"RAD-117/167");
+    EXPECT_TRUE(card_db.get(1009).keywords.has(Keyword::Reaction));
+    EXPECT_EQ(card_db.get(1010).public_code,"RAD-101/167");
+    EXPECT_TRUE(card_db.get(1010).keywords.has(Keyword::Action));
 }
 
 TEST_F(RadianceBatch7Test, RiptideMageDebuffsAnEnemyOnRealPlay) {
@@ -124,4 +129,54 @@ TEST_F(RadianceBatch7Test, WatchfulCuratorGrantsDeflectOnlyToFriendlyGear) {
     recalc();
     EXPECT_FALSE(state.getObject(friendly).keywords.has(Keyword::Deflect));
 }
+
+TEST_F(RadianceBatch7Test, SneakyZeeblesConquerAbilityAddsUnreactableUniversalPower) {
+    const auto zeebles=addUnit(P1,CardDefId{1008},1,0);
+    const Card* card=card_registry.get(CardDefId{1008});
+    ASSERT_NE(card,nullptr);
+    EXPECT_EQ(card->triggerType(),TriggerType::WhenIConquer);
+    EXPECT_TRUE(card->triggeredAbilityAdds(TriggerType::WhenIConquer));
+    const int before=state.player(P1).rune_pool.universal_power;
+    withEngine([&](GameEngine& e){
+        CardContext ctx{e.mutableState(),events,e.testHook_executor(),P1,zeebles};
+        ctx.registry=&card_registry;
+        card_registry.get(CardDefId{1008})->onTrigger(ctx,{});
+    });
+    EXPECT_EQ(state.player(P1).rune_pool.universal_power,before+1);
+}
+
+TEST_F(RadianceBatch7Test, ForDemaciaGrantsShieldAtChosenBattlefieldOnly) {
+    const auto ally=addUnit(P1,kInvalidId,3,0);
+    const auto elsewhere=addUnit(P1,kInvalidId,3,1);
+    const auto enemy=addUnit(P2,kInvalidId,3,0);
+    const auto card=addToHand(P1,CardDefId{1009});
+    EnginePathAgent agent([](const std::vector<Intent>& legal){
+        for(const auto& x:legal) if(x.chosen_value.has_value() && *x.chosen_value==0)return x;
+        return legal.front();
+    });
+    playThroughEngine(card,&agent);
+    EXPECT_TRUE(state.getObject(ally).keywords.has(Keyword::Shield));
+    EXPECT_FALSE(state.getObject(elsewhere).keywords.has(Keyword::Shield));
+    EXPECT_FALSE(state.getObject(enemy).keywords.has(Keyword::Shield));
+}
+
+TEST_F(RadianceBatch7Test, AnOfferKillsChosenGearAndCreatesExhaustedGold) {
+    auto gear=addToHand(P1,CardDefId{345});
+    playThroughEngine(gear);
+    ASSERT_TRUE(state.getObject(gear).location.has_value());
+    const auto spell=addToHand(P1,CardDefId{1010});
+    EnginePathAgent agent(EnginePathAgent::choosing(gear));
+    playThroughEngine(spell,&agent);
+    EXPECT_EQ(state.getObject(gear).zone,ZoneType::Trash);
+    int gold=0;
+    for(const auto& [id,g]:state.objects.onBoard()) {
+        if(!g.isGear() || g.name!="Gold" || !g.location.has_value())continue;
+        ++gold;
+        EXPECT_EQ(g.controller,P1);
+        EXPECT_TRUE(g.is_exhausted);
+        EXPECT_EQ(g.card_def_id,kGoldGearCardDefId);
+    }
+    EXPECT_EQ(gold,1);
+}
+
 } // namespace riftbound::test::radiance_batch7
