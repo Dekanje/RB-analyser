@@ -125,16 +125,51 @@ private:
 class Radiance10_1062 final:public UnitCard {
 public:
  const CardDef& def()const override{return d_;}
-    TriggerType triggerType()const override{return TriggerType::WhenYouPlayMe;}
-    void onTrigger(CardContext& c,const std::vector<GameObjectId>&)override {
-       // Ready a friendly legend; activated-ability grant still pending.
-       for(const auto& [id,o]:c.state.objects.onBoard())
-         if(o.controller==c.controller&&o.card_type==CardType::Legend) {
-           c.executor.readyObject(id);break;
-         }
-    }
+ TriggerType triggerType()const override{return TriggerType::WhenYouPlayMe;}
+ void onTrigger(CardContext& c,const std::vector<GameObjectId>&)override {
+   const auto legend=c.state.player(c.controller).legend_zone;
+   if(legend!=kInvalidId&&c.state.objectExists(legend))c.executor.readyObject(legend);
+ }
+ unsigned choicesAtFinalization()const override{return kFinalizeActivate;}
+ std::vector<ActivatedAbility> activatedAbilities()const override {
+   ActivatedAbility a;a.cost.exhaust=true;
+   a.targets={.count=1,.must_be_unit=true};
+   a.needs_activation_time_target=true;
+   return {a};
+ }
+ bool canActivateAbilityAt(const GameState& s,PlayerId p,GameObjectId source,int)const override {
+   return s.objectExists(source)&&s.getObject(source).zone==ZoneType::LegendZone&&
+      s.getObject(source).controller==p;
+ }
+ void onActivate(CardContext& c,int,const std::vector<GameObjectId>&)override {
+   std::vector<GameObjectId> legal;
+   for(const auto& [id,o]:c.state.objects.onBoard())
+     if(o.isUnit()&&o.location)legal.push_back(id);
+   std::sort(legal.begin(),legal.end());
+   auto chosen=pickTarget(c,"Heartening Soul: legend gives unit +3 Might",legal);
+   if(finalizingChoices(c))return;
+   if(chosen!=kInvalidId)c.executor.giveTemporaryMight(chosen,3);
+ }
+ void applyPassiveAura(GameState& s,PlayerId player)const override {
+   bool hasSoul=false;
+   for(const auto& [id,o]:s.objects.onBoard())
+     if(o.controller==player&&o.card_def_id==cardDefId()&&o.location){
+       hasSoul=true;break;
+     }
+   if(!hasSoul)return;
+   const auto legend=s.player(player).legend_zone;
+   if(legend==kInvalidId||!s.objectExists(legend))return;
+   auto& obj=s.getObject(legend);
+   if(obj.controller!=player||obj.zone!=ZoneType::LegendZone)return;
+   const bool already=std::any_of(obj.granted_abilities.begin(),obj.granted_abilities.end(),
+       [&](const GameObject::GrantedAbilityRef& g){
+         return g.source_def_id==cardDefId()&&g.ability_index==0;
+       });
+   if(!already)obj.granted_abilities.push_back({cardDefId(),0});
+ }
 private:
- const CardDef d_=rad10b(1062,40,"Heartening Soul",CardType::Unit,7,1,7,{Domain::Calm},Rarity::Rare,"When you play me, ready a friendly legend.\nFriendly legends have \"[E]: Give a unit +3 [M] this turn.\"",{});
+ const CardDef d_=rad10b(1062,40,"Heartening Soul",CardType::Unit,7,1,7,{Domain::Calm},
+   Rarity::Rare,"When you play me, ready a friendly legend.\nFriendly legends have \"[E]: Give a unit +3 [M] this turn.\"",{});
 };
 class Radiance10_1063 final:public SpellCard {
 public:
