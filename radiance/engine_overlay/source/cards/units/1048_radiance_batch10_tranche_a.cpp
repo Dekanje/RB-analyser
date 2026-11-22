@@ -227,6 +227,12 @@ private:
 class Radiance10_1055 final:public SpellCard {
 public:
  const CardDef& def()const override{return d_;}
+ bool canBePlayed(const GameState& state,PlayerId controller)const override {
+   for(auto id:r10units(state,controller)){
+     if(state.objectExists(id)&&!moveDests(state,state.getObject(id)).empty())return true;
+   }
+   return false;
+ }
  unsigned choicesAtFinalization()const override{return kFinalizeResolve;}
  static constexpr size_t kMoveSlot=Card::kChoiceStateSlot+4;
  static constexpr size_t kBombSlot=Card::kChoiceStateSlot+5;
