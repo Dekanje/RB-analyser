@@ -102,6 +102,20 @@ executor.write_text(es)
 
 # Route only the new event to Ahri copies at the SAME battlefield, and put
 # their abilities on the chain for a normal response window.
+# A token unit or gear is played but is NOT a card: it has TokenCreatedEvent
+# rather than CardPlayedEvent. Count battlefield token plays for RAD-070 too.
+tr=trigger.read_text()
+token_anchor="""void TriggerManager::onTokenCreated(const TokenCreatedEvent& e) {
+    const TriggerEventScope event_scope(state_.chain);
+    if (!state_.objectExists(e.object) || e.controller == PlayerId::None) return;
+    if (!state_.getObject(e.object).location.has_value()) return;"""
+token_replacement=token_anchor+"""
+    if ((e.card_type == CardType::Unit || e.card_type == CardType::Gear) &&
+        state_.getObject(e.object).isAtBattlefield())
+        state_.player(e.controller).played_unit_or_gear_to_battlefield_this_turn = true;"""
+assert tr.count(token_anchor)==1, "Batch 10 token-play event anchor changed"
+trigger.write_text(tr.replace(token_anchor,token_replacement,1))
+
 tr=trigger.read_text()  # preserve the already-inserted gear-death listener
 change_anchor='    const PlayerId controller = state_.getObject(e.object).controller;'
 onchange_start=tr.index("void TriggerManager::onObjectStateChanged(")
