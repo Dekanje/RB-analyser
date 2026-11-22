@@ -9,6 +9,7 @@ root=Path(__file__).resolve().parents[2]
 engine=root/"alpharune"
 overlay=root/"radiance/engine_overlay/source"
 source_files=[
+    "cards/units/radiance_final64_helpers.h",
     "cards/units/1068_radiance_final64_a.cpp",
     "cards/units/1084_radiance_final64_b.cpp",
     "cards/units/1100_radiance_final64_c.cpp",
