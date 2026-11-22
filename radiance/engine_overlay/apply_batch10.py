@@ -22,6 +22,30 @@ for src,dst in [
     if target.exists():raise SystemExit("Batch 10 source collision: "+str(target))
     shutil.copyfile(source/src,target)
 
+# RAD-070 Hold 'Em needs the exact history of unit/gear plays TO A BATTLEFIELD,
+# not a blanket "card played" flag. Install a turn-reset flag and the real
+# CardPlayedEvent updater so base plays never grant the discount.
+state_file=engine/"src/core/game_state.h"
+game=state_file.read_text()
+decl="    bool played_nontoken_gear_this_turn = false;"
+reset="        played_nontoken_gear_this_turn = false;"
+assert game.count(decl)==1 and game.count(reset)==1, "Batch 10 play-tracking anchors changed"
+game=game.replace(decl,decl+"\n    bool played_unit_or_gear_to_battlefield_this_turn = false;",1)
+game=game.replace(reset,reset+"\n        played_unit_or_gear_to_battlefield_this_turn = false;",1)
+state_file.write_text(game)
+
+trigger=engine/"src/engine/trigger_manager.cpp"
+tr=trigger.read_text()
+event_anchor="""        auto& pps = state_.player(e.player);
+        if (e.card_type == CardType::Spell)"""
+event_replace="""        auto& pps = state_.player(e.player);
+        if ((e.card_type == CardType::Unit || e.card_type == CardType::Gear)
+            && obj.isAtBattlefield())
+            pps.played_unit_or_gear_to_battlefield_this_turn = true;
+        if (e.card_type == CardType::Spell)"""
+assert tr.count(event_anchor)==1, "Batch 10 CardPlayedEvent anchor changed"
+trigger.write_text(tr.replace(event_anchor,event_replace,1))
+
 init=engine/"src/cards/cards_init.cpp"
 s=init.read_text()
 decl="void register_card_1047(CardRegistry&);"
