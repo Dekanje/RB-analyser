@@ -117,6 +117,16 @@ TEST_F(RadianceBatch10Test, HoldEmDiscountsAfterBattlefieldUnitPlay) {
  ASSERT_NE(hold,nullptr);
  EXPECT_EQ(hold->selfCostReduction(state,P1),2);
 }
+TEST_F(RadianceBatch10Test, BedevilingStrangerChoosesCrowdedBattlefieldToBounceEnemy) {
+ addUnit(P1,kInvalidId,2,0);
+ addUnit(P1,kInvalidId,2,0);
+ addUnit(P1,kInvalidId,2,0);
+ const auto enemy=addUnit(P2,kInvalidId,2,0);
+ const auto card=addToHand(P1,CardDefId{1057});
+ EnginePathAgent accepts(EnginePathAgent::accepting());
+ playThroughEngine(card,&accepts);
+ EXPECT_TRUE(inHand(P2,enemy));
+}
 TEST_F(RadianceBatch10Test, PortablePortalPaidTriggerReadiesUnitAtItsBattlefield) {
  auto ally=addUnit(P1,kInvalidId,4,0);
  state.getObject(ally).is_exhausted=true;
