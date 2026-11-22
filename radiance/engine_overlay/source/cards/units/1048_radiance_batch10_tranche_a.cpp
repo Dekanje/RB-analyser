@@ -77,26 +77,36 @@ private:
 class Radiance10_1051 final:public SpellCard {
 public:
  const CardDef& def()const override{return d_;}
-    void onResolve(CardContext& c,const std::vector<GameObjectId>&)override {
-      auto friendly=r10units(c.state,c.controller);
-      auto [a,b]=pickTargetPair(c,
-        "Parallel Convergence: return a friendly unit, then damage a unit",
-        friendly,[&](GameObjectId) {
-          auto any=r10units(c.state,c.controller);
-          auto enemy=r10units(c.state,c.controller,false);
-          any.insert(any.end(),enemy.begin(),enemy.end());
-          any.erase(std::remove_if(any.begin(),any.end(),[&](GameObjectId id) {
-            return !c.state.objectExists(id)||!c.state.getObject(id).isAtBattlefield();
-          }),any.end());
-          std::sort(any.begin(),any.end());
-          return any;
-        });
-      if(finalizingChoices(c))return;
-      if(a!=kInvalidId)c.executor.bounceToHand(a);
-      if(b!=kInvalidId)c.executor.dealDamage(b,5,c.source);
-    }
+ bool canBePlayed(const GameState& state,PlayerId p)const override {
+   return !r10units(state,p).empty();
+ }
+ AdditionalPlayCost additionalPlayCost(const GameState& s,const CardDB&,PlayerId p,GameObjectId)const override {
+   return {.exists=true,.mandatory=true,.payable=!r10units(s,p).empty()};
+ }
+ PlayCostAdjust payAdditionalPlayCost(CardContext& c,const std::function<bool(const PlayCostAdjust&)>&)override {
+   auto v=r10units(c.state,c.controller);
+   if(v.empty())return {};
+   const auto returned=c.executor.chooseObjectNow(c.controller,v,
+     "Parallel Convergence: return friendly unit as an additional play cost");
+   if(returned!=kInvalidId)c.executor.bounceToHand(returned);
+   return {};
+ }
+ unsigned choicesAtFinalization()const override{return kFinalizeResolve;}
+ void onResolve(CardContext& c,const std::vector<GameObjectId>&)override {
+   auto choices=r10units(c.state,c.controller);
+   auto enemy=r10units(c.state,c.controller,false);
+   choices.insert(choices.end(),enemy.begin(),enemy.end());
+   choices.erase(std::remove_if(choices.begin(),choices.end(),[&](GameObjectId id) {
+     return !c.state.objectExists(id)||!c.state.getObject(id).isAtBattlefield();
+   }),choices.end());
+   std::sort(choices.begin(),choices.end());
+   const auto target=pickTarget(c,"Parallel Convergence: deal 5 to a unit at a battlefield",choices);
+   if(finalizingChoices(c))return;
+   if(target!=kInvalidId)c.executor.dealDamage(target,5,c.source);
+ }
 private:
- const CardDef d_=rad10a(1051,51,"Parallel Convergence",CardType::Spell,2,1,0,{Domain::Mind},Rarity::Common,"As an additional cost to play this, return a friendly unit to its owner's hand.\nDeal 5 to a unit at a battlefield.",{});
+ const CardDef d_=rad10a(1051,51,"Parallel Convergence",CardType::Spell,2,1,0,{Domain::Mind},
+   Rarity::Common,"As an additional cost to play this, return a friendly unit to its owner's hand.\nDeal 5 to a unit at a battlefield.",{});
 };
 class Radiance10_1052 final:public SpellCard {
 public:
