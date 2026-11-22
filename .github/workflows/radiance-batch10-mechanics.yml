@@ -78,20 +78,20 @@ jobs:
           PY
       - name: Fast source and catalog audit sanity
         run: |
-          python3 -m py_compile radiance/engine_overlay/apply.py radiance/engine_overlay/apply_wave2.py radiance/engine_overlay/apply_wave3.py radiance/engine_overlay/apply_wave4.py radiance/engine_overlay/apply_batch6.py radiance/engine_overlay/apply_batch7.py radiance/engine_overlay/apply_batch8.py radiance/engine_overlay/apply_batch9.py radiance/engine_overlay/apply_batch9_battlefields.py radiance/engine_overlay/apply_batch9_disarm_chain.py radiance/verify_batch8_registry.py radiance/verify_batch10_registry.py radiance/coverage_ledger.py radiance/audit_wave5_catalog_registry.py
+          python3 -m py_compile radiance/engine_overlay/apply.py radiance/engine_overlay/apply_wave2.py radiance/engine_overlay/apply_wave3.py radiance/engine_overlay/apply_wave4.py radiance/engine_overlay/apply_batch6.py radiance/engine_overlay/apply_batch7.py radiance/engine_overlay/apply_batch8.py radiance/engine_overlay/apply_batch9.py radiance/engine_overlay/apply_batch9_battlefields.py radiance/engine_overlay/apply_batch9_disarm_chain.py radiance/engine_overlay/apply_batch10.py radiance/verify_batch8_registry.py radiance/verify_batch10_registry.py radiance/coverage_ledger.py radiance/audit_wave5_catalog_registry.py
           python3 -m unittest discover -s radiance -p 'test_wave5_catalog_audit.py' -v
           grep -F '[1025,1026,1027,1029,1030,1034,1035]' radiance/engine_overlay/apply_batch9.py
           grep -F 'range(1040,1048)' radiance/engine_overlay/apply_batch9_battlefields.py
           test -f radiance/engine_overlay/apply_batch9_disarm_chain.py
           test -f radiance/engine_overlay/source/cards/units/1048_radiance_batch10_tranche_a.cpp\n          test -f radiance/engine_overlay/source/cards/units/1058_radiance_batch10_tranche_b.cpp\n          test -f radiance/engine_overlay/source/tests/cards/test_radiance_batch10.cpp\n          test -f radiance/engine_overlay/source/cards/units/1010_radiance_batch8.cpp
           test -f radiance/engine_overlay/source/tests/cards/test_radiance_batch9.cpp
-          test -f radiance/engine_overlay/source/tests/cards/test_radiance_batch10_battlefields.cpp
-          test -f radiance/engine_overlay/source/cards/battlefields/1040_radiance_batch10_battlefields_a.cpp
-          test -f radiance/engine_overlay/source/cards/battlefields/1044_radiance_batch10_battlefields_b.cpp
-          test -f radiance/engine_overlay/source/cards/units/1025_radiance_batch10_tranche1.cpp
-          test -f radiance/engine_overlay/source/cards/units/1028_radiance_batch10_tranche2a.cpp
-          test -f radiance/engine_overlay/source/cards/units/1032_radiance_batch10_tranche2b.cpp
-          test -f radiance/engine_overlay/source/cards/units/1036_radiance_batch10_tranche2c.cpp
+          test -f radiance/engine_overlay/source/tests/cards/test_radiance_batch9_battlefields.cpp
+          test -f radiance/engine_overlay/source/cards/battlefields/1040_radiance_batch9_battlefields_a.cpp
+          test -f radiance/engine_overlay/source/cards/battlefields/1044_radiance_batch9_battlefields_b.cpp
+          test -f radiance/engine_overlay/source/cards/units/1025_radiance_batch9_tranche1.cpp
+          test -f radiance/engine_overlay/source/cards/units/1028_radiance_batch9_tranche2a.cpp
+          test -f radiance/engine_overlay/source/cards/units/1032_radiance_batch9_tranche2b.cpp
+          test -f radiance/engine_overlay/source/cards/units/1036_radiance_batch9_tranche2c.cpp
           test -f radiance/engine_overlay/source/cards/units/1016_radiance_batch8_tranche2a.cpp
           test -f radiance/engine_overlay/source/cards/units/1019_radiance_batch8_tranche2b.cpp
           test -f radiance/engine_overlay/source/cards/units/1022_radiance_batch8_tranche2c.cpp
