@@ -3,11 +3,10 @@
 **Baseline:** Batch 7 passed its full regression at 1,009 compiled engine card definitions,
 with 53/167 numbered Radiance cards registered.
 
-**Candidate target:** 1,024 compiled definitions, 68/167 distinct numbered Radiance cards
-registered, 99 not yet implemented.
+**Validated Batch 8 result:** 1,024 compiled definitions, 68/167 distinct numbered Radiance cards
+registered, 99 not yet implemented. Acceptance run: 45062582707 (2026-11-22).
 
-All 15 Batch 8 C++ card implementations are present on the development branch,
-but **do not call this batch accepted until the final full-regression workflow passes**.
+All 15 Batch 8 C++ card implementations are present and the final full-regression workflow **passed**. This accepts the Batch 8 change set, not full-set Radiance gameplay certification.
 
 **Measured targeted test gate (run 45060798628):** 18/18 dedicated Batch 8
 scenario tests passed. Compiler cache: 116/121 hits (95.87%), with a 54-second
@@ -55,3 +54,13 @@ are configured for subsequent iterations. A cold build can still take minutes.
 **Limits:** Registration is not proof that every real game interaction is
 correct. Full-set Radiance gameplay and 58-legend BO3 analyses remain
 blocked while other cards are missing; this document describes Batch 8 only.
+
+## Final acceptance evidence (2026-11-22)
+
+- CI: https://github.com/Dekanje/RB-analyser/actions/runs/45062582707
+- Full AlphaRune regression: **3,697/3,697 passed**, 245 suites.
+- Radiance focused engine-path tests: **59/59 passed**, 7 suites.
+- Strict registry and canonical card catalog audit: **PASS**, 1,024 card definitions, 68/167 numbered Radiance identities, 99 missing.
+- Build cache: 315/317 compiler calls hit (99.37%), using pinned PCH-safe launcher.
+- Test evidence for each of the 15 cards and untested interaction gaps are recorded in `radiance/coverage_ledger.py`; no claims of full-set mechanics verification.
+- Production deck optimization / BO3 simulation across the entire Radiance catalog remains blocked pending the other 99 numbered Radiance cards and their mechanics.
