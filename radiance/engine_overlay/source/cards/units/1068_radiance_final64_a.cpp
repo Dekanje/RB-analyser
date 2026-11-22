@@ -75,7 +75,16 @@ When you play a card with Energy cost [7] or more, you may play this from your t
 class R64_1070 final : public UnitCard {
 public:
  const CardDef& def() const override { return d_; }
- // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
+
+ void asYouPlayChoices(CardContext& c)override{
+   (void)f64ShowOff(c,[](const GameObject& o,const CardDef& d){
+     return d.hasTag("Mech")||std::find(o.tags.begin(),o.tags.end(),"Mech")!=o.tags.end();
+   },"Incorrigible Construct: Show Off a Mech");
+ }
+ bool entersReadyOnPlay(const GameState& s,PlayerId,const GameObject& self)const override{
+   return f64WasShownOff(s,self.id);
+ }
+
 private:
  const CardDef d_=[] {
   auto d=mkFinal64_a(1070,11,R"RB(Incorrigible Construct)RB",CardType::Unit,4,0,4,{Domain::Fury},Rarity::Uncommon,R"RB([Show Off] a Mech. (As you play me, you may reveal a Mech from hand or pick another friendly Mech.)
