@@ -238,7 +238,15 @@ I don't deal combat damage.)RB");
 class R64_1099 final : public UnitCard {
 public:
  const CardDef& def() const override { return d_; }
- // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
+
+ TriggerType triggerType()const override{return TriggerType::WhenYouPlayFromFacedown;}
+ void onTrigger(CardContext& c,const std::vector<GameObjectId>&)override {
+   if(!c.state.objectExists(c.source))return;
+   if(!c.state.getObject(c.source).location)return;
+   c.executor.readyObject(c.source);
+   c.executor.giveTemporaryMight(c.source,1);
+ }
+
 private:
  const CardDef d_=[] {
   auto d=mkFinal64_b(1099,90,R"RB(Evelynn, Consuming)RB",CardType::Unit,5,1,5,{Domain::Body},Rarity::Epic,R"RB([Ambush] (You may play me as a [Reaction] to a battlefield where you have units.)
