@@ -172,6 +172,66 @@ TEST_F(RadianceFinal64Test, HuntingBlindGrantsShieldToFriendsAndMovesOpponentHer
  EXPECT_TRUE(state.getObject(enemy).isAtBattlefield());
  EXPECT_TRUE(state.getObject(ally).hasKeyword(Keyword::Shield));
 }
+TEST_F(RadianceFinal64Test, ForbiddenTechniqueReadiesAnyUnit){
+ auto enemy=addUnit(P2,kInvalidId,4,0);
+ state.getObject(enemy).is_exhausted=true;
+ const auto spell=addToHand(P1,CardDefId{1069});
+ EnginePathAgent chooser(EnginePathAgent::choosing(enemy));
+ playThroughEngine(spell,&chooser);
+ EXPECT_FALSE(state.getObject(enemy).is_exhausted);
+}
+TEST_F(RadianceFinal64Test, CoalescedEnergyRecyclesRunesAndChannelsThemExhausted){
+ for(int i=0;i<4;i++)addRune(P1,Domain::Fury);
+ auto champion=addUnit(P1,CardDefId{1073},4,-1);
+ fireTriggerThroughEngine(champion,TriggerType::AtEndOfTurn);
+ int exhausted=0;
+ for(const auto& [id,o]:state.objects.onBoard())
+   if(o.isRune()&&o.controller==P1&&o.is_exhausted)++exhausted;
+ EXPECT_EQ(exhausted,4);
+}
+TEST_F(RadianceFinal64Test, CataclysmBlocksOpponentSpellsAndMovesIntoOccupiedEnemyBattlefield){
+ const auto own=addUnit(P1,kInvalidId,3,-1);
+ state.battlefields[1].controller=P2;
+ addUnit(P2,kInvalidId,2,1);
+ auto spell=addToHand(P1,CardDefId{1097});
+ playThroughEngine(spell);
+ EXPECT_TRUE(state.player(P2).cant_play_spells_this_turn);
+ EXPECT_EQ(state.getObject(own).battlefieldId(),state.battlefields[1].id);
+}
+TEST_F(RadianceFinal64Test, EvelynnConsumingReadiesAndStrengthensOnFacedownPlayTrigger){
+ auto eve=addUnit(P1,CardDefId{1099},5,0);
+ state.getObject(eve).is_exhausted=true;
+ fireTriggerThroughEngine(eve,TriggerType::WhenYouPlayFromFacedown);
+ EXPECT_FALSE(state.getObject(eve).is_exhausted);
+ EXPECT_EQ(state.getObject(eve).temp_might_bonus,1);
+}
+TEST_F(RadianceFinal64Test, StrigianOraclePredictsWhenExhausted){
+ auto oracle=addUnit(P1,CardDefId{1083},2,0);
+ addToDeck(P1,CardDefId{1084});
+ withEngine([&](GameEngine& e){e.testHook_executor().exhaustObject(oracle);
+    settleLikeTheEngine(e);});
+ EXPECT_TRUE(state.getObject(oracle).is_exhausted);
+ EXPECT_FALSE(state.game_over);
+}
+TEST_F(RadianceFinal64Test, SeraphinePlayCreatesRecruitAndExhaustedFriendsAddMight){
+ auto other=addUnit(P1,kInvalidId,2,0);
+ state.getObject(other).is_exhausted=true;
+ auto sera=addToHand(P1,CardDefId{1128});
+ playThroughEngine(sera);
+ int recruits=0;
+ for(const auto& [id,o]:state.objects.onBoard())
+   if(o.controller==P1&&o.name=="Recruit"&&o.isUnit())++recruits;
+ EXPECT_EQ(recruits,1);
+ withEngine([&](GameEngine& e){e.testHook_recalculateAuras();});
+ EXPECT_GE(state.getObject(sera).current_might,2);
+}
+TEST_F(RadianceFinal64Test, RivenDeserterGainsMightWhenAnotherFriendlyUnitExhausts){
+ auto riven=addUnit(P1,CardDefId{1113},5,0);
+ auto other=addUnit(P1,kInvalidId,2,0);
+ withEngine([&](GameEngine& e){e.testHook_executor().exhaustObject(other);
+   settleLikeTheEngine(e);});
+ EXPECT_EQ(state.getObject(riven).temp_might_bonus,1);
+}
 TEST_F(RadianceFinal64Test, SixtyFourUniqueCardDefinitionsHaveCanonicalMetadata){
  ASSERT_EQ(expected.size(),64u);
  std::set<int> ids,numbers;std::set<std::string> public_codes;
