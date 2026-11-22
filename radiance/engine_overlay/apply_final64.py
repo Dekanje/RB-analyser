@@ -115,6 +115,18 @@ body=body.replace(e,'                         (rune_enters_exhausted ? ", exhaus
 exe=exe[:start]+body+exe[end:]
 executor_path.write_text(exe)
 
+
+# Dynamic facedown capacity (Bushwhack Trap, Bandle Tree):
+# rebuild on every aura pass so lost or bounced traps stop granting a slot.
+gamefile=engine/"src/engine/game_engine.cpp"
+gg=gamefile.read_text()
+cap_anchor="        bf.multi_move_tax[0] = bf.multi_move_tax[1] = 0;"
+assert gg.count(cap_anchor)==1, "Final64 dynamic facedown-capacity anchor changed"
+gg=gg.replace(cap_anchor,
+    "        bf.facedown_max_occupancy = 1; // Radiance Bushwhack Trap, rebuilt by auras\n"+
+    cap_anchor,1)
+gamefile.write_text(gg)
+
 init=engine/"src/cards/cards_init.cpp"
 s=init.read_text()
 last_decl="void register_card_1067(CardRegistry&);"
