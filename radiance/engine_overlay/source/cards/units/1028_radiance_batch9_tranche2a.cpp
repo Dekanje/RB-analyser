@@ -34,7 +34,7 @@ public:
     }
 private:
     const CardDef d_=card9a(1028,49,"Industrious Mechsmith",CardType::Unit,4,0,1,
-        {Domain::Mind},Rarity::Common,"When you play me, play a 3 [M] Mech unit token here.");
+        {},Rarity::Common,"When you play me, play a 3 [M] Mech unit token here.");
 };
 class MysteriousChronomancer9 final:public UnitCard {
 public:
