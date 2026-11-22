@@ -20,7 +20,10 @@ CardDef rad10a(int id,int n,const char* name,CardType type,int energy,int power,
   d.name=name;d.set_code="RAD";d.set_name="Radiance";d.collector_number=n;
   d.card_type=type;d.energy_cost=energy;d.power_cost=power;d.might=might;
   d.domains=std::move(domains);d.rarity=rarity;d.ability_text=rules;
-  for(auto kw:keywords)d.keywords.set(kw);return d;
+  for(auto kw:keywords)d.keywords.set(kw);
+  if(d.keywords.has(Keyword::Assault))d.assault_value=1;
+  if(d.keywords.has(Keyword::Deflect))d.deflect_value=1;
+  return d;
 }
 std::vector<GameObjectId> r10units(const GameState& s,PlayerId controller,
                                     bool friendly=true) {
@@ -75,13 +78,21 @@ class Radiance10_1051 final:public SpellCard {
 public:
  const CardDef& def()const override{return d_;}
     void onResolve(CardContext& c,const std::vector<GameObjectId>&)override {
-      auto enemy=r10units(c.state,c.controller,false);
       auto friendly=r10units(c.state,c.controller);
-      auto a=pickTarget(c,"Parallel Convergence: bounce a friendly unit",friendly);
+      auto [a,b]=pickTargetPair(c,
+        "Parallel Convergence: return a friendly unit, then damage a unit",
+        friendly,[&](GameObjectId) {
+          auto any=r10units(c.state,c.controller);
+          auto enemy=r10units(c.state,c.controller,false);
+          any.insert(any.end(),enemy.begin(),enemy.end());
+          any.erase(std::remove_if(any.begin(),any.end(),[&](GameObjectId id) {
+            return !c.state.objectExists(id)||!c.state.getObject(id).isAtBattlefield();
+          }),any.end());
+          std::sort(any.begin(),any.end());
+          return any;
+        });
       if(finalizingChoices(c))return;
       if(a!=kInvalidId)c.executor.bounceToHand(a);
-      enemy=r10units(c.state,c.controller,false);
-      auto b=pickTarget(c,"Parallel Convergence: deal 5 to a unit",enemy);
       if(b!=kInvalidId)c.executor.dealDamage(b,5,c.source);
     }
 private:
