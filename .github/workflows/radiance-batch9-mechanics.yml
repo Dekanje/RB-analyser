@@ -1,0 +1,191 @@
+name: Radiance Batch 9 - mechanics-based C++ implementation
+# Batch 9 staged CI, first three cards. No full-set mechanics certification.
+# Targeted run covers all authored Batch 8 cards before full acceptance.
+on:
+  push:
+    branches: ['radiance/mechanics-batch9-2026-11-22']
+    paths:
+      - '.github/workflows/radiance-batch9-mechanics.yml'
+      - 'radiance/engine_overlay/**'
+      - 'radiance/verify_batch9_registry.py'
+      - 'radiance/coverage_ledger.py'
+      - 'radiance/audit_wave5_catalog_registry.py'
+  workflow_dispatch:
+    inputs:
+      validation_level:
+        description: 'Select fast targeted test, batch audit, or final full regression'
+        type: choice
+        required: true
+        default: targeted
+        options:
+          - targeted
+          - batch
+          - full
+      gtest_filter:
+        description: 'GoogleTest name/filter for targeted mode only'
+        type: string
+        required: false
+        default: 'RadianceBatch9Test.*'
+concurrency:
+  group: radiance-batch9-staged-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  preflight:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      mode: ${{ steps.scope.outputs.mode }}
+      gtest_filter: ${{ steps.scope.outputs.gtest_filter }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select the minimum required validation scope
+        id: scope
+        env:
+          EVENT_KIND: ${{ github.event_name }}
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+          INPUT_LEVEL: ${{ inputs.validation_level }}
+          INPUT_FILTER: ${{ inputs.gtest_filter }}
+        run: |
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import os, re
+          event = os.environ.get("EVENT_KIND", "")
+          message = os.environ.get("COMMIT_MESSAGE", "").splitlines()
+          subject = message[0].strip() if message else ""
+          if event == "workflow_dispatch":
+              mode = os.environ.get("INPUT_LEVEL") or "targeted"
+              test_filter = os.environ.get("INPUT_FILTER") or "RadianceBatch9Test.*"
+              if mode not in ("targeted", "batch", "full"):
+                  raise ValueError("Invalid dispatch validation level")
+          elif subject.startswith("[batch-ready]"):
+              mode, test_filter = "full", ""
+          elif subject.startswith("[check-cards]"):
+              mode, test_filter = "batch", ""
+          elif subject.startswith("[test-fix"):
+              match = re.match(r"^\[test-fix(?::([A-Za-z0-9_.*?:/-]{1,200}))?\](?:\s|$)", subject)
+              if not match:
+                  raise ValueError("Invalid [test-fix:GoogleTest.Filter] commit prefix")
+              mode, test_filter = "targeted", match.group(1) or "RadianceBatch9Test.*"
+          else:
+              mode, test_filter = "preflight", ""
+          if mode == "targeted" and not re.fullmatch(r"[A-Za-z0-9_.*?:/-]{1,200}", test_filter):
+              raise ValueError("Unsafe targeted GoogleTest filter")
+          print("mode=" + mode)
+          print("gtest_filter=" + (test_filter if mode == "targeted" else ""))
+          PY
+      - name: Fast source and catalog audit sanity
+        run: |
+          python3 -m py_compile radiance/engine_overlay/apply.py radiance/engine_overlay/apply_wave2.py radiance/engine_overlay/apply_wave3.py radiance/engine_overlay/apply_wave4.py radiance/engine_overlay/apply_batch6.py radiance/engine_overlay/apply_batch7.py radiance/engine_overlay/apply_batch8.py radiance/engine_overlay/apply_batch9.py radiance/verify_batch8_registry.py radiance/verify_batch9_registry.py radiance/coverage_ledger.py radiance/audit_wave5_catalog_registry.py
+          python3 -m unittest discover -s radiance -p 'test_wave5_catalog_audit.py' -v
+          grep -F 'range(1025,1028)' radiance/engine_overlay/apply_batch9.py
+          test -f radiance/engine_overlay/source/cards/units/1010_radiance_batch9.cpp
+          test -f radiance/engine_overlay/source/tests/cards/test_radiance_batch9.cpp
+          test -f radiance/engine_overlay/source/cards/units/1025_radiance_batch9_tranche1.cpp
+          test -f radiance/engine_overlay/source/cards/units/1016_radiance_batch9_tranche2a.cpp
+          test -f radiance/engine_overlay/source/cards/units/1019_radiance_batch9_tranche2b.cpp
+          test -f radiance/engine_overlay/source/cards/units/1022_radiance_batch9_tranche2c.cpp
+  compiled-card-check:
+    needs: preflight
+    if: ${{ needs.preflight.outputs.mode != 'preflight' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 59
+    env:
+      VALIDATION_MODE: ${{ needs.preflight.outputs.mode }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install required C++ libraries and apply pinned engine overlay
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq cmake ninja-build g++ ccache libboost-all-dev nlohmann-json3-dev
+          git clone --quiet https://github.com/chorlick/alpharune.git alpharune
+          git -C alpharune checkout --quiet --detach ec90f0fed002aed374d06249fa95e83e3cfbd386
+          python3 radiance/engine_overlay/apply.py
+          python3 radiance/engine_overlay/wave1_regression_fix.py
+          python3 radiance/engine_overlay/apply_wave2.py
+          python3 radiance/engine_overlay/apply_wave3.py
+          python3 radiance/engine_overlay/apply_wave4.py
+          python3 radiance/engine_overlay/apply_batch6.py
+          python3 radiance/engine_overlay/apply_batch7.py
+          python3 radiance/engine_overlay/apply_batch8.py
+          python3 radiance/engine_overlay/apply_batch9.py
+      - name: Restore incremental C++ compiler cache
+        id: ccache-restore
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/.cache/ccache
+          key: rad9-pch-safe-linux-gcc13-${{ github.sha }}
+          restore-keys: |
+            rad9-pch-safe-linux-gcc13-
+            rad8-pch-safe-linux-gcc13-
+      - name: Compile actual AlphaRune engine with Batch 8 cards
+        run: |
+          # Reuse compiled objects safely when AlphaRune uses precompiled headers.
+          # Direct ccache previously classified 121/123 calls as uncacheable.
+          ccache -M 3G
+          ccache --zero-stats
+          cmake -S alpharune -B alpharune/build -G Ninja -DCMAKE_BUILD_TYPE=Release -DRIFTBOUND_BUILD_JOBS=3 "-DCMAKE_CXX_COMPILER_LAUNCHER=env;CCACHE_SLOPPINESS=pch_defines,time_macros;${PWD}/alpharune/scripts/ccache_pch_safe.sh"
+          if [ "$VALIDATION_MODE" = targeted ]; then
+            cmake --build alpharune/build --target riftbound_tests -j 3
+          else
+            cmake --build alpharune/build --target riftbound riftbound_tests -j 3
+          fi
+          ccache -s
+      - name: Targeted test - only the failing GoogleTest cases
+        if: ${{ needs.preflight.outputs.mode == 'targeted' }}
+        env:
+          GTEST_FILTER: ${{ needs.preflight.outputs.gtest_filter }}
+        run: |
+          mkdir -p results
+          RIFTBOUND_ROOT=alpharune alpharune/build/riftbound_tests --gtest_list_tests --gtest_filter="$GTEST_FILTER" > results/targeted_list.txt
+          python3 - <<'PY'
+          from pathlib import Path
+          lines = Path("results/targeted_list.txt").read_text().splitlines()
+          assert any(line.startswith("  ") and not line.lstrip().startswith("#") for line in lines), "No tests matched the requested filter"
+          PY
+          RIFTBOUND_ROOT=alpharune alpharune/build/riftbound_tests --gtest_filter="$GTEST_FILTER" --gtest_brief=1 --gtest_output=xml:results/radiance_targeted_tests.xml
+      - name: Focused Radiance mechanics tests - batch and full modes
+        if: ${{ needs.preflight.outputs.mode == 'batch' || needs.preflight.outputs.mode == 'full' }}
+        run: |
+          mkdir -p results
+          RIFTBOUND_ROOT=alpharune alpharune/build/riftbound_tests --gtest_filter='RadianceWave1Test.*:RadianceWave2Test.*:RadianceWave3Test.*:RadianceWave4Test.*:RadianceBatch6Test.*:RadianceBatch7Test.*:RadianceBatch8Test.*:RadianceBatch9Test.*' --gtest_brief=1 --gtest_output=xml:results/radiance_batch9_focused_tests.xml
+      - name: Strict compiled registration and catalog audit
+        if: ${{ needs.preflight.outputs.mode == 'batch' || needs.preflight.outputs.mode == 'full' }}
+        run: |
+          mkdir -p results
+          alpharune/build/riftbound --dump-registry results/radiance_batch9_registry.json
+          python3 radiance/verify_batch9_registry.py results/radiance_batch9_registry.json --output results/radiance_batch9_coverage.json
+          python3 radiance/audit_wave5_catalog_registry.py radiance/data/radiance_catalog.json results/radiance_batch9_registry.json > results/radiance_batch9_catalog_audit.json
+          python3 radiance/coverage_ledger.py results/radiance_batch9_registry.json --output results/radiance_batch9_ledger.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          x=json.loads(Path("results/radiance_batch9_catalog_audit.json").read_text())
+          assert x["compiled_registry_size"]==1027
+          assert x["registered_base_count"]==71
+          assert x["missing_base_count"]==96
+          assert x["all_mechanics_verified"] is False
+          print("BATCH9_TRANCHE1_CATALOG_GATE_PASS_NOT_FULL_MECHANICS_CERTIFICATION")
+          PY
+      - name: Full AlphaRune regression - final batch gate only
+        if: ${{ needs.preflight.outputs.mode == 'full' }}
+        run: |
+          RIFTBOUND_ROOT=alpharune alpharune/build/riftbound_tests --gtest_brief=1 --gtest_output=xml:results/radiance_batch9_full_regression.xml
+      - name: Show compiler-cache statistics (also after failed compilation)
+        if: always()
+        run: |
+          ccache -s || true
+      - name: Save incremental C++ compiler cache even when a test fails
+        if: always()
+        uses: actions/cache/save@v4
+        continue-on-error: true
+        with:
+          path: ~/.cache/ccache
+          key: rad9-pch-safe-linux-gcc13-${{ github.sha }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: radiance-batch8-validation-${{ needs.preflight.outputs.mode }}
+          path: results/
+          retention-days: 30
+          if-no-files-found: ignore
