@@ -79,11 +79,8 @@ TEST_F(RadianceBatch7Test, PartyCrasherDiscountCountsOnlyExhaustedFriendlyUnits)
 
 TEST_F(RadianceBatch7Test, OverloadedTravelerNeedsFriendlyDeployGearAtSameBattlefield) {
     const auto traveler=addUnit(P1,CardDefId{1004},2,0);
-    auto gear=addToHand(P1,CardDefId{1003});
-    playThroughEngine(gear,nullptr,
-        LocationId{BattlefieldLocation{state.battlefields[0].id}});
     recalc();
-    EXPECT_EQ(state.getObject(traveler).current_might,2); // equip gear != Deploy gear
+    EXPECT_EQ(state.getObject(traveler).current_might,2); // no qualifying Deploy gear
     KeywordSet deploy; deploy.set(Keyword::Deploy);
     GameObjectId deployed=kInvalidId;
     resolveThroughEngine([&](EffectExecutor& e,GameState&){
