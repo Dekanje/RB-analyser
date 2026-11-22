@@ -150,10 +150,10 @@ public:
       return {TriggerType::WhenYouPlayThis,TriggerType::WhenYouHoldHere};
     }
     void onTrigger(CardContext& c,const std::vector<GameObjectId>&)override {
-      if(c.trigger==TriggerType::WhenYouPlayThis) {
+      if(c.firing_trigger==TriggerType::WhenYouPlayThis) {
         c.executor.discardCards(c.controller,1);
         c.executor.drawCards(c.controller,3);
-      }else if(c.trigger==TriggerType::WhenYouHoldHere && c.state.objectExists(c.source))
+      }else if(c.firing_trigger==TriggerType::WhenYouHoldHere && c.state.objectExists(c.source))
         c.executor.bounceToHand(c.source);
     }
 private:
