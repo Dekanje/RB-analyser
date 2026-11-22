@@ -58,4 +58,5 @@ after="""    // Deployed gear watching its owner's combat win at this battlefiel
 assert t.count(before)==1, "CombatResult hook changed"
 tpath.write_text(t.replace(before,after,1))
 
+# The seed-1 deck fingerprint must be measured for this registry size.
 print("RADIANCE_BATCH8_APPLIED: 15 cards, IDs 1010-1024")
