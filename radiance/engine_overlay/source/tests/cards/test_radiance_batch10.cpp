@@ -117,6 +117,26 @@ TEST_F(RadianceBatch10Test, HoldEmDiscountsAfterBattlefieldUnitPlay) {
  ASSERT_NE(hold,nullptr);
  EXPECT_EQ(hold->selfCostReduction(state,P1),2);
 }
+TEST_F(RadianceBatch10Test, InvigoratingBloomMightyExhaustActivationDrawsOne) {
+ auto mighty=addUnit(P1,kInvalidId,5,-1);
+ addToDeck(P1,CardDefId{1058});
+ const auto gear=addToHand(P1,CardDefId{1049});
+ playThroughEngine(gear);
+ const auto* card=card_registry.get(CardDefId{1049});
+ ASSERT_NE(card,nullptr);
+ ASSERT_TRUE(card->hasActivatedAbility());
+ EXPECT_TRUE(card->canActivateAbility(state,P1));
+ const auto before=state.player(P1).main_deck.size();
+ Intent a;a.type=IntentType::ActivateAbility;
+ a.player=P1;a.ability_source=gear;a.ability_index=0;
+ EnginePathAgent agent(EnginePathAgent::choosing(mighty));
+ withEngineDefaultTurn([&](GameEngine& e){
+   e.testHook_executeIntent(a);settleLikeTheEngine(e);
+ },&agent,nullptr,P1);
+ EXPECT_TRUE(state.getObject(mighty).is_exhausted);
+ EXPECT_TRUE(state.getObject(gear).is_exhausted);
+ EXPECT_EQ(state.player(P1).main_deck.size()+1,before);
+}
 TEST_F(RadianceBatch10Test, SatchelChargeMovesFriendlyUnitAndPlaysBombToken) {
  const auto ally=addUnit(P1,kInvalidId,2,-1);
  const auto spell=addToHand(P1,CardDefId{1055});
