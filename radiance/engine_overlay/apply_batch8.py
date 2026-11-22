@@ -9,6 +9,9 @@ source=root/"radiance/engine_overlay/source"
 files=[
  ("cards/units/1010_radiance_batch8.cpp","src/cards/units/1010_radiance_batch8.cpp"),
  ("tests/cards/test_radiance_batch8.cpp","tests/cards/test_radiance_batch8.cpp"),
+ ("cards/units/1016_radiance_batch8_tranche2a.cpp","src/cards/units/1016_radiance_batch8_tranche2a.cpp"),
+ ("cards/units/1019_radiance_batch8_tranche2b.cpp","src/cards/units/1019_radiance_batch8_tranche2b.cpp"),
+ ("cards/units/1022_radiance_batch8_tranche2c.cpp","src/cards/units/1022_radiance_batch8_tranche2c.cpp"),
 ]
 for src,dest in files:
     target=engine/dest
@@ -20,9 +23,9 @@ declaration="void register_card_1009(CardRegistry&);"
 registration="    register_card_1009(registry);"
 assert s.count(declaration)==1 and s.count(registration)==1, "Batch7 anchors changed"
 s=s.replace(declaration,declaration+"\n"+"\n".join(
-    f"void register_card_{i}(CardRegistry&);" for i in range(1010,1016)),1)
+    f"void register_card_{i}(CardRegistry&);" for i in range(1010,1025)),1)
 s=s.replace(registration,registration+"\n"+"\n".join(
-    f"    register_card_{i}(registry);" for i in range(1010,1016)),1)
+    f"    register_card_{i}(registry);" for i in range(1010,1025)),1)
 init.write_text(s)
 # CR 323.6 has an "unless an effect would indicate otherwise" exception:
 # [Deploy] is precisely the printed permission for an unattached Gear to
