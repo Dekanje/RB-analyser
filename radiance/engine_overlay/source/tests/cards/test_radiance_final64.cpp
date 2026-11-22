@@ -128,6 +128,7 @@ TEST_F(RadianceFinal64Test, EvelynnScoresOnHoldOnlyWithFriendlyFacedownHere){
  obj.owner=P1;obj.controller=P1;obj.card_type=CardType::Spell;
  obj.zone=ZoneType::FacedownZone;obj.is_hidden=true;
  obj.hidden_at=state.battlefields[0].id;
+ state.battlefields[0].facedown.push_back(facedown);
  auto before=state.player(P1).score;
  fireTriggerThroughEngine(eve,TriggerType::WhenIHold);
  EXPECT_EQ(state.player(P1).score,before+1);
