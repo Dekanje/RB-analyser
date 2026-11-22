@@ -96,7 +96,17 @@ private:
 class R64_1119 final : public SpellCard {
 public:
  const CardDef& def() const override { return d_; }
- // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
+
+ void asYouPlayChoices(CardContext& c)override{
+   (void)f64ShowOff(c,[](const GameObject&,const CardDef& d){
+     return d.energy_cost>=7;
+   },"Rousing Display: Show Off a card costing 7 or more");
+ }
+ void onResolve(CardContext& c,const std::vector<GameObjectId>&)override{
+   const int n=f64WasShownOff(c.state,c.source)?4:2;
+   for(int i=0;i<n;i++)f64Recruit(c,BaseLocation{c.controller});
+ }
+
 private:
  const CardDef d_=[] {
   auto d=mkFinal64_d(1119,127,R"RB(Rousing Display)RB",CardType::Spell,5,0,0,{Domain::Order},Rarity::Uncommon,R"RB([Show Off] a card with Energy cost [7] or more. (As you play this, you may reveal such a card from hand or pick a friendly one.)
