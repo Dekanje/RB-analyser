@@ -135,7 +135,7 @@ jobs:
             rad10-pch-safe-linux-gcc13-
             rad9-pch-safe-linux-gcc13-
             rad8-pch-safe-linux-gcc13-
-      - name: Compile actual AlphaRune engine with Batch 9 cards
+      - name: Compile actual AlphaRune engine with Batch 10 cards
         run: |
           # Reuse compiled objects safely when AlphaRune uses precompiled headers.
           # Direct ccache previously classified 121/123 calls as uncacheable.
