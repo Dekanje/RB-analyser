@@ -11,7 +11,7 @@ Pinned upstream AlphaRune engine: `ec90f0fed002aed374d06249fa95e83e3cfbd386`.
 | 1048 | RAD-013 | Lost to the Sands | Initial spell effect; mode and targeting timing to verify |
 | 1049 | RAD-035 | Invigorating Bloom | Play-time +3 Might; activated draw pending |
 | 1050 | RAD-038 | Ahri, Confident | Disarm keyword; reaction to enemy Might reduction pending |
-| 1051 | RAD-051 | Parallel Convergence | Bounce and damage; additional-cost timing pending |
+| 1051 | RAD-051 | Parallel Convergence | Mandatory friendly-unit return is a play-time cost; battlefield damage chosen at finalization; test pending |
 | 1052 | RAD-070 | Hold 'Em | +3 Might effect; cost reduction pending |
 | 1053 | RAD-087 | Portable Portal | Deploy/Ganking aura; optional play-time cost pending |
 | 1054 | RAD-089 | Titanic Shrine | Play trigger draft; reaction timing/choice pending |
@@ -23,10 +23,10 @@ Pinned upstream AlphaRune engine: `ec90f0fed002aed374d06249fa95e83e3cfbd386`.
 | 1060 | RAD-028 | Ki Burst | Exhaust-friendly-unit as cast-time additional cost; target/stun integration tests added, validation pending |
 | 1061 | RAD-029 | Life from Stone | Exhaust-friendly-unit as cast-time additional cost; draw/channel integration test added, validation pending |
 | 1062 | RAD-040 | Heartening Soul | Ready legend; legend activated-ability grant pending |
-| 1063 | RAD-047 | Fanfare | Delayed next-three-unit trigger pending |
-| 1064 | RAD-061 | Ekko, Ingenious | Ganking; return-unit-as-cost pending |
-| 1065 | RAD-075 | Skystrike Squadron | Deflect; optional bounce and reduced cost pending |
-| 1066 | RAD-116 | Concert Poster | Deploy; optional Recruit-token cost/creation pending |
+| 1063 | RAD-047 | Fanfare | Delayed repeat trigger draws for up to three unit plays this turn; gameplay test pending |
+| 1064 | RAD-061 | Ekko, Ingenious | Mandatory return-unit-as-play-cost and Champion metadata implemented; test pending |
+| 1065 | RAD-075 | Skystrike Squadron | Optional friendly-gear bounce for -2 Energy implemented; test pending |
+| 1066 | RAD-116 | Concert Poster | Optional 1 Energy cost at trigger finalization and Recruit token in base implemented; test pending |
 | 1067 | RAD-121 | One-Two Punch | Initial Buff/Stun effect; lock/play-time targeting to verify |
 
 The above is a **staged implementation, not twenty fully verified rules implementations**.
@@ -60,3 +60,9 @@ base identities, and the full regression still require GitHub Actions proof.
 
 **No 58-deck BO3 simulation results are claimed while the remaining 64 Radiance cards
 and the listed rules-interaction gaps are unresolved.**
+
+## Additional mechanics-development validation
+
+RAD-047/051/061/075/116 have added effects and engine-path tests in the
+batch 10 development branch. These are **not accepted** until the focused
+CI run and full AlphaRune regression pass, and their edge cases are audited.
