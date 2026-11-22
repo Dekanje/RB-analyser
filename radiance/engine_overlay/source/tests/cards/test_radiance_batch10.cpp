@@ -11,6 +11,26 @@ class RadianceBatch10Test:public CardTestFixture {};
 struct Printed {
  int id,number,energy,power,might; const char* name; CardType type;
 };
+TEST_F(RadianceBatch10Test, TitanicShrineExhaustsToDrawForLargestPlayedUnit) {
+ auto shrine=addToHand(P1,CardDefId{1054});
+ playThroughEngine(shrine);
+ ASSERT_FALSE(state.getObject(shrine).is_exhausted);
+ addToDeck(P1,CardDefId{1058});
+ auto before=state.player(P1).main_deck.size();
+ auto large=addToHand(P1,CardDefId{1062});
+ playThroughEngine(large);
+ EXPECT_TRUE(state.getObject(shrine).is_exhausted);
+ EXPECT_EQ(state.player(P1).main_deck.size()+1,before);
+}
+TEST_F(RadianceBatch10Test, LostToSandsOnlyOffersBattlefieldUnitNotBaseUnit) {
+ auto base=addUnit(P2,kInvalidId,2,-1);
+ auto battlefield=addUnit(P2,kInvalidId,3,0);
+ auto spell=addToHand(P1,CardDefId{1048});
+ EnginePathAgent chooser(EnginePathAgent::choosing(battlefield));
+ playThroughEngine(spell,&chooser);
+ EXPECT_FALSE(chooser.wasOffered(base));
+ EXPECT_TRUE(chooser.wasOffered(battlefield));
+}
 TEST_F(RadianceBatch10Test, HearteningSoulGrantsExhaustAbilityOnlyToFriendlyLegend) {
  const auto legend=state.createObject();
  auto& obj=state.getObject(legend);
