@@ -237,7 +237,25 @@ private:
 class R64_1128 final : public UnitCard {
 public:
  const CardDef& def() const override { return d_; }
- // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
+
+ std::vector<TriggerType> triggerTypes()const override{
+   return {TriggerType::WhenYouPlayMe,TriggerType::WhenIBecomeExhausted};
+ }
+ void onTrigger(CardContext& c,const std::vector<GameObjectId>&)override {
+   c.executor.createToken(c.controller,CardType::Unit,"Recruit",1,{"Recruit"},
+                          KeywordSet{},BaseLocation{c.controller},false);
+ }
+ void applyPassiveAura(GameState& s,PlayerId p)const override{
+   forEachSelfOnce(*this,s,p,[&](GameObjectId source,GameObject& self){
+     if(!self.location)return;
+     int exhausted=0;
+     for(const auto& [id,o]:s.objects.onBoard())
+       if(id!=source&&o.isUnit()&&o.controller==p&&o.location&&o.is_exhausted)
+         ++exhausted;
+     if(exhausted)auraMight(self,source,exhausted);
+   });
+ }
+
 private:
  const CardDef d_=[] {
   auto d=mkFinal64_d(1128,138,R"RB(Seraphine, Not Alone)RB",CardType::Unit,5,1,1,{Domain::Order},Rarity::Epic,R"RB(When you play me or when I become exhausted, play a 1 [M] Recruit unit token to your base.
