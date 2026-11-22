@@ -152,4 +152,19 @@ s=s.replace(decl,decl+"\n"+"\n".join(
 s=s.replace(reg,reg+"\n"+"\n".join(
     f"    register_card_{i}(registry);" for i in range(1048,1068)),1)
 init.write_text(s)
-print("RADIANCE_BATCH10_OVERLAY_APPLIED: 20 new identities, IDs 1048..1067")
+
+# New legal card pool changes the deterministic seed-1 deck. Preserve the
+# pinned earlier sizes and install only the measured 1,059-definition hash
+# reported by the real compiled DeckFuzz.DeckOfSeedOneIsPinned full-regression
+# failure in run 45077255357 (h=11226295876980254031).
+decktest=engine/"tests/test_deck_fuzz.cpp"
+t=decktest.read_text()
+old_hash="""    constexpr uint64_t kRadiance1039DeckOfSeedOne = 9407362350736305228ull;
+    const uint64_t expected = registry_->size()==1039 ? kRadiance1039DeckOfSeedOne"""
+new_hash="""    constexpr uint64_t kRadiance1039DeckOfSeedOne = 9407362350736305228ull;
+    constexpr uint64_t kRadiance1059DeckOfSeedOne = 11226295876980254031ull;
+    const uint64_t expected = registry_->size()==1059 ? kRadiance1059DeckOfSeedOne
+                             : registry_->size()==1039 ? kRadiance1039DeckOfSeedOne"""
+assert t.count(old_hash)==1, "Batch 10 deck fingerprint anchor changed"
+decktest.write_text(t.replace(old_hash,new_hash,1))
+print("RADIANCE_BATCH10_OVERLAY_APPLIED: 20 new identities, IDs 1048..1067; seed-1 hash pinned")
