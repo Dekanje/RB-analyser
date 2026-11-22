@@ -26,7 +26,8 @@ for src,dest in [
     ("cards/units/0983_additional_deck_cards.cpp","src/cards/units/0983_additional_deck_cards.cpp"),
     ("cards/spells/0987_hush.cpp","src/cards/spells/0987_hush.cpp"),
     ("cards/units/0988_shimmering_swimmer.cpp","src/cards/units/0988_shimmering_swimmer.cpp"),
-    ("cards/units/0989_radiance_wave1.cpp","src/cards/units/0989_radiance_wave1.cpp")]:
+    ("cards/units/0989_radiance_wave1.cpp","src/cards/units/0989_radiance_wave1.cpp"),
+    ("tests/cards/test_radiance_wave1.cpp","tests/cards/test_radiance_wave1.cpp")]:
     target=engine/dest
     if target.exists():raise SystemExit("Collision: "+str(target))
     shutil.copyfile(source/src,target)
