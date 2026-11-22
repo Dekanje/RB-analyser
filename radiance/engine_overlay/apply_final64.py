@@ -127,6 +127,21 @@ gg=gg.replace(cap_anchor,
     cap_anchor,1)
 gamefile.write_text(gg)
 
+
+# Real "As you play this" spell choices are made before spell target/cost.
+# Pinned engine invokes the hook for permanents but omitted hand-played
+# spells. Four Radiance Show Off spells require this before they resolve.
+gg=gamefile.read_text()
+spell_start=gg.index("void GameEngine::executePlaySpell(")
+spell_end=gg.index("\nvoid GameEngine::finishPlaySpell(",spell_start)
+spell_body=gg[spell_start:spell_end]
+needle="    forgetPlayPayments(intent.player, intent.card);   // a new play: nothing is paid yet"
+assert spell_body.count(needle)==1, "Spell as-you-play hook anchor changed"
+spell_body=spell_body.replace(needle,needle+"""
+    // CR 355.1: as-you-play choices of spells also precede payment.
+    effect_executor_->makeAsYouPlayChoices(intent.player, intent.card);""",1)
+gamefile.write_text(gg[:spell_start]+spell_body+gg[spell_end:])
+
 init=engine/"src/cards/cards_init.cpp"
 s=init.read_text()
 last_decl="void register_card_1067(CardRegistry&);"
