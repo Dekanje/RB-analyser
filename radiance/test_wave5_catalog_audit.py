@@ -27,7 +27,7 @@ class CatalogAuditTests(unittest.TestCase):
         self.assertFalse(result["all_mechanics_verified"])
 
     def test_registration_does_not_imply_verified_mechanics(self):
-        self.registry["cards"] = [{"public_code": f"RAD-{i:03d}/167", "id": 2000+i}
+        self.registry["cards"] = [{"public_code": f"RAD-{i:03d}/167", "card_id": 2000+i}
                                   for i in range(1,168)]
         incomplete, result = self.run_audit()
         self.assertFalse(incomplete)
@@ -40,20 +40,59 @@ class CatalogAuditTests(unittest.TestCase):
             self.run_audit()
 
     def test_duplicate_compiled_code_rejected(self):
-        self.registry["cards"] = [{"public_code":"RAD-001/167","id":100},
-                                  {"public_code":"RAD-001/167","id":101}]
+        self.registry["cards"] = [{"public_code":"RAD-001/167","card_id":100},
+                                  {"public_code":"RAD-001/167","card_id":101}]
         with self.assertRaises(AssertionError):
             self.run_audit()
 
     def test_duplicate_engine_id_rejected_even_when_codes_differ(self):
-        self.registry["cards"] = [{"public_code":"RAD-001/167","id":100},
-                                  {"public_code":"RAD-002/167","id":100}]
+        self.registry["cards"] = [{"public_code":"RAD-001/167","card_id":100},
+                                  {"public_code":"RAD-002/167","card_id":100}]
         with self.assertRaisesRegex(AssertionError, "Duplicate compiled engine IDs"):
             self.run_audit()
 
     def test_uncatalogued_radiance_code_rejected(self):
-        self.registry["cards"] = [{"public_code":"RAD-999/167","id":3000}]
+        self.registry["cards"] = [{"public_code":"RAD-999/167","card_id":3000}]
         with self.assertRaisesRegex(AssertionError, "absent from catalog"):
+            self.run_audit()
+
+    def test_exact_pinned_ziggs_bomb_token_is_accepted_but_not_counted_as_numbered_card(self):
+        self.registry["cards"] = [{
+            "public_code": "RAD-TBomb",
+            "card_id": 982, "card_def_id": "rad-bomb-token",
+            "name": "Bomb", "set": "RAD", "card_type": "gear",
+            "super_type": "token", "tags": ["Bomb"]
+        }]
+        incomplete, result = self.run_audit()
+        self.assertTrue(incomplete)
+        self.assertEqual(result["registered_base_count"], 0)
+        self.assertEqual(result["missing_base_count"], 167)
+        self.assertEqual(result["explicit_non_gallery_token_codes"], ["RAD-TBomb"])
+        self.assertFalse(result["all_mechanics_verified"])
+
+    def test_fake_bomb_token_with_wrong_id_rejected(self):
+        self.registry["cards"] = [{
+            "public_code": "RAD-TBomb",
+            "card_id": 4000, "card_def_id": "rad-bomb-token",
+            "name": "Bomb", "set": "RAD", "card_type": "gear",
+            "super_type": "token", "tags": ["Bomb"]
+        }]
+        with self.assertRaisesRegex(AssertionError, "Unrecognized gameplay token identity"):
+            self.run_audit()
+
+    def test_fake_bomb_token_without_token_supertype_rejected(self):
+        self.registry["cards"] = [{
+            "public_code": "RAD-TBomb",
+            "card_id": 982, "card_def_id": "rad-bomb-token",
+            "name": "Bomb", "set": "RAD", "card_type": "gear",
+            "super_type": None, "tags": ["Bomb"]
+        }]
+        with self.assertRaisesRegex(AssertionError, "Unrecognized gameplay token identity"):
+            self.run_audit()
+
+    def test_compiled_card_missing_canonical_card_id_rejected(self):
+        self.registry["cards"] = [{"public_code":"RAD-001/167", "id":100}]
+        with self.assertRaisesRegex(AssertionError, "missing card_id"):
             self.run_audit()
 
     def test_missing_numbered_catalog_identity_rejected(self):
@@ -65,7 +104,7 @@ class CatalogAuditTests(unittest.TestCase):
     def test_printing_does_not_satisfy_base_identity(self):
         alt = next(c["public_code"] for c in self.catalog["cards"]
                    if not c["public_code"].endswith("/167"))
-        self.registry["cards"] = [{"public_code":alt,"id":3000}]
+        self.registry["cards"] = [{"public_code":alt,"card_id":3000}]
         incomplete, result = self.run_audit()
         self.assertTrue(incomplete)
         self.assertEqual(result["registered_base_count"], 0)
