@@ -9,12 +9,17 @@ namespace riftbound::test::radiance_wave1 {
 class RadianceWave1Test : public CardTestFixture {};
 
 TEST_F(RadianceWave1Test, EveryCardHasItsExactCodeAndRegistryDefinition) {
-    const std::pair<CardDefId,const char*> ids[] = {
-        {989,"RAD-077/167"},{990,"RAD-088/167"},
-        {991,"RAD-059/167"},{992,"RAD-079/167"},
-        {993,"RAD-099/167"}
+    // CardDefId uses a compile-time-only StrongId constructor: construct
+    // each ID from a literal in a constant expression, never at runtime
+    // through std::pair's forwarding conversion.
+    constexpr CardDefId ids[] = {989,990,991,992,993};
+    constexpr const char* codes[] = {
+        "RAD-077/167","RAD-088/167","RAD-059/167",
+        "RAD-079/167","RAD-099/167"
     };
-    for (const auto& [id, code] : ids) {
+    for (int i=0; i<5; ++i) {
+        const auto id=ids[i];
+        const auto* code=codes[i];
         ASSERT_NE(card_registry.get(id),nullptr);
         const auto& d=card_db.get(id);
         EXPECT_EQ(d.public_code,code);
