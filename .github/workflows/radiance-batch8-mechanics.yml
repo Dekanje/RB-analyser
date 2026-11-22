@@ -76,9 +76,12 @@ jobs:
         run: |
           python3 -m py_compile radiance/engine_overlay/apply.py radiance/engine_overlay/apply_wave2.py radiance/engine_overlay/apply_wave3.py radiance/engine_overlay/apply_wave4.py radiance/engine_overlay/apply_batch6.py radiance/engine_overlay/apply_batch7.py radiance/engine_overlay/apply_batch8.py radiance/verify_batch8_registry.py radiance/coverage_ledger.py radiance/audit_wave5_catalog_registry.py
           python3 -m unittest discover -s radiance -p 'test_wave5_catalog_audit.py' -v
-          grep -F 'range(1010,1016)' radiance/engine_overlay/apply_batch8.py
+          grep -F 'range(1010,1025)' radiance/engine_overlay/apply_batch8.py
           test -f radiance/engine_overlay/source/cards/units/1010_radiance_batch8.cpp
           test -f radiance/engine_overlay/source/tests/cards/test_radiance_batch8.cpp
+          test -f radiance/engine_overlay/source/cards/units/1016_radiance_batch8_tranche2a.cpp
+          test -f radiance/engine_overlay/source/cards/units/1019_radiance_batch8_tranche2b.cpp
+          test -f radiance/engine_overlay/source/cards/units/1022_radiance_batch8_tranche2c.cpp
   compiled-card-check:
     needs: preflight
     if: ${{ needs.preflight.outputs.mode != 'preflight' }}
@@ -153,11 +156,11 @@ jobs:
           import json
           from pathlib import Path
           x=json.loads(Path("results/radiance_batch8_catalog_audit.json").read_text())
-          assert x["compiled_registry_size"]==1015
-          assert x["registered_base_count"]==59
-          assert x["missing_base_count"]==108
+          assert x["compiled_registry_size"]==1024
+          assert x["registered_base_count"]==68
+          assert x["missing_base_count"]==99
           assert x["all_mechanics_verified"] is False
-          print("BATCH7_CATALOG_GATE_PASS_NOT_FULL_MECHANICS_CERTIFICATION")
+          print("BATCH8_CATALOG_GATE_PASS_NOT_FULL_MECHANICS_CERTIFICATION")
           PY
       - name: Full AlphaRune regression - final batch gate only
         if: ${{ needs.preflight.outputs.mode == 'full' }}
