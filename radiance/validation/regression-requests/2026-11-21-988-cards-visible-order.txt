@@ -1,0 +1,1 @@
+Run all pinned upstream regression tests with 988 implemented definitions and numeric-ID-invariant Overt Operation prompts; report remaining differences without suppressing tests.

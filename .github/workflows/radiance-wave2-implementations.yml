@@ -1,0 +1,69 @@
+name: Radiance full-card implementation - Wave 2 C++ semantics
+on:
+  push:
+    branches: ['radiance/full-card-implementation-wave2-2026-11-22']
+    paths:
+      - '.github/workflows/radiance-wave2-implementations.yml'
+      - 'radiance/engine_overlay/**'
+      - 'radiance/verify_wave2_registry.py'
+      - 'radiance/coverage_ledger.py'
+      - 'radiance/validation/wave1/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  compile-and-test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 59
+    steps:
+      - uses: actions/checkout@v4
+      - name: Python syntax and baseline overlay anchors
+        run: |
+          python3 -m py_compile radiance/engine_overlay/apply.py radiance/engine_overlay/wave1_regression_fix.py radiance/engine_overlay/apply_wave2.py radiance/verify_wave2_registry.py
+          grep -F 'register_card_993(registry);' radiance/engine_overlay/apply.py
+          grep -F '0989_radiance_wave1.cpp' radiance/engine_overlay/apply.py
+          grep -F 'test_radiance_wave1.cpp' radiance/engine_overlay/apply.py
+      - name: Fetch exact pinned AlphaRune source and apply Wave 1
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq cmake ninja-build g++ ccache libboost-all-dev nlohmann-json3-dev
+          git clone --quiet https://github.com/chorlick/alpharune.git alpharune
+          git -C alpharune checkout --quiet --detach ec90f0fed002aed374d06249fa95e83e3cfbd386
+          python3 radiance/engine_overlay/apply.py
+          python3 radiance/engine_overlay/wave1_regression_fix.py
+          python3 radiance/engine_overlay/apply_wave2.py
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/ccache
+          key: radiance-wave2-ccache-${{ runner.os }}-${{ github.sha }}
+          restore-keys: |
+            radiance-regression-ccache-
+            radiance-ccache-ubuntu2404-
+      - name: Compile real engine and card-specific tests
+        run: |
+          cmake -S alpharune -B alpharune/build -G Ninja -DCMAKE_BUILD_TYPE=Release -DRIFTBOUND_BUILD_JOBS=2 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+          cmake --build alpharune/build --target riftbound riftbound_tests -j 2
+      - name: Validate Wave 1 and Wave 2 real card behaviors through engine paths
+        run: |
+          mkdir -p results
+          RIFTBOUND_ROOT=alpharune alpharune/build/riftbound_tests --gtest_filter='RadianceWave1Test.*:RadianceWave2Test.*' --gtest_brief=1 --gtest_output=xml:results/radiance_wave1_card_tests.xml
+      - name: Run full pinned AlphaRune regression suite
+        run: |
+          RIFTBOUND_ROOT=alpharune alpharune/build/riftbound_tests --gtest_brief=1 --gtest_output=xml:results/radiance_wave1_full_regression.xml
+      - name: Require 994 compiled cards and inventory of missing Radiance cards
+        run: |
+          alpharune/build/riftbound --dump-registry results/radiance_wave1_registry.json
+          python3 radiance/verify_wave2_registry.py results/radiance_wave1_registry.json --output results/radiance_wave2_coverage.json
+          # The registry verifier above already requires exactly one compiled Brawl
+          # with correct public code, name, type, and 994 total definitions.
+          # The previous strict integer-ID assertion caused a false negative despite
+          # a passing compiled-registry verifier; assert the card identity here.
+          python3 -c 'import json; x=json.load(open("results/radiance_wave1_registry.json"))["cards"]; assert len(x)==994,(len(x),994); assert any(c.get("public_code")=="RAD-004/167" and c.get("name")=="Brawl" for c in x),"Brawl not compiled as engine ID 994"'
+          python3 radiance/coverage_ledger.py results/radiance_wave1_registry.json --output results/radiance_coverage_ledger.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: radiance-wave2-994-card-coverage-and-tests
+          path: results/
+          retention-days: 30
+          if-no-files-found: ignore

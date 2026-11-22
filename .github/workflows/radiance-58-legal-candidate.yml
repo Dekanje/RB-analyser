@@ -1,0 +1,69 @@
+name: Validate 54 unchanged originals plus four disclosed legal optimized candidates
+on:
+  push:
+    branches: ['radiance/engine-mechanics-development']
+    paths:
+      - 'scripts/legal_candidate.py'
+      - '.github/workflows/radiance-58-legal-candidate.yml'
+      - 'radiance/validation/legal-candidate-requests/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: radiance-58-legal-candidate-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq cmake ninja-build g++ ccache libboost-all-dev nlohmann-json3-dev
+          git clone --quiet https://github.com/chorlick/alpharune.git alpharune
+          git -C alpharune checkout --quiet --detach ec90f0fed002aed374d06249fa95e83e3cfbd386
+          python3 radiance/engine_overlay/apply.py
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/ccache
+          key: radiance-legal-58-ccache-${{ runner.os }}-${{ github.sha }}
+          restore-keys: |
+            radiance-ccache-ubuntu2404-
+      - name: Compile pinned real C++ engine
+        run: |
+          cmake -S alpharune -B alpharune/build -G Ninja -DCMAKE_BUILD_TYPE=Release -DRIFTBOUND_BUILD_JOBS=2 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+          cmake --build alpharune/build --target riftbound -j 2
+      - name: Verify nine original Radiance cards and decks
+        run: python3 radiance/engine_overlay/verify.py
+      - name: Check original SHA and candidate edits
+        run: |
+          python3 - <<'PY'
+          import sys
+          sys.path.insert(0,'scripts')
+          from run_actual_games import decode
+          from legal_candidate import make_legal_candidate
+          m=make_legal_candidate(decode(),'decks_legal_candidate','results/four_legal_candidates_manifest.json')
+          assert len(m)==58
+          import json
+          manifest=json.load(open('results/four_legal_candidates_manifest.json'))
+          assert len([r for r in manifest['decks'] if r['changed']])==4
+          print("FOUR_DISCLOSED_RULES_LEGAL_CANDIDATES")
+          PY
+      - name: Validate 54 unchanged + 4 disclosed legal candidate decks in both seats
+        run: |
+          python3 scripts/validate_58_originals.py \
+            --legal-candidates --engine alpharune/build/riftbound \
+            --repetitions 2 --seconds 50 \
+            --output results/all_58_legal_candidate_validation.json
+      - name: Upload source/effective SHA receipts and game outcomes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: all-58-legal-candidate-validation
+          path: |
+            results/four_legal_candidates_manifest.json
+            results/all_58_legal_candidate_validation.json
+            radiance/engine_overlay/compiled_registry.json
+          retention-days: 30
+          if-no-files-found: ignore

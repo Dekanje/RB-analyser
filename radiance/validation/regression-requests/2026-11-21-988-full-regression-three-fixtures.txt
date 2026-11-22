@@ -1,0 +1,1 @@
+Re-run all 3638 pinned C++ regression tests after 988-variant deck fingerprint, valid Hush test chain target, Overt Operation name/ID tie break, exact pair-target play probes, and Demacian Standard legality fixes. Fail on any test, upload results.

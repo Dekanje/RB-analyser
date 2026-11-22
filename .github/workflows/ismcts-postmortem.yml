@@ -1,0 +1,64 @@
+name: Audit incomplete ISMCTS BO3 games
+on:
+  push:
+    branches: ['optimization/ismcts-2026-11-21']
+    paths: ['.github/workflows/ismcts-postmortem.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 44900171748
+          github-token: ${{ github.token }}
+          pattern: ismcts-bo3-shard-*
+          path: analysis/shards
+      - name: Count actual outcomes; isolate crashes and failing pairings
+        run: |
+          python3 - <<'PY'
+          import collections,glob,json,pathlib
+          paths=sorted(glob.glob('analysis/shards/ismcts-bo3-shard-*/ismcts_bo3_shard_*.json'))
+          if len(paths)!=64: raise RuntimeError('Expected all 64 shards, got '+str(len(paths)))
+          outcomes=collections.Counter()
+          failures=collections.Counter()
+          bypair=collections.Counter()
+          unsuccessful=[]
+          seen=set()
+          for path in paths:
+              data=json.load(open(path))
+              for row in data['results']:
+                  key=(row['legend_a'],row['legend_b'],row['instance'])
+                  if key in seen:raise RuntimeError('Duplicate '+str(key))
+                  seen.add(key)
+                  outcomes[row['status']]+=1
+                  if row['status']!='complete':
+                      game=row['games'][-1]
+                      failures[str(game['returncode'])]+=1
+                      bypair[key[:2]]+=1
+                      unsuccessful.append({'a':key[0],'b':key[1],'instance':key[2],
+                          'seed':game['seed'],'game_number':game['number'],
+                          'status':game['status'],'returncode':game['returncode'],
+                          'stderr_tail':game['stderr_tail'][-600:]})
+          report={'expected_shards':64,'shards':len(paths),'unique_series':len(seen),
+                  'expected_series':1711*20,'series_status':dict(outcomes),
+                  'error_exit_codes':dict(failures),'affected_pairings':len(bypair),
+                  'worst_pairings':[{'a':a,'b':b,'incomplete':n} for (a,b),n in bypair.most_common(50)],
+                  'incomplete_series':unsuccessful,'fully_complete':not unsuccessful and len(seen)==1711*20}
+          pathlib.Path('analysis/ismcts_postmortem.json').write_text(json.dumps(report,indent=2))
+          print('ISMCTS_POSTMORTEM',json.dumps({k:v for k,v in report.items() if k not in ('incomplete_series','worst_pairings')}))
+          for item in report['worst_pairings'][:15]:print('FAILED_PAIR',json.dumps(item))
+          for item in unsuccessful[:8]:print('FAILED_SEED',json.dumps(item))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ismcts-58-postmortem
+          path: analysis/ismcts_postmortem.json
+          retention-days: 30
+          if-no-files-found: ignore

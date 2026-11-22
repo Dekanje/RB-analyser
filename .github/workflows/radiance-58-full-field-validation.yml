@@ -1,0 +1,101 @@
+name: Radiance finalists vs every other legend, ISMCTS BO3
+on:
+  push:
+    branches: ['optimization/full-radiance-2026-11-21']
+    paths:
+      - '.github/workflows/radiance-58-full-field-validation.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  full-field-validation:
+    strategy:
+      fail-fast: false
+      matrix:
+        legend: ['Orianna','Vex']
+    runs-on: ubuntu-24.04
+    timeout-minutes: 65
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify upgraded field-validation code
+        run: python3 -m py_compile scripts/blind_validate_radiance.py scripts/evaluate_radiance_ismcts.py
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 44930045768
+          github-token: ${{ github.token }}
+          name: all-58-radiance-ismcts-candidate-results
+          path: results/radiance_58_ismcts
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 44929504017
+          github-token: ${{ github.token }}
+          name: radiance-full-catalog-58-legends-coverage
+          path: results/full_radiance_pool
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 44900171748
+          github-token: ${{ github.token }}
+          name: verified-ismcts-engine-58
+          path: .
+      - name: Install engine runtime dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libboost-all-dev
+          chmod +x alpharune/build/riftbound
+      - name: Compare finalist with its baseline against all 57 other legends
+        run: |
+          python3 -u scripts/blind_validate_radiance.py \
+            --selected results/radiance_58_ismcts \
+            --baselines results/full_radiance_pool \
+            --engine alpharune/build/riftbound \
+            --output results/full_field_${{ matrix.legend }} \
+            --all-opponents --legend-prefix "${{ matrix.legend }}" \
+            --agent ismcts:sims=24 \
+            --repetitions 1 --workers 8 --timeout 75 \
+            --seed 2026112899911
+      - name: Audit all matchups and multiple testing
+        run: |
+          python3 - <<'PY'
+          import json,collections,pathlib,os
+          p=pathlib.Path('results/full_field_'+os.environ['TARGET'])
+          j=json.loads((p/'blind_summary.json').read_text())
+          assert len(j['decisions'])==1
+          d=j['decisions'][0]
+          scenarios=json.loads((p/'blind_scenarios.json').read_text())
+          groups=collections.defaultdict(list)
+          for r in scenarios:groups[r['opponent']].append(r)
+          expected=57*2
+          complete=d['completed_paired_scenarios']==expected and len(groups)==57
+          tally=[]
+          for name,rows in sorted(groups.items()):
+            wins_base=sum(x['baseline_win'] for x in rows if x['baseline_status']==x['candidate_status']=='complete')
+            wins_candidate=sum(x['candidate_win'] for x in rows if x['baseline_status']==x['candidate_status']=='complete')
+            tally.append({'opponent':name,'paired_scenarios':len(rows),'baseline_wins':wins_base,'candidate_wins':wins_candidate,
+                          'incomplete':sum(x['baseline_status']!='complete' or x['candidate_status']!='complete' for x in rows)})
+          complete=complete and all(x['paired_scenarios']==2 and x['incomplete']==0 for x in tally)
+          pval=d['mcnemar_exact_two_sided_p']
+          report={'legend':d['legend'],'opponents':len(groups),'all_57_validated':complete,
+             'paired_scenarios_complete':d['completed_paired_scenarios'],'paired_scenarios_expected':expected,
+             'baseline_wins':d['baseline_wins'],'candidate_wins':d['candidate_wins'],
+             'raw_p_two_sided':pval,'bonferroni_corrected_for_two_candidates':min(1.,2*pval),
+             'improved_opponents':sum(x['candidate_wins']>x['baseline_wins'] for x in tally),
+             'worsened_opponents':sum(x['candidate_wins']<x['baseline_wins'] for x in tally),
+             'unchanged_opponents':sum(x['candidate_wins']==x['baseline_wins'] for x in tally),
+             'certified_global_optimum':False,
+             'candidate_supported_on_field':bool(complete and d['candidate_wins']>d['baseline_wins'] and 2*pval<.05),
+             'method':'ISMCTS-vs-ISMCTS, fixed deck BO3, 24 sims per action, no sideboarding'}
+          (p/'field_57_summary.json').write_text(json.dumps(report,indent=2))
+          (p/'per_opponent.json').write_text(json.dumps(tally,indent=2))
+          print('ALL_57_LEGENDS_FIELD_RESULT',json.dumps(report),flush=True)
+          if not complete:raise SystemExit('INCOMPLETE_FIELD: invalid for deck acceptance')
+          PY
+        env:
+          TARGET: ${{ matrix.legend }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: radiance-all-57-opponents-${{ matrix.legend }}
+          path: results/full_field_${{ matrix.legend }}/
+          if-no-files-found: ignore
+          retention-days: 30

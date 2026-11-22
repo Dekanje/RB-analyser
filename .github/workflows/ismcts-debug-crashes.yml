@@ -1,0 +1,66 @@
+name: Reproduce ISMCTS Mordekaiser and Seraphine crashes
+on:
+  push:
+    branches: ['optimization/ismcts-2026-11-21']
+    paths: ['.github/workflows/ismcts-debug-crashes.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  debug:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install compiler and debugger
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq cmake ninja-build g++ gdb ccache libboost-all-dev nlohmann-json3-dev
+          git clone --quiet https://github.com/chorlick/alpharune.git alpharune
+          git -C alpharune checkout --quiet --detach ec90f0fed002aed374d06249fa95e83e3cfbd386
+          python3 radiance/engine_overlay/apply.py
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/ccache
+          key: ismcts-debug-ccache-${{ runner.os }}-${{ github.sha }}
+          restore-keys: |
+            optimization-ccache-ubuntu2404-
+            radiance-ccache-ubuntu2404-
+      - name: Build engine with frame pointers for debugger
+        run: |
+          cmake -S alpharune -B alpharune/build -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo -DRIFTBOUND_BUILD_JOBS=2 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_FLAGS="-fno-omit-frame-pointer -g1"
+          cmake --build alpharune/build --target riftbound -j 2
+      - name: Reproduce exact failed seeds in gdb
+        run: |
+          mkdir -p diagnostics
+          python3 - <<'PY'
+          from pathlib import Path
+          import subprocess,sys
+          sys.path.insert(0,'scripts')
+          from run_actual_games import decode
+          from legal_candidate import make_legal_candidate
+          decks=make_legal_candidate(decode(),Path('decks_legal_candidate'))
+          trials=[
+            ('mordekaiser_segv',"Mordekaiser, Iron Revenant","Azir, Emperor of the Sands",202611556010),
+            ('seraphine_spell_cost',"Darius, Hand of Noxus","Seraphine, Starry-Eyed Songstress",202611621040)
+          ]
+          for name,a,b,seed in trials:
+              cmd=['gdb','--batch','-ex','set pagination off','-ex','run','-ex','bt 35','--args',
+                   'alpharune/build/riftbound','--deck1',str(decks[a]),'--deck2',str(decks[b]),
+                   '--agent1','ismcts:sims=24','--agent2','ismcts:sims=24',
+                   '--game-mode','match','--seed',str(seed),'--web','off','--render-html','off']
+              try:
+                  r=subprocess.run(cmd,capture_output=True,text=True,timeout=240)
+                  output=r.stdout+'\n'+r.stderr
+              except subprocess.TimeoutExpired as ex:
+                  output='TIMED OUT after 240 seconds '+str(ex)
+              Path('diagnostics/'+name+'.txt').write_text(output)
+              print('DEBUG_CASE',name,'OUTPUT_TAIL',output[-6000:],flush=True)
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ismcts-crash-debuggers
+          path: diagnostics/
+          retention-days: 14
+          if-no-files-found: ignore

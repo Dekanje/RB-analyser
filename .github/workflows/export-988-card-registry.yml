@@ -1,0 +1,40 @@
+name: Export compiled 988-card AlphaRune registry for Radiance decklists
+on:
+  push:
+    branches: ['optimization/full-radiance-2026-11-21']
+    paths: ['.github/workflows/export-988-card-registry.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  export:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 44900171748
+          github-token: ${{ github.token }}
+          name: verified-ismcts-engine-58
+          path: .
+      - name: Export exact playable card identities and set codes
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libboost-all-dev
+          chmod +x alpharune/build/riftbound
+          mkdir -p results/export_registry
+          alpharune/build/riftbound --dump-registry results/export_registry/card_registry_988.json
+          python3 - <<'PY'
+          import json
+          p='results/export_registry/card_registry_988.json'
+          d=json.load(open(p))
+          assert len(d['cards'])==988,len(d['cards'])
+          print('REGISTRY_988_EXPORTED',len(d['cards']))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: radiance-optimizer-compiled-988-card-registry
+          path: results/export_registry/
+          retention-days: 30

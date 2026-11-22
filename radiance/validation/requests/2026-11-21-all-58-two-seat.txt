@@ -1,0 +1,4 @@
+Run all 58 original optimized decks unchanged, each in both seats, against pinned AlphaRune experimental Radiance engine.
+Request SHA: 1514928146ff12b4f2d577191b6bf86b25a089bc
+Required: no substitutions; fail closed on any invalid or incomplete game; artifact records original SHA for every deck.
+This is engine compatibility, not rules certification or tournament sideboarding.

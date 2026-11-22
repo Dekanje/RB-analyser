@@ -1,0 +1,20 @@
+name: Export current Radiance overlay for local test
+on:
+  push:
+    branches: ['radiance/engine-mechanics-development']
+    paths: ['.github/workflows/export-alpharune-snapshot.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  export:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Make overlay archive
+        run: tar -czf branch-overlay-src.tgz radiance/engine_overlay
+      - uses: actions/upload-artifact@v4
+        with:
+          name: current-radiance-overlay
+          path: branch-overlay-src.tgz
+          retention-days: 1

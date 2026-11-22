@@ -1,0 +1,1 @@
+Full regression gate at 988 compiled card definitions with mandatory complete-pair pre-play legality probe, visible-name ordering, and corrected source-scan count. Preserve failures, collect fresh seeded deck fingerprint; control upstream passed all five cases.

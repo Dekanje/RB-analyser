@@ -1,0 +1,27 @@
+name: Optimization source material for local QA
+on:
+  push:
+    branches: ['optimization/ismcts-2026-11-21']
+    paths: ['.github/workflows/optimization-source-export.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  export:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Make reproducible sample archive
+        run: |
+          mkdir -p optimization_export
+          cp data/optimized_58_decks.json.gz.b64 optimization_export/
+          cp scripts/legal_candidate.py scripts/run_actual_games.py optimization_export/
+          cp scripts/run_bo3_pairings.py optimization_export/
+          cp .github/workflows/radiance-2026-11-23-bans.yml optimization_export/
+          sha256sum optimization_export/* > optimization_export/SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: optimizer-inputs
+          path: optimization_export/
+          retention-days: 1

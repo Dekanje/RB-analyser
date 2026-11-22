@@ -1,0 +1,52 @@
+name: Isolate Mordekaiser crash by ISMCTS search depth
+on:
+  push:
+    branches: ['repair/ismcts-stability-2026-11-21']
+    paths: ['.github/workflows/ismcts-search-depth-diagnostics.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  search-budget:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 44932743894
+          github-token: ${{ github.token }}
+          name: repaired-ismcts-engine-preflight
+          path: .
+      - run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libboost-all-dev
+          chmod +x alpharune/build/riftbound
+      - name: Reproduce crash sensitivity from true engine games
+        run: |
+          python3 - <<'PY'
+          import pathlib,sys,json
+          sys.path.insert(0,'scripts')
+          from run_actual_games import decode,gametest
+          from legal_candidate import make_legal_candidate
+          decks=make_legal_candidate(decode(),pathlib.Path('decks_legal_candidate'))
+          cases=[
+             ('mord_azir','Mordekaiser, Iron Revenant','Azir, Emperor of the Sands',202611556010),
+             ('mord_mirror','Mordekaiser, Iron Revenant','Mordekaiser, Iron Revenant',202611556151)]
+          rows=[]
+          for tag,a,b,seed in cases:
+            for agent in ('random','ismcts:sims=1','ismcts:sims=2','ismcts:sims=4','ismcts:sims=8','ismcts:sims=12','ismcts:sims=24'):
+              r=gametest(pathlib.Path('alpharune/build/riftbound'),decks[a],decks[b],seed,90,agent)
+              obj={'case':tag,'seed':seed,'agent':agent,'status':r['status'],'returncode':r['returncode'],'winner':r['winner'],'stderr':r['stderr_tail'][-400:]}
+              rows.append(obj)
+              print('ISMCTS_BUDGET_DIAG',json.dumps(obj),flush=True)
+          pathlib.Path('results').mkdir(exist_ok=True)
+          pathlib.Path('results/ismcts_budget_diagnostic.json').write_text(json.dumps(rows,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ismcts-search-budget-crash-signatures
+          path: results/ismcts_budget_diagnostic.json
+          if-no-files-found: error
+          retention-days: 30

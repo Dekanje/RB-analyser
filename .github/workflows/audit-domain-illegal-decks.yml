@@ -1,0 +1,26 @@
+name: Audit domain-illegal original optimized deck cards
+on:
+  push:
+    branches: ['radiance/engine-mechanics-development']
+    paths: ['.github/workflows/audit-domain-illegal-decks.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Print exact source cards and hash for affected decks
+        run: |
+          python3 - <<'PY'
+          import sys,hashlib
+          sys.path.insert(0,'scripts')
+          from run_actual_games import decode,header
+          needed={"Lucian, Purifier","Miss Fortune, Bounty Hunter","Rengar, Pridestalker","Azir, Emperor of the Sands","Renekton, Butcher of the Sands"}
+          for path in decode():
+              if header(path) not in needed:continue
+              print("===== DECK",header(path),"SOURCE SHA",hashlib.sha256(path.read_bytes()).hexdigest(),"=====",flush=True)
+              print(path.read_text(),flush=True)
+          PY

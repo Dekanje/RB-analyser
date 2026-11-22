@@ -1,0 +1,1 @@
+Run pinned regression after restricting Demacian Standard trigger to legal attack contexts; retain all regression failures.

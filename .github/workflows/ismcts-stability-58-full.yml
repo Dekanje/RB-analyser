@@ -1,0 +1,162 @@
+name: Repair ISMCTS engine and rerun all 58 BO3 matchups
+on:
+  push:
+    branches: ['repair/ismcts-stability-2026-11-21']
+    paths:
+      - '.github/workflows/ismcts-stability-58-full.yml'
+      - 'radiance/engine_overlay/stability_patch.py'
+      - 'scripts/repaired_matrix_postmortem.py'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: repair-ismcts-58-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check source scripts and install pinned engine dependencies
+        run: |
+          python3 -m py_compile scripts/repaired_matrix_postmortem.py scripts/run_bo3_pairings.py radiance/engine_overlay/stability_patch.py
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq cmake ninja-build g++ ccache libboost-all-dev nlohmann-json3-dev
+      - name: Exact source checkout and stability fixes
+        run: |
+          git clone --quiet https://github.com/chorlick/alpharune.git alpharune
+          git -C alpharune checkout --quiet --detach ec90f0fed002aed374d06249fa95e83e3cfbd386
+          python3 radiance/engine_overlay/apply.py
+          python3 radiance/engine_overlay/stability_patch.py
+          grep -F 'kFiberStackBytes = 2 * 1024 * 1024;' alpharune/src/engine/step_driver.cpp
+          grep -F 'requires_complete_viability' alpharune/src/engine/game_engine.cpp
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/ccache
+          key: ismcts-stability-ccache-ubuntu2404-${{ github.sha }}
+          restore-keys: |
+            ismcts-debug-ccache-ubuntu2404-
+            ismcts-bo3-ccache-ubuntu2404-
+            optimization-ccache-ubuntu2404-
+            radiance-ccache-ubuntu2404-
+      - name: Compile patched engine
+        run: |
+          cmake -S alpharune -B alpharune/build -G Ninja -DCMAKE_BUILD_TYPE=Release -DRIFTBOUND_BUILD_JOBS=2 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+          cmake --build alpharune/build --target riftbound -j 2
+          python3 radiance/engine_overlay/verify.py
+      - name: Strict original roster legality and two-seat engine validation
+        run: |
+          python3 scripts/validate_58_originals.py --legal-candidates --engine alpharune/build/riftbound --repetitions 2 --seconds 60 --output results/all_58_legal_candidate_validation.json
+      - name: Reproduce previous crash seeds with ISMCTS both seats and require actual game completion
+        run: |
+          python3 - <<'PY'
+          import json,pathlib,sys,hashlib
+          sys.path.insert(0,'scripts')
+          from run_actual_games import decode,gametest
+          from legal_candidate import make_legal_candidate
+          decks=make_legal_candidate(decode(),pathlib.Path('decks_legal_candidate'))
+          cases=[
+             ("Mordekaiser, Iron Revenant","Azir, Emperor of the Sands",202611556010),
+             ("Mordekaiser, Iron Revenant","Azir, Emperor of the Sands",202611556040),
+             ("Mordekaiser, Iron Revenant","Azir, Emperor of the Sands",202611556050),
+             ("Mordekaiser, Iron Revenant","Azir, Emperor of the Sands",202611556081),
+             ("Mordekaiser, Iron Revenant","Vi, Piltover Enforcer",202611556091),
+             ("Mordekaiser, Iron Revenant","Mordekaiser, Iron Revenant",202611556151),
+             ("Darius, Hand of Noxus","Seraphine, Starry-Eyed Songstress",202611621040),
+             ("Seraphine, Starry-Eyed Songstress","Darius, Hand of Noxus",202611621041),
+             ("Lux, Lady of Luminosity","Seraphine, Starry-Eyed Songstress",202612593080),
+             ("Lillia, Bashful Bloom","Seraphine, Starry-Eyed Songstress",202612534022),
+             ("Diana, Scorn of the Moon","Seraphine, Starry-Eyed Songstress",202611673010),
+             ("Garen, Might of Demacia","Seraphine, Starry-Eyed Songstress",202611964040),
+          ]
+          rows=[]
+          for a,b,seed in cases:
+            r=gametest(pathlib.Path('alpharune/build/riftbound'),decks[a],decks[b],seed,90,'ismcts:sims=24')
+            entry={'a':a,'b':b,'seed':seed,'status':r['status'],'winner':r['winner'],
+                   'returncode':r['returncode'],'stderr_tail':r['stderr_tail'][-1000:]}
+            rows.append(entry)
+            print('STABILITY_SEED',json.dumps(entry),flush=True)
+          pathlib.Path('results').mkdir(exist_ok=True)
+          pathlib.Path('results/repaired_exact_seed_replay.json').write_text(json.dumps(rows,indent=2))
+          if any(r['status']!='complete' or r['winner'] not in (1,2) for r in rows):
+            raise SystemExit('STABILITY_PREFLIGHT_FAILED: preserve failure receipts; no all-field run')
+          print('STABILITY_PREFLIGHT_12_OF_12_COMPLETE')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: repaired-ismcts-engine-preflight
+          path: |
+            alpharune/build/riftbound
+            results/all_58_legal_candidate_validation.json
+            results/repaired_exact_seed_replay.json
+          compression-level: 0
+          retention-days: 30
+          if-no-files-found: ignore
+  simulate:
+    needs: prepare
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 58
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: ${{ github.run_id }}
+          github-token: ${{ github.token }}
+          name: repaired-ismcts-engine-preflight
+          path: .
+      - name: Install compiled runtime dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libboost-all-dev
+          chmod +x alpharune/build/riftbound
+          if ldd alpharune/build/riftbound | grep -q 'not found'; then
+            echo 'Missing runtime libraries'
+            exit 1
+          fi
+      - name: Strict real ISMCTS vs ISMCTS fixed-deck BO3
+        run: |
+          python3 scripts/run_bo3_pairings.py --legal-candidates --validation results/all_58_legal_candidate_validation.json --engine alpharune/build/riftbound --shards 64 --shard ${{ matrix.shard }} --series-per-pair 20 --agent ismcts:sims=24 --seconds 75 --max-seconds 3050 --output results/ismcts_bo3_shard_${{ matrix.shard }}.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: repaired-ismcts-bo3-shard-${{ matrix.shard }}
+          path: results/ismcts_bo3_shard_${{ matrix.shard }}.json
+          retention-days: 30
+          if-no-files-found: ignore
+  aggregate:
+    if: always()
+    needs: [prepare, simulate]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: repaired-ismcts-bo3-shard-*
+          path: results/shards
+      - name: Identify all crashes, timeouts, invalid games and missing shards
+        if: always()
+        run: |
+          python3 scripts/repaired_matrix_postmortem.py --inputs 'results/shards/repaired-ismcts-bo3-shard-*/ismcts_bo3_shard_*.json' --output results/repaired_ismcts_postmortem.json --shards 64 --series-per-pair 20
+      - name: Aggregate only if all 34,220 real BO3 series completed
+        run: |
+          python3 scripts/aggregate_bo3.py --inputs 'results/shards/repaired-ismcts-bo3-shard-*/ismcts_bo3_shard_*.json' --output results/ismcts_bo3_all_matchups.json
+          mv results/bo3_legend_rankings.csv results/repaired_ismcts_58_legend_rankings.csv
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: repaired-58-ismcts-full-matrix-and-diagnostics
+          path: |
+            results/repaired_ismcts_postmortem.json
+            results/ismcts_bo3_all_matchups.json
+            results/ismcts_bo3_all_matchups.csv
+            results/repaired_ismcts_58_legend_rankings.csv
+          retention-days: 30
+          if-no-files-found: ignore

@@ -1,0 +1,1 @@
+Re-run all 58 original-deck compatibility checks with explicit failure diagnostics. No silent substitutions beyond separately disclosed Ornn candidate.

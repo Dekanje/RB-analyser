@@ -1,0 +1,63 @@
+name: Diagnose persistent Mordekaiser ISMCTS SIGSEGV on exact seeds
+on:
+  push:
+    branches: ['repair/ismcts-stability-2026-11-21']
+    paths: ['.github/workflows/ismcts-crash-diagnostics-v2.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  gdb:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 44932743894
+          github-token: ${{ github.token }}
+          name: repaired-ismcts-engine-preflight
+          path: .
+      - name: Dependencies, symbols, stack and gdb
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq gdb libboost-all-dev
+          chmod +x alpharune/build/riftbound
+          ulimit -s
+      - name: Reproduce saved exact failures in gdb with complete machine context
+        run: |
+          python3 - <<'PY'
+          import pathlib,subprocess,sys,json
+          sys.path.insert(0,'scripts')
+          from run_actual_games import decode
+          from legal_candidate import make_legal_candidate
+          decks=make_legal_candidate(decode(),pathlib.Path('decks_legal_candidate'))
+          cases=[
+           ("mord_vs_azir","Mordekaiser, Iron Revenant","Azir, Emperor of the Sands",202611556010),
+           ("azir_vs_mord","Azir, Emperor of the Sands","Mordekaiser, Iron Revenant",202611556010),
+           ("mord_mirror","Mordekaiser, Iron Revenant","Mordekaiser, Iron Revenant",202611556151),
+          ]
+          out=pathlib.Path('results/gdb');out.mkdir(parents=True,exist_ok=True)
+          for label,a,b,seed in cases:
+           cmd=['gdb','--batch','-q','-ex','set pagination off','-ex','set print thread-events off',
+                '-ex','handle SIGSEGV stop print nopass','-ex','run',
+                '-ex','info threads','-ex','thread apply all bt 90',
+                '-ex','info registers','-ex','info proc mappings',
+                '--args','alpharune/build/riftbound','--deck1',str(decks[a]),
+                '--deck2',str(decks[b]),'--agent1','ismcts:sims=24','--agent2','ismcts:sims=24',
+                '--game-mode','match','--seed',str(seed),'--web','off','--render-html','off']
+           try:
+            p=subprocess.run(cmd,capture_output=True,text=True,timeout=150)
+            text=p.stdout+'\n'+p.stderr
+           except subprocess.TimeoutExpired as ex:text='GDB TIMEOUT '+str(ex)
+           (out/(label+'.txt')).write_text(text,encoding='utf8')
+           print('GDB_CASE',label,'TAIL',text[-12000:],flush=True)
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: repaired-mordekaiser-gdb-signatures
+          path: results/gdb/
+          retention-days: 30
+          if-no-files-found: ignore
