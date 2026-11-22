@@ -19,14 +19,12 @@ public:
         std::vector<GameObjectId> eligible;
         for (const auto& [id, obj]:ctx.state.objects.onBoard()) {
             if (!obj.isGear() || !obj.location.has_value()) continue;
-            if (obj.card_def_id==kInvalidId) continue;
-            if (obj.card_def_id.raw() >= 0 &&
-                obj.card_def_id != kInvalidId &&
-                ctx.state.objectExists(id)) {
-                // Printed cost rather than effective play cost (CR 102).
-                if (ctx.state.getObject(id).energy_cost <= 4)
-                    eligible.push_back(id);
-            }
+            // Printed cost, NOT current play cost or a runtime GameObject
+            // property. The registry is populated on the real engine path.
+            if (obj.card_def_id==kInvalidId || !ctx.registry) continue;
+            const Card* gear_card=ctx.registry->get(obj.card_def_id);
+            if (gear_card && gear_card->def().energy_cost <= 4)
+                eligible.push_back(id);
         }
         auto chosen=selectSeveralTargets(*this, ctx,
             "Stalwart Goatherd: optionally kill gear costing 4 or less",
