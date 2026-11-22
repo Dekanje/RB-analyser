@@ -14,6 +14,9 @@ WAVE1 = {
     "RAD-008/167": ["WarScoutPrintedIdentityAndAccelerate","WarScoutBuffsChosenFriendlyUnitViaTriggeredChoice","WarScoutCanBuffEnemyUnitViaTriggeredChoice"],
     "RAD-049/167": ["PrintedCostDomainAndIdentity","IndustriousMechsmithCreatesThreeMightMechInBase","IndustriousMechsmithCreatesTokenAtSameBattlefield"],
     "RAD-003/167": ["PrintedCostDomainAndIdentity","BilgewaterTrackerCanDeclineEveryOptionalTarget","BilgewaterTrackerChoosesTwoUnitsAndNotThird","BilgewaterTrackerDamageIsLethalForOneMightUnits"],
+    "RAD-009/167": ["NewCardsHaveExactPrintedIdentities","ApparatusAndItsMechEnterReadyInBase","ApparatusPlaysMechAtSameBattlefield"],
+    "RAD-119/167": ["NewCardsHaveExactPrintedIdentities","HuntingDogDoesNotCreateBirdJustByBeingPlayed","HuntingDogDeathCreatesDeflectBirdInControllerBase"],
+    "RAD-083/167": ["NewCardsHaveExactPrintedIdentities","GoatherdMayDeclineKillingAnyGear","GoatherdCanKillChosenAffordableGear","GoatherdDoesNothingWithoutLegalGearTarget"],
 }
 # Evidence gaps must remain explicit until deterministic gameplay interactions pass.
 KNOWN_GAPS = {
@@ -26,6 +29,9 @@ KNOWN_GAPS = {
     "RAD-008/167": ["Accelerate payment/ready-state, Might expiration, counter and invalid-target cases not yet covered"],
     "RAD-049/167": ["Source leaves board before triggered effect resolves; token replacement effects and token interactions not yet exercised"],
     "RAD-003/167": ["Deflect, mistargeted unit, damaged-before-trigger and death-replacement interactions not yet tested"],
+    "RAD-009/167": ["Ready-state replacement effects, kill-source-before-trigger-resolution, and Mech interactions not yet tested"],
+    "RAD-119/167": ["Death replacement, countered Deathknell, and Bird Deflect payment not yet tested"],
+    "RAD-083/167": ["Shield 2 combat calculation, enemy Deflect costs, and gear death-replacement not yet tested"],
 }
 
 def main():
