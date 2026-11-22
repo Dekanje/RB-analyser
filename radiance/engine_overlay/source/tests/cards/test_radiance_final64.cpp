@@ -75,6 +75,41 @@ static const std::vector<Printed> expected={
  {1130,163,0,0,0,R"R64(Hunters' Circle)R64",CardType::Battlefield},
  {1131,167,6,1,4,R"R64(Neeko, Blending In)R64",CardType::Unit},
 };
+TEST_F(RadianceFinal64Test, RaucousAnthemReadiesAndStrengthensAllFriendliesOnly){
+ auto a=addUnit(P1,kInvalidId,2,0);
+ auto b=addUnit(P1,kInvalidId,3,-1);
+ auto enemy=addUnit(P2,kInvalidId,4,0);
+ state.getObject(a).is_exhausted=true;
+ state.getObject(b).is_exhausted=true;
+ state.getObject(enemy).is_exhausted=true;
+ auto spell=addToHand(P1,CardDefId{1124});
+ playThroughEngine(spell);
+ EXPECT_FALSE(state.getObject(a).is_exhausted);
+ EXPECT_FALSE(state.getObject(b).is_exhausted);
+ EXPECT_TRUE(state.getObject(enemy).is_exhausted);
+ EXPECT_EQ(state.getObject(a).temp_might_bonus,3);
+ EXPECT_EQ(state.getObject(b).temp_might_bonus,3);
+ EXPECT_EQ(state.getObject(enemy).temp_might_bonus,0);
+}
+TEST_F(RadianceFinal64Test, BurnAwayBanishesSmallEnemyAndBurnsExactlyTwo){
+ auto target=addUnit(P2,kInvalidId,3,0);
+ addToDeck(P1,CardDefId{1084});
+ addToDeck(P1,CardDefId{1084});
+ auto spell=addToHand(P1,CardDefId{1117});
+ EnginePathAgent choice(EnginePathAgent::choosing(target));
+ playThroughEngine(spell,&choice);
+ EXPECT_EQ(state.getObject(target).zone,ZoneType::Banishment);
+ EXPECT_EQ(state.player(P1).main_deck.size(),0u);
+ EXPECT_EQ(state.player(P1).trash.size(),3u);
+}
+TEST_F(RadianceFinal64Test, DemacianIlluminatorsBuffsAfterFriendlyUnitDies){
+ addUnit(P1,CardDefId{1122},3,0);
+ auto ally=addUnit(P1,kInvalidId,2,0);
+ auto victim=addUnit(P1,kInvalidId,1,0);
+ EnginePathAgent choice(EnginePathAgent::choosing(ally));
+ resolveThroughEngine([&](EffectExecutor& exec,GameState&){exec.killObject(victim);},&choice);
+ EXPECT_EQ(state.getObject(ally).buff_count,1);
+}
 TEST_F(RadianceFinal64Test, SixtyFourUniqueCardDefinitionsHaveCanonicalMetadata){
  ASSERT_EQ(expected.size(),64u);
  std::set<int> ids,numbers;std::set<std::string> public_codes;
