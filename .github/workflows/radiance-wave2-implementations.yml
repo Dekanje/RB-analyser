@@ -5,7 +5,7 @@ on:
     paths:
       - '.github/workflows/radiance-wave2-implementations.yml'
       - 'radiance/engine_overlay/**'
-      - 'radiance/verify_wave1_registry.py'
+      - 'radiance/verify_wave2_registry.py'
       - 'radiance/coverage_ledger.py'
       - 'radiance/validation/wave1/**'
   workflow_dispatch:
@@ -19,7 +19,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Python syntax and baseline overlay anchors
         run: |
-          python3 -m py_compile radiance/engine_overlay/apply.py radiance/engine_overlay/wave1_regression_fix.py radiance/engine_overlay/apply_wave2.py radiance/verify_wave1_registry.py
+          python3 -m py_compile radiance/engine_overlay/apply.py radiance/engine_overlay/wave1_regression_fix.py radiance/engine_overlay/apply_wave2.py radiance/verify_wave2_registry.py
           grep -F 'register_card_993(registry);' radiance/engine_overlay/apply.py
           grep -F '0989_radiance_wave1.cpp' radiance/engine_overlay/apply.py
           grep -F 'test_radiance_wave1.cpp' radiance/engine_overlay/apply.py
@@ -53,7 +53,7 @@ jobs:
       - name: Require 994 compiled cards and inventory of missing Radiance cards
         run: |
           alpharune/build/riftbound --dump-registry results/radiance_wave1_registry.json
-          python3 radiance/verify_wave1_registry.py results/radiance_wave1_registry.json --output results/radiance_wave1_coverage.json
+          python3 radiance/verify_wave2_registry.py results/radiance_wave1_registry.json --output results/radiance_wave2_coverage.json
           python3 -c 'import json; x=json.load(open("results/radiance_wave1_registry.json"))["cards"]; assert len(x)==994,(len(x),994); assert any(c.get("public_code")=="RAD-004/167" and c.get("id")==994 for c in x),"Brawl not compiled"'
           python3 radiance/coverage_ledger.py results/radiance_wave1_registry.json --output results/radiance_coverage_ledger.json
       - uses: actions/upload-artifact@v4
