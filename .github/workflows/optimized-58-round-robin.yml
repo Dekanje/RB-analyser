@@ -9,7 +9,7 @@ permissions:
   contents: read
   actions: read
 concurrency:
-  group: optimized-58-round-robin-45176567243
+  group: optimized-58-round-robin-45181493632
   cancel-in-progress: false
 jobs:
   round-robin-qa:
@@ -27,10 +27,10 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
     steps:
-      - name: Use only successful immutable run 45176567243
+      - name: Use only successful immutable run 45181493632
         run: |
           set -euo pipefail
-          run_id=45176567243
+          run_id=45181493632
           for i in $(seq 1 180); do
             state=$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}" --jq '.status+" "+(.conclusion // "pending")')
             echo "OPTIMIZED_SEARCH_SOURCE ${run_id}: ${state}"
@@ -56,14 +56,14 @@ jobs:
       - name: Fetch exactly the 58 independently optimized decks
         uses: actions/download-artifact@v4
         with:
-          run-id: 45176567243
+          run-id: 45181493632
           github-token: ${{ github.token }}
           name: expanded-optimized-58-independent-radiance-bo3
           path: results/selected
       - name: Fetch the same-run full-Radiance engine
         uses: actions/download-artifact@v4
         with:
-          run-id: 45176567243
+          run-id: 45181493632
           github-token: ${{ github.token }}
           name: independent-58-compiled-engine
           path: .
@@ -105,7 +105,7 @@ jobs:
           path: results/shards
       - uses: actions/download-artifact@v4
         with:
-          run-id: 45176567243
+          run-id: 45181493632
           github-token: ${{ github.token }}
           name: expanded-optimized-58-independent-radiance-bo3
           path: results/selected
