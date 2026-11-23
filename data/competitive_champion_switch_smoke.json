@@ -1,0 +1,18 @@
+{
+  "game2": {
+    "p1": {
+      "chosen_champion": "Kennen, Keeper of Balance"
+    },
+    "p2": {
+      "chosen_champion": "Miss Fortune, Captain"
+    }
+  },
+  "game3": {
+    "p1": {
+      "chosen_champion": "Kennen, Keeper of Balance"
+    },
+    "p2": {
+      "chosen_champion": "Miss Fortune, Captain"
+    }
+  }
+}
