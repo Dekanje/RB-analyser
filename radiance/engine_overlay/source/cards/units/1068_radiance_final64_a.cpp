@@ -349,6 +349,17 @@ class R64_1078 final : public SpellCard {
 public:
  const CardDef& def() const override { return d_; }
  unsigned choicesAtFinalization()const override{return kFinalizeResolve;}
+ // Only the first mode chooses a board object for cost modifiers: a friendly
+ // Deploy gear. Looking at one's own deck and choosing a card there must not
+ // make an unrelated battlefield unit eligible for an on-choice discount.
+ FinalizeChoice mayChooseAtFinalization(const GameState& s,PlayerId controller,
+                                        GameObjectId id)const override{
+   if(!s.objectExists(id))return FinalizeChoice::No;
+   const auto& obj=s.getObject(id);
+   return obj.isGear()&&obj.controller==controller&&obj.location.has_value()&&
+          obj.hasKeyword(Keyword::Deploy)
+       ?FinalizeChoice::Yes:FinalizeChoice::No;
+ }
  static std::vector<GameObjectId> deployGears(const GameState& s,PlayerId p){
    auto gears=f64Gears(s,p);
    std::vector<GameObjectId> out;
