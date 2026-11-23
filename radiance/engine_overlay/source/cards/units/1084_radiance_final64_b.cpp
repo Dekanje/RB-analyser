@@ -121,7 +121,7 @@ public:
    const auto type=c.state.getObject(top).card_type;
    const int actual=type==CardType::Unit?0:type==CardType::Gear?1:
                     type==CardType::Spell?2:-1;
-   if(guessed==actual)c.executor.recycleCards(c.controller,{top},knowledge::everyone());
+   if(guessed==actual)f64RecycleRevealedTop(c,c.controller,top);
    else c.executor.drawCards(c.controller,1);
  }
 
@@ -277,7 +277,7 @@ public:
    const bool mighty=obj.isUnit()&&obj.card_def_id!=kInvalidId&&
         c.executor.cardDB().get(obj.card_def_id).might>=5;
    if(mighty)c.executor.drawCards(c.controller,1);
-   else c.executor.recycleCards(c.controller,{top},knowledge::everyone());
+   else f64RecycleRevealedTop(c,c.controller,top);
  }
 
 private:
