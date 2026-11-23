@@ -1845,16 +1845,26 @@ TEST_F(RadianceFinal64Test, OriannaBattlefieldAuraDiscountsGearEnergyAndPower){
  EXPECT_EQ(state.player(P1).rune_pool.universal_power,0);
 }
 TEST_F(RadianceFinal64Test, OriannaAuraNotGrantedFromBaseOrToOpponent){
- addUnit(P1,CardDefId{1091},5,-1);
- auto gear=addToHand(P2,CardDefId{1080});
- state.player(P2).rune_pool.energy=3;
- state.player(P2).rune_pool.universal_power=1;
+ auto orianna=addUnit(P1,CardDefId{1091},5,-1);
  withEngine([&](GameEngine& e){
    e.testHook_recalculateAuras();
-   EXPECT_FALSE(e.testHook_payCardCost(P2,gear));
+   const auto& p1=e.mutableState().player(P1).cost_modifiers;
+   const auto& p2=e.mutableState().player(P2).cost_modifiers;
+   auto from_orianna=[&](const auto& m){return m.source==orianna;};
+   EXPECT_TRUE(std::none_of(p1.begin(),p1.end(),from_orianna));
+   EXPECT_TRUE(std::none_of(p2.begin(),p2.end(),from_orianna));
  });
- EXPECT_EQ(state.player(P2).rune_pool.energy,3);
- EXPECT_EQ(state.player(P2).rune_pool.universal_power,1);
+ // The battlefield aura is friendly-only; it must never reach the opponent.
+ state.getObject(orianna).zone=ZoneType::BattlefieldZone;
+ state.getObject(orianna).location=BattlefieldLocation{state.battlefields[0].id};
+ withEngine([&](GameEngine& e){
+   e.testHook_recalculateAuras();
+   const auto& p1=e.mutableState().player(P1).cost_modifiers;
+   const auto& p2=e.mutableState().player(P2).cost_modifiers;
+   auto from_orianna=[&](const auto& m){return m.source==orianna;};
+   EXPECT_EQ(std::count_if(p1.begin(),p1.end(),from_orianna),1);
+   EXPECT_TRUE(std::none_of(p2.begin(),p2.end(),from_orianna));
+ });
 }
 
 TEST_F(RadianceFinal64Test, SixtyFourUniqueCardDefinitionsHaveCanonicalMetadata){
