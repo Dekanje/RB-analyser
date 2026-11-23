@@ -91,12 +91,13 @@
     },
     "RAD-033/167": {
       "engine_id": 1078,
-      "status": "in_review",
+      "status": "accepted",
       "engine_scenarios": [
-        "RadianceFinal64Test.CommandAttackLooksAtTopFiveAndDrawsOnlyRevealedGear"
+        "RadianceFinal64Test.CommandAttackLooksAtTopFiveAndDrawsOnlyRevealedGear",
+        "RadianceFinal64Test.CommandAttackMovesFriendlyDeployGearToAnotherBattlefield"
       ],
-      "unverified_rules": "Choose one —Move a friendly gear with [Deploy] to a battlefield.Look at the top 5 cards of your Main Deck. You may reveal a gear from among them and draw it. Recycle the rest.",
-      "review_note": "Engine code and focused scenarios authored; compiled gameplay and remaining interaction/edge-case audit required before acceptance."
+      "verified_rules": "Choose one —Move a friendly gear with [Deploy] to a battlefield.Look at the top 5 cards of your Main Deck. You may reveal a gear from among them and draw it. Recycle the rest.",
+      "review_note": "Both printed modes reviewed in source and verified with real engine-play scenarios: selecting/moving a friendly Deploy gear to a second battlefield and choosing/revealing/drawing only eligible top-five gear while recycling the rest. All four Command/Seraphine focused tests passed in CI 45127670182. Overall Final64 gate remains fail-closed."
     },
     "RAD-043/167": {
       "engine_id": 1079,
@@ -477,9 +478,13 @@
     },
     "RAD-138/167": {
       "engine_id": 1128,
-      "status": "pending",
-      "engine_scenarios": [],
-      "unverified_rules": "When you play me or when I become exhausted, play a 1 :rb_might: Recruit unit token to your base.\nI have +1 :rb_might: for each other exhausted unit you control."
+      "status": "accepted",
+      "engine_scenarios": [
+        "RadianceFinal64Test.SeraphinePlayCreatesRecruitAndExhaustedFriendsAddMight",
+        "RadianceFinal64Test.SeraphineExhaustionCreatesRecruitAndAuraCountsOnlyFriendlyOthers"
+      ],
+      "verified_rules": "When you play me or when I become exhausted, play a 1 :rb_might: Recruit unit token to your base.\nI have +1 :rb_might: for each other exhausted unit you control.",
+      "review_note": "Printed play/exhaustion Recruit triggers and dynamic Might bonus reviewed against source. Dedicated engine-path tests verify a Recruit on play, another on genuine exhaustion, and a recalculated Might bonus counting only other exhausted friendly units, excluding opponents and self (CI 45127670182). Overall Final64 gate remains fail-closed."
     },
     "RAD-158/167": {
       "engine_id": 1129,
