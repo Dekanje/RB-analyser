@@ -366,7 +366,22 @@ Friendly units here have [Shield 2]. (+2 [M] while they're defenders.))RB");
 class R64_1081 final : public UnitCard {
 public:
  const CardDef& def() const override { return d_; }
- // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
+ TriggerType triggerType()const override{return TriggerType::WhenIAttackOrDefend;}
+ unsigned choicesAtFinalization()const override{return kFinalizeTrigger;}
+ void onTrigger(CardContext& c,const std::vector<GameObjectId>&)override{
+   if(!c.state.objectExists(c.source)||!c.state.getObject(c.source).isAtBattlefield()){
+     (void)finalizingChoices(c);return;
+   }
+   const auto here=c.state.getObject(c.source).battlefieldId();
+   auto friends=boardObjects(c.state,[&](const GameObject& o){
+     return o.isUnit()&&o.controller==c.controller&&o.isAtBattlefield()&&o.battlefieldId()==here;
+   });
+   const auto selected=pickTarget(c,"K'Sante: double Shield of a friendly unit here",friends);
+   if(finalizingChoices(c))return;
+   if(selected==kInvalidId||!c.state.objectExists(selected))return;
+   const int shield=c.state.getObject(selected).shield_value;
+   if(shield>0)c.executor.giveTemporaryKeyword(selected,Keyword::Shield,shield);
+ }
 private:
  const CardDef d_=[] {
   auto d=mkFinal64_a(1081,45,R"RB(K'Sante, Dauntless)RB",CardType::Unit,4,1,4,{Domain::Calm},Rarity::Epic,R"RB([Shield] (+1 [M] while I'm a defender.)
