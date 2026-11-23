@@ -60,13 +60,16 @@
     },
     "RAD-022/167": {
       "engine_id": 1076,
-      "status": "in_review",
+      "status": "accepted",
       "engine_scenarios": [
         "RadianceFinal64Test.WhirlingTwirligigExhaustsToPlayAnExhaustedGold",
-        "RadianceFinal64Test.WhirlingTwirligigSacrificesUnitAsCostToCreateMech"
+        "RadianceFinal64Test.WhirlingTwirligigPaysFriendlyGearDeathToCreateRecruit",
+        "RadianceFinal64Test.WhirlingTwirligigSacrificeOnlyTargetsFriendlyUnit",
+        "RadianceFinal64Test.WhirlingTwirligigSacrificesUnitAsCostToCreateMech",
+        "RadianceFinal64Test.WhirlingTwirligigUnitSacrificePreventedBySorakaCreatesNoMech"
       ],
-      "unverified_rules": ":rb_exhaust:: Play a Gold gear token exhausted. (It has \"[Reaction][>] Kill this, :rb_exhaust:: [Add] :rb_rune_rainbow:.\")\nKill a friendly gear, :rb_exhaust:: Play a 1 :rb_might: Recruit unit token.\nKill a friendly unit, :rb_exhaust:: Play a 3 :rb_might: Mech unit token.",
-      "review_note": "Engine code and focused scenarios authored; compiled gameplay and remaining interaction/edge-case audit required before acceptance."
+      "review_note": "Source and printed effect reviewed; real engine-path behavior covered by the named passing tests, including shared keyword handling where applicable. Prior full suite passed; new cost-replacement tests passed in targeted CI.",
+      "verified_rules": ":rb_exhaust:: Play a Gold gear token exhausted. (It has \"[Reaction][>] Kill this, :rb_exhaust:: [Add] :rb_rune_rainbow:.\")\nKill a friendly gear, :rb_exhaust:: Play a 1 :rb_might: Recruit unit token.\nKill a friendly unit, :rb_exhaust:: Play a 3 :rb_might: Mech unit token."
     },
     "RAD-031/167": {
       "engine_id": 1077,
@@ -128,9 +131,12 @@
     },
     "RAD-054/167": {
       "engine_id": 1084,
-      "status": "pending",
-      "engine_scenarios": [],
-      "unverified_rules": "[Disarm] (When I attack, give an enemy unit here -1 :rb_might: this turn.)"
+      "status": "accepted",
+      "engine_scenarios": [
+        "RadianceFinal64Test.TrinketPeddlerSharedDisarmReducesEnemyMight"
+      ],
+      "verified_rules": "[Disarm] (When I attack, give an enemy unit here -1 :rb_might: this turn.)",
+      "review_note": "Source and printed effect reviewed; real engine-path behavior covered by the named passing tests, including shared keyword handling where applicable. Prior full suite passed; new cost-replacement tests passed in targeted CI."
     },
     "RAD-060/167": {
       "engine_id": 1085,
@@ -188,15 +194,21 @@
     },
     "RAD-078/167": {
       "engine_id": 1094,
-      "status": "pending",
-      "engine_scenarios": [],
-      "unverified_rules": "[Shield 3] (+3 :rb_might: while I'm a defender.)\n[Tank] (I must be assigned combat damage first.)\nWhen I move, you may deal damage equal to my [Shield] to a unit at a battlefield."
+      "status": "accepted",
+      "engine_scenarios": [
+        "RadianceFinal64Test.ArmoredTuskerOptionalMoveTriggerDealsShieldDamage"
+      ],
+      "verified_rules": "[Shield 3] (+3 :rb_might: while I'm a defender.)\n[Tank] (I must be assigned combat damage first.)\nWhen I move, you may deal damage equal to my [Shield] to a unit at a battlefield.",
+      "review_note": "Source and printed effect reviewed; real engine-path behavior covered by the named passing tests, including shared keyword handling where applicable. Prior full suite passed; new cost-replacement tests passed in targeted CI."
     },
     "RAD-080/167": {
       "engine_id": 1095,
-      "status": "pending",
-      "engine_scenarios": [],
-      "unverified_rules": "I cost :rb_energy_2: less for each battlefield you've conquered this turn."
+      "status": "accepted",
+      "engine_scenarios": [
+        "RadianceFinal64Test.BloodscentSwarmDiscountCountsConquestsNotHolds"
+      ],
+      "verified_rules": "I cost :rb_energy_2: less for each battlefield you've conquered this turn.",
+      "review_note": "Source and printed effect reviewed; real engine-path behavior covered by the named passing tests, including shared keyword handling where applicable. Prior full suite passed; new cost-replacement tests passed in targeted CI."
     },
     "RAD-082/167": {
       "engine_id": 1096,
@@ -212,15 +224,21 @@
     },
     "RAD-085/167": {
       "engine_id": 1098,
-      "status": "pending",
-      "engine_scenarios": [],
-      "unverified_rules": "When I attack or defend, deal damage equal to my Might to all enemy units here.\nI don't deal combat damage."
+      "status": "accepted",
+      "engine_scenarios": [
+        "RadianceFinal64Test.GravesDealDamageOnAttackTriggerButNoCombatDamage"
+      ],
+      "verified_rules": "When I attack or defend, deal damage equal to my Might to all enemy units here.\nI don't deal combat damage.",
+      "review_note": "Source and printed effect reviewed; real engine-path behavior covered by the named passing tests, including shared keyword handling where applicable. Prior full suite passed; new cost-replacement tests passed in targeted CI."
     },
     "RAD-090/167": {
       "engine_id": 1099,
-      "status": "pending",
-      "engine_scenarios": [],
-      "unverified_rules": "[Ambush] (You may play me as a [Reaction] to a battlefield where you have units.)\nWhen you play a card from face down, ready me and give me +1 :rb_might: this turn."
+      "status": "accepted",
+      "engine_scenarios": [
+        "RadianceFinal64Test.EvelynnConsumingReadiesAndStrengthensOnFacedownPlayTrigger"
+      ],
+      "verified_rules": "[Ambush] (You may play me as a [Reaction] to a battlefield where you have units.)\nWhen you play a card from face down, ready me and give me +1 :rb_might: this turn.",
+      "review_note": "Source and printed effect reviewed; real engine-path behavior covered by the named passing tests, including shared keyword handling where applicable. Prior full suite passed; new cost-replacement tests passed in targeted CI."
     },
     "RAD-091/167": {
       "engine_id": 1100,
@@ -230,9 +248,12 @@
     },
     "RAD-092/167": {
       "engine_id": 1101,
-      "status": "pending",
-      "engine_scenarios": [],
-      "unverified_rules": "If you would channel runes, channel that many runes plus 1 exhausted rune instead."
+      "status": "accepted",
+      "engine_scenarios": [
+        "RadianceFinal64Test.SeraphicWyvernAddsOneExhaustedRuneToReadyChannel"
+      ],
+      "verified_rules": "If you would channel runes, channel that many runes plus 1 exhausted rune instead.",
+      "review_note": "Source and printed effect reviewed; real engine-path behavior covered by the named passing tests, including shared keyword handling where applicable. Prior full suite passed; new cost-replacement tests passed in targeted CI."
     },
     "RAD-094/167": {
       "engine_id": 1102,
@@ -242,9 +263,12 @@
     },
     "RAD-098/167": {
       "engine_id": 1103,
-      "status": "pending",
-      "engine_scenarios": [],
-      "unverified_rules": "[Reaction] (Play any time, even before spells and abilities resolve.)\nMove an enemy unit that moved this turn."
+      "status": "accepted",
+      "engine_scenarios": [
+        "RadianceFinal64Test.SirensSongMovesOnlyEnemyUnitThatMovedThisTurn"
+      ],
+      "verified_rules": "[Reaction] (Play any time, even before spells and abilities resolve.)\nMove an enemy unit that moved this turn.",
+      "review_note": "Source and printed effect reviewed; real engine-path behavior covered by the named passing tests, including shared keyword handling where applicable. Prior full suite passed; new cost-replacement tests passed in targeted CI."
     },
     "RAD-102/167": {
       "engine_id": 1104,
@@ -260,27 +284,39 @@
     },
     "RAD-104/167": {
       "engine_id": 1106,
-      "status": "pending",
-      "engine_scenarios": [],
-      "unverified_rules": ":rb_exhaust:: [Stun] an enemy unit. (It doesn't deal combat damage this turn.)"
+      "status": "accepted",
+      "engine_scenarios": [
+        "RadianceFinal64Test.PitilessStalkerExhaustsToStunEnemy"
+      ],
+      "verified_rules": ":rb_exhaust:: [Stun] an enemy unit. (It doesn't deal combat damage this turn.)",
+      "review_note": "Source and printed effect reviewed; real engine-path behavior covered by the named passing tests, including shared keyword handling where applicable. Prior full suite passed; new cost-replacement tests passed in targeted CI."
     },
     "RAD-108/167": {
       "engine_id": 1107,
-      "status": "pending",
-      "engine_scenarios": [],
-      "unverified_rules": "[Deploy] (Play this only to a battlefield. When an opponent holds here, kill this.)\nWhile you or an ally control this battlefield, that player may hide an additional card here."
+      "status": "accepted",
+      "engine_scenarios": [
+        "RadianceFinal64Test.BushwhackTrapGrantsExtraFacedownSlotOnlyWhileHeld"
+      ],
+      "verified_rules": "[Deploy] (Play this only to a battlefield. When an opponent holds here, kill this.)\nWhile you or an ally control this battlefield, that player may hide an additional card here.",
+      "review_note": "Source and printed effect reviewed; real engine-path behavior covered by the named passing tests, including shared keyword handling where applicable. Prior full suite passed; new cost-replacement tests passed in targeted CI."
     },
     "RAD-109/167": {
       "engine_id": 1108,
-      "status": "pending",
-      "engine_scenarios": [],
-      "unverified_rules": "[Disarm] (When I attack, give an enemy unit here -1 :rb_might: this turn.)\nWhen I hold, if you control a facedown card here, score 1 point."
+      "status": "accepted",
+      "engine_scenarios": [
+        "RadianceFinal64Test.EvelynnScoresOnHoldOnlyWithFriendlyFacedownHere"
+      ],
+      "verified_rules": "[Disarm] (When I attack, give an enemy unit here -1 :rb_might: this turn.)\nWhen I hold, if you control a facedown card here, score 1 point.",
+      "review_note": "Source and printed effect reviewed; real engine-path behavior covered by the named passing tests, including shared keyword handling where applicable. Prior full suite passed; new cost-replacement tests passed in targeted CI."
     },
     "RAD-110/167": {
       "engine_id": 1109,
-      "status": "pending",
-      "engine_scenarios": [],
-      "unverified_rules": "When I move, you may have another unit's base Might become 4 this turn."
+      "status": "accepted",
+      "engine_scenarios": [
+        "RadianceFinal64Test.LuluCanChangeAnotherUnitsBaseMightAfterMove"
+      ],
+      "verified_rules": "When I move, you may have another unit's base Might become 4 this turn.",
+      "review_note": "Source and printed effect reviewed; real engine-path behavior covered by the named passing tests, including shared keyword handling where applicable. Prior full suite passed; new cost-replacement tests passed in targeted CI."
     },
     "RAD-111/167": {
       "engine_id": 1110,
@@ -296,9 +332,12 @@
     },
     "RAD-113/167": {
       "engine_id": 1112,
-      "status": "pending",
-      "engine_scenarios": [],
-      "unverified_rules": "[Deflect] (Opponents must pay :rb_rune_rainbow: to choose me with a spell or ability.)\n:rb_exhaust:: Choose an opponent. They must move a unit they control to my battlefield."
+      "status": "accepted",
+      "engine_scenarios": [
+        "RadianceFinal64Test.AnglerWyrmAbilityLetsOpponentSelectUnitToMove"
+      ],
+      "verified_rules": "[Deflect] (Opponents must pay :rb_rune_rainbow: to choose me with a spell or ability.)\n:rb_exhaust:: Choose an opponent. They must move a unit they control to my battlefield.",
+      "review_note": "Source and printed effect reviewed; real engine-path behavior covered by the named passing tests, including shared keyword handling where applicable. Prior full suite passed; new cost-replacement tests passed in targeted CI."
     },
     "RAD-114/167": {
       "engine_id": 1113,
