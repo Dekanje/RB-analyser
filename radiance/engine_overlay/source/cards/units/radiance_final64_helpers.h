@@ -100,6 +100,16 @@ inline GameObjectId f64RevealTop(CardContext& c,PlayerId owner){
  return top;
 }
 
+// Revealed top cards remain in Main Deck until explicitly taken. A
+// recycleCards call on one still in the deck inserts a duplicate object.
+inline void f64RecycleRevealedTop(CardContext& c,PlayerId owner,GameObjectId top){
+ if(top==kInvalidId||!c.state.objectExists(top))return;
+ if(c.state.getObject(top).zone!=ZoneType::MainDeck)return;
+ auto& deck=c.state.player(owner).main_deck;
+ if(std::find(deck.begin(),deck.end(),top)==deck.end())return;
+ if(!deck::take(c.state,top,deck::Place::Held,knowledge::everyone()))return;
+ c.executor.recycleCards(owner,{top},knowledge::everyone());
+}
 inline int f64TotalFriendlyExhausted(const GameState& s,PlayerId p,GameObjectId exclude=kInvalidId){
  int n=0;
  for(const auto& [id,o]:s.objects.onBoard())
