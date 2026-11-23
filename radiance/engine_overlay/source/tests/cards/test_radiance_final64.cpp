@@ -1528,13 +1528,13 @@ TEST_F(RadianceFinal64Test, ForbiddenTechniqueHighEnergyPlayFromTrashReadiesAndB
  state.getObject(target).is_exhausted=true;
  state.player(P1).rune_pool.energy=20;
  state.player(P1).rune_pool.power[static_cast<int>(Domain::Fury)]=4;
- auto expensive=addToHand(P1,CardDefId{1095}); // 8 Energy and 2 Fury Power.
+ auto expensive=addToHand(P1,CardDefId{1074}); // 9 Energy and 2 Fury Power.
  EnginePathAgent yes(EnginePathAgent::choosing(target,EnginePathAgent::May::Yes));
  playThroughEngine(expensive,&yes,std::nullopt,nullptr,false);
  EXPECT_FALSE(state.getObject(target).is_exhausted);
  EXPECT_EQ(state.getObject(spell).zone,ZoneType::Banishment)
    <<"Replay with its own 1E/2F cost must banish this spell after it resolves";
- EXPECT_EQ(state.player(P1).rune_pool.energy,11);
+ EXPECT_EQ(state.player(P1).rune_pool.energy,10);
  EXPECT_EQ(state.player(P1).rune_pool.power[static_cast<int>(Domain::Fury)],0);
 }
 TEST_F(RadianceFinal64Test, ForbiddenTechniqueLowEnergyDoesNotGrantTrashReplay){
@@ -1561,7 +1561,7 @@ TEST_F(RadianceFinal64Test, ForbiddenTechniqueDecliningReplayKeepsCardInTrash){
  addUnit(P1,kInvalidId,2,0);
  state.player(P1).rune_pool.energy=20;
  state.player(P1).rune_pool.power[static_cast<int>(Domain::Fury)]=4;
- auto expensive=addToHand(P1,CardDefId{1095});
+ auto expensive=addToHand(P1,CardDefId{1074});
  EnginePathAgent decline;
  playThroughEngine(expensive,&decline,std::nullopt,nullptr,false);
  EXPECT_EQ(state.getObject(spell).zone,ZoneType::Trash)
@@ -1576,7 +1576,7 @@ TEST_F(RadianceFinal64Test, ForbiddenTechniqueInsufficientFuryPreventsReplay){
  addUnit(P1,kInvalidId,2,0);
  state.player(P1).rune_pool.energy=20;
  state.player(P1).rune_pool.power[static_cast<int>(Domain::Fury)]=2;
- auto expensive=addToHand(P1,CardDefId{1095});
+ auto expensive=addToHand(P1,CardDefId{1074});
  EnginePathAgent yes(EnginePathAgent::accepting());
  playThroughEngine(expensive,&yes,std::nullopt,nullptr,false);
  EXPECT_EQ(state.getObject(spell).zone,ZoneType::Trash);
