@@ -310,7 +310,7 @@
       "engine_scenarios": [
         "RadianceFinal64Test.ProtectorsShieldQuickDrawAttachesAndGivesMight",
         "RadianceFinal64Test.ProtectorsShieldEquipCostsOneEnergyNoPower",
-        "RadianceFinal64Test.ProtectorsShieldCanBeReequippedForOneEnergy"
+        "RadianceFinal64Test.ProtectorsShieldEquipInactiveWhileAttachedButWorksWhenDetached"
       ],
       "unverified_rules": "[Quick-Draw] (This has [Reaction]. When you play it, attach it to a unit you control.)\n[Equip] :rb_energy_1: (:rb_energy_1:: Attach this to a unit you control.)",
       "review_note": "Engine code and focused scenarios authored; compiled gameplay and remaining interaction/edge-case audit required before acceptance."
