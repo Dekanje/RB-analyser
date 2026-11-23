@@ -1737,6 +1737,96 @@ TEST_F(RadianceFinal64Test, HeimerdingerLeavesGearTokensUnchanged){
  EXPECT_EQ(state.getObject(gear).name,"Gold");
 }
 
+
+TEST_F(RadianceFinal64Test, RunebladeOnPlayBanishedTopAndGrantsAccess){
+ addToDeck(P1,CardDefId{1084});
+ auto top=state.player(P1).main_deck.back();
+ auto anvil=addToHand(P1,CardDefId{1071});
+ playThroughEngine(anvil);
+ EXPECT_EQ(state.getObject(top).zone,ZoneType::Banishment);
+ EXPECT_EQ(state.player(P1).main_deck.size(),0u);
+ EXPECT_TRUE(state.getObject(top).card_counters.count("__rad_play_until_turn"));
+ state.player(P1).rune_pool.energy=20;
+ withEngineDefaultTurn([&](GameEngine& e){
+  auto opts=e.generateLegalActions();
+  EXPECT_TRUE(std::any_of(opts.begin(),opts.end(),[&](const Intent& a){
+   return a.card==top&&a.play_source==Intent::PlaySource::Banishment;
+  }));
+ },nullptr,nullptr,P1);
+}
+TEST_F(RadianceFinal64Test, RunebladeLeavesBoardBanishesAnotherTop){
+ addToDeck(P1,CardDefId{1084});
+ addToDeck(P1,CardDefId{1070});
+ auto anvil=addToHand(P1,CardDefId{1071});
+ playThroughEngine(anvil);
+ ASSERT_EQ(state.player(P1).main_deck.size(),1u);
+ auto second=state.player(P1).main_deck.back();
+ withEngine([&](GameEngine& e){e.testHook_executor().killObject(anvil);
+    settleLikeTheEngine(e);});
+ EXPECT_EQ(state.getObject(second).zone,ZoneType::Banishment);
+ EXPECT_TRUE(state.getObject(second).card_counters.count("__rad_play_until_turn"));
+ EXPECT_EQ(state.player(P1).main_deck.size(),0u);
+}
+TEST_F(RadianceFinal64Test, RunebladeActivatedAbilityHasCorrectCost){
+ auto* anvil=card_registry.get(CardDefId{1071});
+ ASSERT_NE(anvil,nullptr);
+ ASSERT_TRUE(anvil->hasActivatedAbility());
+ auto cost=anvil->getActivationCost();
+ EXPECT_TRUE(cost.exhaust);
+ EXPECT_EQ(cost.energy,2);
+ EXPECT_EQ(cost.power,1);
+ EXPECT_EQ(cost.power_domain,Domain::Fury);
+}
+TEST_F(RadianceFinal64Test, RunebladePermissionExpiresByOwnersNextEnding){
+ addToDeck(P1,CardDefId{1084});
+ auto top=state.player(P1).main_deck.back();
+ auto anvil=addToHand(P1,CardDefId{1071});
+ playThroughEngine(anvil);
+ state.player(P1).rune_pool.energy=20;
+ state.player(P1).turns_taken=state.getObject(top).card_counters.at("__rad_play_until_turn")+1;
+ withEngineDefaultTurn([&](GameEngine& e){
+   auto opts=e.generateLegalActions();
+   EXPECT_FALSE(std::any_of(opts.begin(),opts.end(),[&](const Intent& a){
+     return a.card==top;
+   }));
+ },nullptr,nullptr,P1);
+}
+TEST_F(RadianceFinal64Test, AkaliFirstMoveAddsEnergyAndUniversalPower){
+ auto akali=addUnit(P1,CardDefId{1072},5,-1);
+ state.getObject(akali).moves_this_turn=1;
+ const int energy=state.player(P1).rune_pool.energy;
+ const int power=state.player(P1).rune_pool.universal_power;
+ fireTriggerThroughEngine(akali,TriggerType::WhenIMove);
+ EXPECT_EQ(state.player(P1).rune_pool.energy,energy+1);
+ EXPECT_EQ(state.player(P1).rune_pool.universal_power,power+1);
+}
+TEST_F(RadianceFinal64Test, AkaliSecondMoveBanishedCardGrantsAccess){
+ auto akali=addUnit(P1,CardDefId{1072},5,-1);
+ addToDeck(P1,CardDefId{1084});
+ auto top=state.player(P1).main_deck.back();
+ state.getObject(akali).moves_this_turn=2;
+ fireTriggerThroughEngine(akali,TriggerType::WhenIMove);
+ EXPECT_EQ(state.getObject(top).zone,ZoneType::Banishment);
+ state.player(P1).rune_pool.energy=20;
+ withEngineDefaultTurn([&](GameEngine& e){
+   auto opts=e.generateLegalActions();
+   EXPECT_TRUE(std::any_of(opts.begin(),opts.end(),[&](const Intent& a){
+     return a.card==top&&a.play_source==Intent::PlaySource::Banishment;
+   }));
+ },nullptr,nullptr,P1);
+}
+TEST_F(RadianceFinal64Test, AkaliThirdMoveDoesNotBanishOrAdd){
+ auto akali=addUnit(P1,CardDefId{1072},5,-1);
+ addToDeck(P1,CardDefId{1084});
+ state.getObject(akali).moves_this_turn=3;
+ const int e=state.player(P1).rune_pool.energy,p=state.player(P1).rune_pool.universal_power;
+ const auto deck=state.player(P1).main_deck.size();
+ fireTriggerThroughEngine(akali,TriggerType::WhenIMove);
+ EXPECT_EQ(state.player(P1).rune_pool.energy,e);
+ EXPECT_EQ(state.player(P1).rune_pool.universal_power,p);
+ EXPECT_EQ(state.player(P1).main_deck.size(),deck);
+}
+
 TEST_F(RadianceFinal64Test, SixtyFourUniqueCardDefinitionsHaveCanonicalMetadata){
  ASSERT_EQ(expected.size(),64u);
  std::set<int> ids,numbers;std::set<std::string> public_codes;

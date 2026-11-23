@@ -165,10 +165,36 @@ I enter ready if you showed off.)RB");
  }();
 };
 
+// RAD-012 / RAD-015: grant a real, cost-paying play from banishment.
+static void rad64BanishTopAndGrant(CardContext& c) {
+ auto& ps=c.state.player(c.controller);
+ if(ps.main_deck.empty())return;
+ const auto top=ps.main_deck.back();
+ c.executor.banishObject(top,c.controller);
+ if(!c.state.objectExists(top) || c.state.getObject(top).zone!=ZoneType::Banishment)return;
+ // The permission expires when this player's next Ending Step begins.
+ // turns_taken increments at the beginning of that player's turn.
+ const int expires=ps.turns_taken+(c.state.turn.turn_player==c.controller?0:1);
+ c.state.getObject(top).card_counters["__rad_play_until_turn"]=expires;
+}
+
 class R64_1071 final : public GearCard {
 public:
  const CardDef& def() const override { return d_; }
- // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
+ std::vector<TriggerType> triggerTypes()const override{
+   return {TriggerType::WhenYouPlayThis,TriggerType::WhenILeaveTheBoard};
+ }
+ void onTrigger(CardContext& c,const std::vector<GameObjectId>&)override{
+   rad64BanishTopAndGrant(c);
+ }
+ bool hasActivatedAbility()const override{return true;}
+ ActivationCost getActivationCost()const override{
+   return ActivationCost{.exhaust=true,.energy=2,.power=1,.power_domain=Domain::Fury};
+ }
+ void onActivate(CardContext& c,const std::vector<GameObjectId>&)override{
+   if(c.state.objectExists(c.source)&&c.state.getObject(c.source).location)
+     c.executor.killObject(c.source);
+ }
 private:
  const CardDef d_=[] {
   auto d=mkFinal64_a(1071,12,R"RB(Runeblade Anvil)RB",CardType::Gear,1,0,0,{Domain::Fury},Rarity::Uncommon,R"RB(When you play this or when this leaves the board, banish the top card of your Main Deck. Until your next Ending Phase, you may play that card. (You still pay its costs.)
@@ -181,7 +207,23 @@ private:
 class R64_1072 final : public UnitCard {
 public:
  const CardDef& def() const override { return d_; }
- // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
+ TriggerType triggerType()const override{return TriggerType::WhenIMove;}
+ bool triggerCondition(const GameState& s,GameObjectId source,PlayerId,
+                       TriggerType,GameObjectId)const override{
+   if(!s.objectExists(source))return false;
+   const int moves=s.getObject(source).moves_this_turn;
+   return moves==1||moves==2;
+ }
+ void onTrigger(CardContext& c,const std::vector<GameObjectId>&)override{
+   if(!c.state.objectExists(c.source))return;
+   const int moves=c.state.getObject(c.source).moves_this_turn;
+   if(moves==1){
+     c.executor.addFloatingEnergy(c.controller,1);
+     c.executor.addFloatingUniversalPower(c.controller,1);
+   }else if(moves==2){
+     rad64BanishTopAndGrant(c);
+   }
+ }
 private:
  const CardDef d_=[] {
   auto d=mkFinal64_a(1072,15,R"RB(Akali, Brash)RB",CardType::Unit,5,1,5,{Domain::Fury},Rarity::Rare,R"RB(The first time I move each turn, [Add] [1][A].

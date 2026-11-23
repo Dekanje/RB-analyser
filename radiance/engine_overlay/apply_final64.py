@@ -464,4 +464,78 @@ for old,new in replacements:
     token_fn=token_fn.replace(old,new,1)
 ex_path.write_text(ex[:token_begin]+token_fn+ex[token_end:])
 
+
+# RAD-012/015: true play permission from banishment, at normal costs and
+# normal timing, expiring at the owner's next Ending Step.
+gp=engine/"src/engine/game_engine.cpp"
+g=gp.read_text()
+banish_helper="""// RAD-012 / RAD-015: banished cards with a one-time play permission.
+static bool radianceBanishedCardPlayable(const GameState& s,PlayerId who,GameObjectId id){
+    if(!s.objectExists(id))return false;
+    const auto& obj=s.getObject(id);
+    if(obj.owner!=who||obj.zone!=ZoneType::Banishment)return false;
+    const auto it=obj.card_counters.find("__rad_play_until_turn");
+    if(it==obj.card_counters.end())return false;
+    if(s.player(who).turns_taken>it->second)return false;
+    if(s.turn.turn_player==who&&s.turn.phase==TurnPhase::EndingStep)return false;
+    return true;
+}
+static void radianceAppendGrantedBanishment(const GameState& s,PlayerId who,
+                                            std::vector<GameObjectId>& into){
+    for(auto id:s.player(who).banishment)
+        if(radianceBanishedCardPlayable(s,who,id))into.push_back(id);
+}
+
+"""
+hand_anchor="std::vector<GameObjectId> GameEngine::handAndChampion(PlayerId player) const {"
+assert g.count(hand_anchor)==1,"banish helper insertion anchor"
+g=g.replace(hand_anchor,banish_helper+hand_anchor,1)
+# handAndChampion is used by ambush play generators only.
+body_anchor="        out.push_back(ps.champion_zone);\n    return out;\n}"
+assert g.count(body_anchor)==1,"handAndChampion body anchor"
+g=g.replace(body_anchor,"        out.push_back(ps.champion_zone);\n    radianceAppendGrantedBanishment(state_,player,out);\n    return out;\n}",1)
+# Main phase: units, gear and spells may be played at their printed costs.
+unita="    std::vector<GameObjectId> unit_sources = ps.hand;"
+assert g.count(unita)==1,"unit source anchor"
+g=g.replace(unita,unita+"\n    radianceAppendGrantedBanishment(state_,player,unit_sources);",1)
+playa="            play_intent.card = card_id;\n            play_intent.use_alt_play_cost = alt == 1;"
+assert g.count(playa)==1,"unit intent source"
+g=g.replace(playa,"            play_intent.card = card_id;\n            if(card.zone==ZoneType::Banishment)play_intent.play_source=Intent::PlaySource::Banishment;\n            play_intent.use_alt_play_cost = alt == 1;",1)
+geara="    // Play gear from hand (to base only, CR 149.2)\n    for (auto card_id : ps.hand) {"
+assert g.count(geara)==1,"gear source anchor"
+g=g.replace(geara,"    // Play gear from hand or permission-granted banishment (CR 149.2)\n    std::vector<GameObjectId> rad_gear_sources=ps.hand;\n    radianceAppendGrantedBanishment(state_,player,rad_gear_sources);\n    for (auto card_id : rad_gear_sources) {",1)
+gearintent="        play_intent.card = card_id;\n        play_intent.play_location = BaseLocation{player};"
+assert g.count(gearintent)==1,"gear intent anchor"
+g=g.replace(gearintent,"        play_intent.card = card_id;\n        if(card.zone==ZoneType::Banishment)play_intent.play_source=Intent::PlaySource::Banishment;\n        play_intent.play_location = BaseLocation{player};",1)
+spellstart="    if (ps.cant_play_cards_this_turn || ps.cant_play_spells_this_turn) return;\n    for (auto card_id : ps.hand) {"
+assert g.count(spellstart)==1,"spell source"
+g=g.replace(spellstart,"    if (ps.cant_play_cards_this_turn || ps.cant_play_spells_this_turn) return;\n    std::vector<GameObjectId> rad_spell_sources=ps.hand;\n    radianceAppendGrantedBanishment(state_,player,rad_spell_sources);\n    for (auto card_id : rad_spell_sources) {",1)
+emit_a="        auto emit = [&](Intent play) { actions.push_back(std::move(play)); };"
+assert g.count(emit_a)==1,"spell emit"
+g=g.replace(emit_a,"        auto emit = [&](Intent play) {\n            if(card.zone==ZoneType::Banishment)play.play_source=Intent::PlaySource::Banishment;\n            actions.push_back(std::move(play));\n        };",1)
+reaction="    std::vector<GameObjectId> sources = ps.hand;\n    if (ps.champion_zone != kInvalidId"
+assert g.count(reaction)==1,"reaction permanent source"
+g=g.replace(reaction,"    std::vector<GameObjectId> sources = ps.hand;\n    radianceAppendGrantedBanishment(state_,player,sources);\n    if (ps.champion_zone != kInvalidId",1)
+reactionintent="        play.card = card_id;\n        if (card.isGear()) {"
+assert g.count(reactionintent)==1,"reaction intent source"
+g=g.replace(reactionintent,"        play.card = card_id;\n        if(card.zone==ZoneType::Banishment)play.play_source=Intent::PlaySource::Banishment;\n        if (card.isGear()) {",1)
+# Also permit banished [Ambush] units at their proper showdown and closed timings.
+for t in ["IntentType::PlayActionCard","IntentType::PlayReaction"]:
+    aa="            ambush.type = "+t+";\n            ambush.player = player;"
+    assert g.count(aa)==1,"ambush type anchor "+t
+    g=g.replace(aa,"            ambush.type = "+t+";\n            ambush.play_source=card.zone==ZoneType::Banishment ? Intent::PlaySource::Banishment : Intent::PlaySource::Hand;\n            ambush.player = player;",1)
+# Card play removes the specific card from banishment, and clears its grant
+# so the same object cannot be replayed if it is banished again.
+cardseg="void GameEngine::executePlayCard(const Intent& intent) {"
+idx=g.index(cardseg);end=g.index("void GameEngine::executePlaySpell(",idx)
+part=g[idx:end]
+a="    } else if (intent.play_source == Intent::PlaySource::Trash &&\n               card.zone == ZoneType::Trash) {"
+assert part.count(a)==1,"permanent remove source"
+part=part.replace(a,"    } else if (intent.play_source == Intent::PlaySource::Banishment &&\n               card.zone == ZoneType::Banishment) {\n        auto& zone=state_.player(card.owner).banishment;\n        zone.erase(std::remove(zone.begin(),zone.end(),intent.card),zone.end());\n        card.card_counters.erase(\"__rad_play_until_turn\");\n"+a,1)
+g=g[:idx]+part+g[end:]
+spella="    } else if (intent.play_source == Intent::PlaySource::Trash &&\n               card.zone == ZoneType::Trash) {\n        // Trash-replay (Death from Below):"
+assert g.count(spella)==1,"spell remove source"
+g=g.replace(spella,"    } else if (intent.play_source == Intent::PlaySource::Banishment &&\n               card.zone == ZoneType::Banishment) {\n        auto& zone=state_.player(card.owner).banishment;\n        zone.erase(std::remove(zone.begin(),zone.end(),intent.card),zone.end());\n        card.card_counters.erase(\"__rad_play_until_turn\");\n"+spella,1)
+gp.write_text(g)
+
 print("RADIANCE_FINAL64_OVERLAY_APPLIED: engine IDs 1068..1131 (64 distinct identities)")
