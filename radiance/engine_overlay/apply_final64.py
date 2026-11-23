@@ -272,7 +272,7 @@ source=source.replace(helper_anchor,helper+helper_anchor,1)
 reaction_anchor="        bool has_reaction = card.keywords.has(Keyword::Reaction);"
 assert source.count(reaction_anchor)==2,"RAD-063 hand/trash timing anchors changed"
 source=source.replace(reaction_anchor,
-    "        bool has_reaction = card.keywords.has(Keyword::Reaction) ||\\n"
+    "        bool has_reaction = card.keywords.has(Keyword::Reaction) ||\n"
     "            radianceRebelGrantsSpellReaction(state_, player);")
 game_engine_path.write_text(source)
 
