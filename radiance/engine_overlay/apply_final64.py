@@ -200,3 +200,45 @@ diag="""    if (where.find("seed 20261043 decision 129") != std::string::npos) {
 assert source.count(anchor)==1, "HiddenOrderLeak diagnostics insertion anchor changed"
 privacy.write_text(source.replace(anchor,diag+anchor,1))
 
+# Check the earliest duplicate zone membership in the *real* state, before
+# makeVariant mutates hidden objects; record the action that preceded it.
+source=privacy.read_text()
+probe_anchor="""        for (int n = 0; n < 4000 && !engine.isStepDone(); ++n) {
+            const StepResult step = engine.currentStep();
+            checkVariants(engine.state(), step, *db_, registry_, seed * 1000 + n,"""
+probe_replacement="""        std::string previous_action = "<game start>";
+        bool printed_duplicate = false;
+        for (int n = 0; n < 4000 && !engine.isStepDone(); ++n) {
+            const StepResult step = engine.currentStep();
+            if (!printed_duplicate) {
+                for (auto pid : {PlayerId::Player1, PlayerId::Player2}) {
+                    const auto& ps = engine.state().player(pid);
+                    for (auto id : ps.hand) {
+                        if (std::find(ps.main_deck.begin(), ps.main_deck.end(), id) == ps.main_deck.end()) continue;
+                        const auto& obj=engine.state().getObject(id);
+                        std::cerr << "RADIANCE_FIRST_DUPLICATE game=" << g << " decision=" << n
+                          << " player=" << toString(pid) << " object=" << toString(id)
+                          << " card=" << obj.name.get() << " def=" << obj.card_def_id.raw()
+                          << " zone=" << static_cast<int>(obj.zone.get())
+                          << " previous_action=" << previous_action << std::endl;
+                        printed_duplicate = true;
+                        break;
+                    }
+                    if(printed_duplicate)break;
+                }
+            }
+            checkVariants(engine.state(), step, *db_, registry_, seed * 1000 + n,"""
+assert source.count(probe_anchor)==1, "Privacy diagnostics loop anchor changed"
+source=source.replace(probe_anchor,probe_replacement,1)
+step_anchor="""            engine.applyChoice(static_cast<int>(
+                chooseByActionId(engine.state(), step.legal, rng, pass_p)));
+"""
+step_replacement="""            const size_t choice=chooseByActionId(engine.state(), step.legal, rng, pass_p);
+            previous_action = step.legal.at(choice).describe();
+            engine.applyChoice(static_cast<int>(choice));
+"""
+assert source.count(step_anchor)>=1, "Choice diagnostic anchor changed"
+source=source.replace(step_anchor,step_replacement,1)
+privacy.write_text(source)
+
+
