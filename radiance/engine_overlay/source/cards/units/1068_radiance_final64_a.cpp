@@ -244,7 +244,50 @@ Units don't ready during the Awaken Phase.)RB");
 class R64_1076 final : public GearCard {
 public:
  const CardDef& def() const override { return d_; }
- // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
+ std::vector<ActivatedAbility> activatedAbilities()const override{
+   ActivatedAbility gold;gold.cost.exhaust=true;
+   ActivatedAbility recruit;recruit.cost.exhaust=true;
+   ActivatedAbility mech;mech.cost.exhaust=true;mech.cost.kill_friendly_unit=true;
+   return {gold,recruit,mech};
+ }
+ unsigned choicesAtFinalization()const override{return kFinalizeActivate;}
+ static std::vector<GameObjectId> sacrificialGears(const GameState& s,PlayerId p,GameObjectId self){
+   auto gears=f64Gears(s,p);
+   gears.erase(std::remove(gears.begin(),gears.end(),self),gears.end());
+   return gears;
+ }
+ bool canActivateAbilityAt(const GameState& s,PlayerId p,GameObjectId source,int index)const override{
+   if(!GearCard::canActivateAbilityAt(s,p,source,index))return false;
+   if(index==1)return !sacrificialGears(s,p,source).empty();
+   if(index==2)return !f64Units(s,p).empty();
+   return index==0;
+ }
+ void onActivate(CardContext& c,int index,const std::vector<GameObjectId>&)override{
+   const LocationId atBase=BaseLocation{c.controller};
+   if(index==0){
+     if(finalizingChoices(c))return;
+     c.executor.createToken(c.controller,CardType::Gear,"Gold",0,{"Gold"},
+         KeywordSet{},atBase,false,{},CardDefId{326},true);
+     return;
+   }
+   if(index==1){
+     if(costAlreadyPaid(c)){
+       if(finalizingChoices(c))return;
+       f64Recruit(c,atBase,1);
+       return;
+     }
+     auto gears=sacrificialGears(c.state,c.controller,c.source);
+     std::sort(gears.begin(),gears.end());
+     const auto sacrifice=pickTarget(c,"Whirling Twirligig: kill friendly gear as cost",gears);
+     if(sacrifice!=kInvalidId&&costDueNow(c))c.executor.killObject(sacrifice);
+     if(finalizingChoices(c))return;
+     return;
+   }
+   if(index==2){
+     if(finalizingChoices(c))return;
+     f64Mech(c,atBase,3);
+   }
+ }
 private:
  const CardDef d_=[] {
   auto d=mkFinal64_a(1076,22,R"RB(Whirling Twirligig)RB",CardType::Gear,4,1,0,{Domain::Fury},Rarity::Epic,R"RB([E]: Play a Gold gear token exhausted. (It has "[Reaction][>] Kill this, [E]: [Add] [A].")
