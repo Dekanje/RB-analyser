@@ -63,14 +63,17 @@ def legal_plans(registered, byname, max_options=6, max_swap_depth=2):
     # Round-robin different sideboard cards FIRST. The previous heuristic
     # ranked three swaps all using the same Corrupt Enforcer; that does not
     # explore enough strategic diversity.
-    selected=[];selected_pairs=set();represented_side=set()
+    selected=[];selected_pairs=set();represented_side=set();represented_main=set()
     for prefer_new_side in (True,False):
         for score,main_out,side_in,plan in scored:
-            if (prefer_new_side and side_in in represented_side or
-                (main_out,side_in) in selected_pairs):
+            if (prefer_new_side and
+                (side_in in represented_side or main_out in represented_main)):
+                continue
+            if (main_out,side_in) in selected_pairs:
                 continue
             selected.append((score,main_out,side_in,plan))
             represented_side.add(side_in)
+            represented_main.add(main_out)
             selected_pairs.add((main_out,side_in))
             if len(selected)>=max_options:
                 break
