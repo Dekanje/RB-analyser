@@ -455,6 +455,13 @@ TEST_F(RadianceFinal64Test, SeraphicWyvernAddsOneExhaustedRuneToReadyChannel){
  EXPECT_EQ(exhausted,1);
  EXPECT_EQ(state.player(P1).rune_deck.size(),1u);
 }
+TEST_F(RadianceFinal64Test, KSanteDauntlessDoublesFriendlyShieldAtItsBattlefield){
+ auto ksante=addUnit(P1,CardDefId{1081},4,0);
+ ASSERT_EQ(state.getObject(ksante).shield_value,1);
+ fireTriggerThroughEngine(ksante,TriggerType::WhenIAttackOrDefend);
+ EXPECT_EQ(state.getObject(ksante).shield_value,2);
+ EXPECT_EQ(state.getObject(ksante).temp_shield_value,1);
+}
 TEST_F(RadianceFinal64Test, ProtectorsShieldQuickDrawAttachesAndGivesMight){
  auto unit=addUnit(P1,kInvalidId,3,-1);
  auto shield=addToHand(P1,CardDefId{1116});
