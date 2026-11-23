@@ -30,19 +30,34 @@ public:
     TriggerType triggerType()const override{return TriggerType::WhenYouPlayACard;}
     unsigned choicesAtFinalization()const override{return kFinalizeTrigger;}
     void onTrigger(CardContext& ctx,const std::vector<GameObjectId>&)override {
-        if(!ctx.state.objectExists(ctx.source))return;
-        auto& self=ctx.state.getObject(ctx.source);
-        if(!self.location)return;
-        const auto& chain=ctx.state.chain.resuming;
-        if(!chain||chain->triggering_subject==kInvalidId||
-           !ctx.state.objectExists(chain->triggering_subject))return;
-        const auto& card=ctx.state.getObject(chain->triggering_subject);
-        if(card.card_def_id==kInvalidId)return;
-        const int energy=ctx.executor.cardDB().get(card.card_def_id).energy_cost;
+        // A WhenYouPlayACard trigger can be on the Chain after Guidebot
+        // has died (e.g. killed by Rocket Barrage in the same chain).
+        // Every kFinalizeTrigger callback MUST reach its end-of-choices
+        // marker or an empty/declined choice helper in its finalize pass.
+        // Previously the early exits below bypassed that marker and made
+        // GameEngine::collectFinalizeChoices throw instead of finishing.
+        auto stillEligible=[&](){
+            if(!ctx.state.objectExists(ctx.source))return false;
+            const auto& self=ctx.state.getObject(ctx.source);
+            if(!self.location)return false;
+            const auto& chain=ctx.state.chain.resuming;
+            if(!chain||chain->triggering_subject==kInvalidId||
+               !ctx.state.objectExists(chain->triggering_subject))return false;
+            const auto& played=ctx.state.getObject(chain->triggering_subject);
+            return played.card_def_id!=kInvalidId;
+        };
+        // confirmOptional records a legal "nothing to decide" when the
+        // trigger's source is already gone. Never ask the agent to alter
+        // a dead unit and never return before finalizingChoices().
         const int yes=confirmOptional(ctx,
             "Piltovan Guidebot: use the played card's printed Energy cost as base Might?",
-            [](){return true;});
-        if(finalizingChoices(ctx)||yes!=1)return;
+            stillEligible);
+        if(yes<0)return;  // pending agent decision, engine will re-enter
+        if(finalizingChoices(ctx)||yes!=1||!stillEligible())return;
+        auto& self=ctx.state.getObject(ctx.source);
+        const auto& played=ctx.state.getObject(
+            ctx.state.chain.resuming->triggering_subject);
+        const int energy=ctx.executor.cardDB().get(played.card_def_id).energy_cost;
         self.base_might_this_turn=energy;
         self.recomputeMight();
     }
