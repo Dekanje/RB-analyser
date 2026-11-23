@@ -1,0 +1,126 @@
+name: Competitive Draven-RekSai broad mutations paired engine screen (one-shot)
+on:
+  push:
+    branches: ['research/competitive-agent-benchmark-v1-2026-11-23']
+    paths: ['.github/workflows/competitive-evolution-screen.yml']
+permissions:
+  contents: read
+  actions: read
+jobs:
+  paired-screen-preflight:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check pinned-source and candidate consistency routines
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/screen_evolution.py scripts/test_screen_evolution.py
+          python3 -m unittest discover -s scripts -p 'test_screen_evolution.py' -v
+  compare-candidate-populations:
+    needs: paired-screen-preflight
+    strategy:
+      fail-fast: false
+      matrix:
+        legend_index: [0,1]
+        shard: [0,1,2,3]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 85
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45181493632
+          github-token: ${{ github.token }}
+          name: expanded-optimized-58-independent-radiance-bo3
+          path: results/selected
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45223997723
+          github-token: ${{ github.token }}
+          name: competitive-all58-unvalidated-2320-proposals
+          path: results/proposals
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45208732588
+          github-token: ${{ github.token }}
+          name: all-58-optimized-head-to-head-rankings-and-matchups
+          path: results/previous
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45205260187
+          github-token: ${{ github.token }}
+          name: repaired-fullfield-engine-1123
+          path: engine_build
+      - name: Install pinned runtime and validate cards/decks on same engine
+        timeout-minutes: 12
+        run: |
+          set -euo pipefail
+          if ! sudo env DEBIAN_FRONTEND=noninteractive timeout -k 10s 55s apt-get -o Acquire::Retries=0 update -qq; then
+            echo '::warning::using cached package indexes'
+          fi
+          sudo env DEBIAN_FRONTEND=noninteractive timeout 360s apt-get -o Acquire::Retries=2 install -y -qq --no-install-recommends libboost-program-options1.83.0 libboost-filesystem1.83.0 libboost-system1.83.0 libboost-context1.83.0
+          chmod +x engine_build/riftbound
+          test -f results/proposals/manifest.json
+          test -f results/previous/all_58_ranked.json
+          test "$(find results/selected/selected_decks -maxdepth 1 -name '*.txt' | wc -l)" -eq 58
+          if ldd engine_build/riftbound | grep -q 'not found'; then exit 1; fi
+      - name: Compare each changed list with its own baseline using same elite opponents and seeds
+        timeout-minutes: 68
+        run: |
+          python3 -u scripts/screen_evolution.py \
+            --selected results/selected --proposals results/proposals \
+            --ranked results/previous/all_58_ranked.json \
+            --engine engine_build/riftbound \
+            --output results/evolution-screen/${{ matrix.legend_index }}-${{ matrix.shard }} \
+            --legend-index ${{ matrix.legend_index }} --shards 4 --shard ${{ matrix.shard }} \
+            --opponents 3 --repetitions 1 \
+            --agent ismcts:sims=24 --timeout 120 --workers 3 --seed 202611241203
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: evolution-screen-${{ matrix.legend_index }}-${{ matrix.shard }}
+          path: results/evolution-screen/${{ matrix.legend_index }}-${{ matrix.shard }}/
+          if-no-files-found: warn
+          retention-days: 30
+  shortlist-for-independent-holdout:
+    needs: compare-candidate-populations
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: evolution-screen-*
+          path: results/shards
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45181493632
+          github-token: ${{ github.token }}
+          name: expanded-optimized-58-independent-radiance-bo3
+          path: results/selected
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45223997723
+          github-token: ${{ github.token }}
+          name: competitive-all58-unvalidated-2320-proposals
+          path: results/proposals
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45208732588
+          github-token: ${{ github.token }}
+          name: all-58-optimized-head-to-head-rankings-and-matchups
+          path: results/previous
+      - name: Aggregate all 80 candidate comparisons; select only exploratory holdout shortlist
+        run: |
+          python3 scripts/screen_evolution.py --aggregate \
+            --selected results/selected --proposals results/proposals \
+            --ranked results/previous/all_58_ranked.json \
+            --input results/shards --output results/competitive_candidate_shortlists \
+            --shards 4 --opponents 3 --repetitions 1 --shortlist 5 \
+            --agent ismcts:sims=24 --seed 202611241203
+      - uses: actions/upload-artifact@v4
+        with:
+          name: competitive-draven-reksai-exploratory-top5-shortlists
+          path: results/competitive_candidate_shortlists/
+          retention-days: 30
