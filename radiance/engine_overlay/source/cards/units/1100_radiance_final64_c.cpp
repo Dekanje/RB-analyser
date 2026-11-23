@@ -360,7 +360,7 @@ public:
            {c.controller,yours},{opponent(c.controller),theirs}}){
      if(card==kInvalidId||!c.state.objectExists(card))continue;
      if(energy(card)==lowest)c.executor.drawCards(owner,1);
-     else c.executor.recycleCards(owner,{card},knowledge::everyone());
+     else f64RecycleRevealedTop(c,owner,card);
    }
  }
 
