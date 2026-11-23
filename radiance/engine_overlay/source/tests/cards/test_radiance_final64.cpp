@@ -729,6 +729,22 @@ TEST_F(RadianceFinal64Test, DuneDevourerKillsFriendlyUnitAsAdditionalPlayCostFor
  EXPECT_FALSE(state.getObject(sacrifice).location.has_value());
  EXPECT_EQ(state.player(P1).rune_pool.energy,0);
 }
+TEST_F(RadianceFinal64Test, DuneDevourerDoesNotDiscountPreventedSacrifice){
+ auto soraka=addUnit(P1,CardDefId{550},4,0);
+ auto protectedUnit=addUnit(P1,kInvalidId,2,0);
+ auto devourer=addToHand(P1,CardDefId{1118});
+ state.player(P1).rune_pool.energy=7;
+ state.player(P1).rune_pool.universal_power=1;
+ // Soraka replaces the friendly unit's death with heal, exhaust and
+ // recall. "Kill as additional cost" did not happen: cost remains 7.
+ EnginePathAgent yes(EnginePathAgent::script({1,static_cast<int>(protectedUnit.raw())}));
+ playThroughEngine(devourer,&yes,std::nullopt,nullptr,false);
+ EXPECT_TRUE(state.getObject(devourer).location.has_value());
+ EXPECT_TRUE(state.getObject(protectedUnit).isAtBase());
+ EXPECT_TRUE(state.getObject(protectedUnit).is_exhausted);
+ EXPECT_EQ(state.player(P1).rune_pool.energy,0);
+ EXPECT_TRUE(state.getObject(soraka).location.has_value());
+}
 TEST_F(RadianceFinal64Test, DuneDevourerHasCorrectOptionalAdditionalCostAndDeflect){
  const auto* card=card_registry.get(CardDefId{1118});
  ASSERT_NE(card,nullptr);
