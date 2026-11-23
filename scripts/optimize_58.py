@@ -302,6 +302,7 @@ def main(args):
           for cand in candidates:
               screening=compare(cand['path'],'prefilter',args.prefilter_samples,agent_override='random')
               pretrial.append({'remove':cand['remove'],'add':cand['add'],
+                               'swap_sequence':cand['swap_sequence'],
                                'file':str(cand['path'].relative_to(output)),
                                'prefilter':screening,
                                'delta_prefilter':screening['candidate_wins']-screening['baseline_wins']})
