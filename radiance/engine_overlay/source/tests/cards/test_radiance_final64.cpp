@@ -114,6 +114,46 @@ TEST_F(RadianceFinal64Test, DemacianIlluminatorsIgnoresEnemyUnitDeath){
  EXPECT_EQ(state.getObject(illuminators).buff_count,0);
  EXPECT_EQ(state.getObject(ally).buff_count,0);
 }
+
+TEST_F(RadianceFinal64Test, BattlefieldArmorerPaysEnergyWhenFriendlyBattlefieldGearDies){
+ auto armorer=addUnit(P1,CardDefId{1121},3,0);
+ auto gear=addToHand(P1,CardDefId{1080}); // Genuine Deploy gear.
+ playThroughEngine(gear,nullptr,LocationId{BattlefieldLocation{state.battlefields[0].id}});
+ ASSERT_TRUE(state.getObject(gear).isAtBattlefield());
+ state.player(P1).rune_pool.energy=1;
+ EnginePathAgent yes(EnginePathAgent::accepting());
+ resolveThroughEngine([&](EffectExecutor& ex,GameState&){ex.killObject(gear);},&yes);
+ EXPECT_TRUE(inHand(P1,gear));
+ EXPECT_EQ(state.getObject(gear).zone,ZoneType::Hand);
+ EXPECT_EQ(state.player(P1).rune_pool.energy,0);
+ EXPECT_TRUE(state.getObject(armorer).location.has_value());
+}
+TEST_F(RadianceFinal64Test, BattlefieldArmorerNoEnergyCannotReturnDeadGear){
+ addUnit(P1,CardDefId{1121},3,0);
+ auto gear=addToHand(P1,CardDefId{1080});
+ playThroughEngine(gear,nullptr,LocationId{BattlefieldLocation{state.battlefields[0].id}});
+ state.player(P1).rune_pool.energy=0;
+ resolveThroughEngine([&](EffectExecutor& ex,GameState&){ex.killObject(gear);});
+ EXPECT_FALSE(inHand(P1,gear));
+ EXPECT_EQ(state.getObject(gear).zone,ZoneType::Trash);
+}
+TEST_F(RadianceFinal64Test, BattlefieldArmorerIgnoresEnemyGearDeathAndFriendlyBaseGear){
+ addUnit(P1,CardDefId{1121},3,0);
+ auto enemy=addToHand(P2,CardDefId{1080});
+ playThroughEngine(enemy,nullptr,LocationId{BattlefieldLocation{state.battlefields[0].id}},nullptr,false);
+ auto baseGear=addToHand(P1,CardDefId{1088});
+ playThroughEngine(baseGear);
+ ASSERT_TRUE(state.getObject(baseGear).isAtBase());
+ state.player(P1).rune_pool.energy=2;
+ EnginePathAgent yes(EnginePathAgent::accepting());
+ resolveThroughEngine([&](EffectExecutor& ex,GameState&){
+   ex.killObject(enemy);ex.killObject(baseGear);
+ },&yes);
+ EXPECT_FALSE(inHand(P2,enemy));
+ EXPECT_FALSE(inHand(P1,baseGear));
+ EXPECT_EQ(state.player(P1).rune_pool.energy,2)
+   << "No optional recovery payment is offered for enemy/base gear";
+}
 TEST_F(RadianceFinal64Test, DemacianIlluminatorsBuffsAfterFriendlyUnitDies){
  addUnit(P1,CardDefId{1122},3,0);
  auto ally=addUnit(P1,kInvalidId,2,0);
