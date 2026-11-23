@@ -336,7 +336,74 @@ When you play me to a battlefield, you may move another unit you control here to
 class R64_1078 final : public SpellCard {
 public:
  const CardDef& def() const override { return d_; }
- // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
+ unsigned choicesAtFinalization()const override{return kFinalizeResolve;}
+ static std::vector<GameObjectId> deployGears(const GameState& s,PlayerId p){
+   auto gears=f64Gears(s,p);
+   std::vector<GameObjectId> out;
+   for(auto id:gears)if(s.objectExists(id)&&s.getObject(id).hasKeyword(Keyword::Deploy))out.push_back(id);
+   return out;
+ }
+ static std::vector<GameObjectId> topFive(const CardContext& c){
+   std::vector<GameObjectId> out;
+   const auto& deck=c.state.player(c.controller).main_deck;
+   for(auto it=deck.rbegin();it!=deck.rend()&&out.size()<5;++it)
+     if(c.state.objectExists(*it))out.push_back(*it);
+   return out;
+ }
+ static std::vector<GameObjectId> topGears(const CardContext& c){
+   std::vector<GameObjectId> out;
+   for(auto id:topFive(c))if(c.state.getObject(id).isGear())out.push_back(id);
+   return out;
+ }
+ void onResolve(CardContext& c,const std::vector<GameObjectId>&)override{
+   const auto gears=deployGears(c.state,c.controller);
+   const uint32_t legal=gears.empty()?2u:3u;
+   const int mode=pickMode(c,"Command: Attack",2,
+     {"Move friendly Deploy gear to battlefield","Look at top five; reveal and draw gear"},legal);
+   GameObjectId selected=kInvalidId;
+   if(mode==0)selected=pickTarget(c,"Command: Attack: move Deploy gear",gears);
+   if(finalizingChoices(c))return;
+   if(mode==0){
+     if(selected==kInvalidId||!c.state.objectExists(selected))return;
+     std::vector<LocationId> destinations;
+     for(const auto& bf:c.state.battlefields)
+       if(c.state.getObject(selected).battlefieldId()!=bf.id)
+         destinations.push_back(BattlefieldLocation{bf.id});
+     if(destinations.empty())return;
+     const auto where=c.executor.chooseLocationNow(c.controller,destinations,
+       "Command: Attack: choose battlefield for gear");
+     if(const auto* bf=std::get_if<BattlefieldLocation>(&where))
+       c.executor.moveToBattlefield(selected,bf->id);
+     return;
+   }
+   if(mode!=1)return;
+   const auto& ri=c.state.chain.resuming;
+   if(!ri.has_value()||ri->resume_point==0)
+     for(auto id:topFive(c))knowledge::shown(c.state,id,knowledge::only(c.controller));
+   const int yes=confirmOptional(c,"Command: Attack: reveal and draw top-five gear?",[&]{
+     return !topGears(c).empty();
+   });
+   if(yes==-1)return;
+   const auto top=topFive(c);
+   GameObjectId picked=kInvalidId;
+   if(yes==1){
+     picked=pickUnseenCard(c,"Command: Attack: choose gear to reveal",topGears(c));
+     if(picked==kInvalidId&&ri.has_value()&&ri->resume_point==7)return;
+   }
+   std::vector<GameObjectId> rest;
+   for(auto id:top){
+     deck::take(c.state,id,deck::Place::Held,knowledge::only(c.controller),false);
+     if(id!=picked)rest.push_back(id);
+   }
+   if(!rest.empty())c.executor.recycleCards(c.controller,rest);
+   if(picked!=kInvalidId&&c.state.objectExists(picked)){
+     const auto& o=c.state.getObject(picked);
+     c.events.emit(CardRevealedEvent{picked,o.card_def_id,o.owner,
+       true,c.controller,ZoneType::MainDeck});
+     deck::putOnTop(c.state,c.controller,picked,deck::Place::Held,knowledge::everyone());
+     c.executor.drawCards(c.controller,1);
+   }
+ }
 private:
  const CardDef d_=[] {
   auto d=mkFinal64_a(1078,33,R"RB(Command: Attack)RB",CardType::Spell,1,1,0,{Domain::Calm},Rarity::Uncommon,R"RB(Choose one —Move a friendly gear with [Deploy] to a battlefield.
