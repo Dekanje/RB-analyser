@@ -398,6 +398,7 @@ move=move.replace(old_loc,"""    // The PLAYER performing the movement pays, eve
         }
     }
 """+old_loc,1);
-ex=ex.slice(0,beg)+move+ex.slice(end);expath.write_text(ex)
+ex=ex[:beg]+move+ex[end:]
+expath.write_text(ex)
 
 print("RADIANCE_FINAL64_OVERLAY_APPLIED: engine IDs 1068..1131 (64 distinct identities)")
