@@ -169,6 +169,36 @@ assert audited.count(audit_anchor)==1, "StrongIds audit entry anchor changed"
 assert audit_entry not in audited, "StrongIds Dockside reader audited twice"
 audit.write_text(audited.replace(audit_anchor,audit_anchor+"\n"+audit_entry,1))
 
+# RAD-019 Firebrand Raider stops UNIT readiness (not rune/gear/legend
+# readiness) during the turn player's Awaken Phase while it remains in play.
+# All other units enter ready through its cross-player aura in the card class.
+# Keep this as a pin-anchored upstream engine patch, not a global rule change.
+engine_cpp=engine/"src/engine/game_engine.cpp"
+engine_source=engine_cpp.read_text()
+awaken_head="""    auto player = state_.turn.turn_player;
+    {
+        const SimultaneousTriggers together(state_.chain);"""
+awaken_replacement="""    auto player = state_.turn.turn_player;
+    bool firebrand_prevents_unit_ready = false;
+    for (const auto& [firebrand_id, firebrand] : state_.objects.onBoard()) {
+        if (firebrand.card_def_id == CardDefId{1075} &&
+            firebrand.isUnit() && firebrand.location.has_value()) {
+            firebrand_prevents_unit_ready = true;
+            break;
+        }
+    }
+    {
+        const SimultaneousTriggers together(state_.chain);"""
+assert engine_source.count(awaken_head)==1, "AwakenPhase turn-player anchor changed"
+engine_source=engine_source.replace(awaken_head,awaken_replacement,1)
+ready_anchor="""            if (obj.controller == player && obj.is_exhausted && obj.location.has_value()) {
+                const Card* card = obj.card_def_id != kInvalidId"""
+ready_replacement="""            if (obj.controller == player && obj.is_exhausted && obj.location.has_value()) {
+                if (firebrand_prevents_unit_ready && obj.isUnit()) continue;
+                const Card* card = obj.card_def_id != kInvalidId"""
+assert engine_source.count(ready_anchor)==1, "AwakenPhase unit-ready gate anchor changed"
+engine_cpp.write_text(engine_source.replace(ready_anchor,ready_replacement,1))
+
 init=engine/"src/cards/cards_init.cpp"
 s=init.read_text()
 last_decl="void register_card_1067(CardRegistry&);"
