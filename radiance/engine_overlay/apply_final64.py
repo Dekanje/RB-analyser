@@ -848,7 +848,7 @@ payment_patch="""    auto& ps = state_.player(player);
             state_.getObject(id).card_counters["__rad_orianna_used_turn"]
                 = state_.turn.turn_number;"""
 payment_block=payment_block.replace(payment_anchor,payment_patch);
-og=og.slice(0,payment_start)+payment_block+og.slice(payment_end);
+og=og[:payment_start]+payment_block+og[payment_end:]
 orianna_engine.write_text(og)
 
 print("RADIANCE_FINAL64_OVERLAY_APPLIED: engine IDs 1068..1131 (64 distinct identities)")
