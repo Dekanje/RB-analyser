@@ -504,9 +504,15 @@ g=g.replace(playa,"            play_intent.card = card_id;\n            if(card.
 geara="    // Play gear from hand (to base only, CR 149.2)\n    for (auto card_id : ps.hand) {"
 assert g.count(geara)==1,"gear source anchor"
 g=g.replace(geara,"    // Play gear from hand or permission-granted banishment (CR 149.2)\n    std::vector<GameObjectId> rad_gear_sources=ps.hand;\n    radianceAppendGrantedBanishment(state_,player,rad_gear_sources);\n    for (auto card_id : rad_gear_sources) {",1)
-gearintent="        play_intent.card = card_id;\n        play_intent.play_location = BaseLocation{player};"
-assert g.count(gearintent)==1,"gear intent anchor"
-g=g.replace(gearintent,"        play_intent.card = card_id;\n        if(card.zone==ZoneType::Banishment)play_intent.play_source=Intent::PlaySource::Banishment;\n        play_intent.play_location = BaseLocation{player};",1)
+# Previous overlays can alter the play-intent body: restrict this edit to
+# the gear generation block, rather than matching a whole source-wide pair.
+gear_start=g.index("    // Play gear from hand or permission-granted banishment")
+gear_end=g.index("    // Play spells from hand",gear_start)
+gear_section=g[gear_start:gear_end]
+gearintent="        play_intent.card = card_id;"
+assert gear_section.count(gearintent)==1,"gear card assignment"
+gear_section=gear_section.replace(gearintent,gearintent+"\n        if(card.zone==ZoneType::Banishment)play_intent.play_source=Intent::PlaySource::Banishment;",1)
+g=g[:gear_start]+gear_section+g[gear_end:]
 spellstart="    if (ps.cant_play_cards_this_turn || ps.cant_play_spells_this_turn) return;\n    for (auto card_id : ps.hand) {"
 assert g.count(spellstart)==1,"spell source"
 g=g.replace(spellstart,"    if (ps.cant_play_cards_this_turn || ps.cant_play_spells_this_turn) return;\n    std::vector<GameObjectId> rad_spell_sources=ps.hand;\n    radianceAppendGrantedBanishment(state_,player,rad_spell_sources);\n    for (auto card_id : rad_spell_sources) {",1)
