@@ -130,9 +130,12 @@
     },
     "RAD-046/167": {
       "engine_id": 1082,
-      "status": "pending",
-      "engine_scenarios": [],
-      "unverified_rules": ":rb_exhaust:: Draw 1 and channel 1 rune exhausted.\nWhen I become exhausted, give a friendly unit +3 :rb_might: this turn."
+      "status": "accepted",
+      "engine_scenarios": [
+        "RadianceFinal64Test.ResplendentRostrumExhaustDrawChannelAndBuff"
+      ],
+      "verified_rules": ":rb_exhaust:: Draw 1 and channel 1 rune exhausted.\nWhen I become exhausted, give a friendly unit +3 :rb_might: this turn.",
+      "review_note": "Printed exhaustion activation draws one card, channels one rune exhausted, and triggers a +3 Might buff on a chosen friendly unit. A dedicated live-engine activation validated all effects including resource zones and exhaustion, CI 45129313864. Strict final gate remains fail-closed until 64/64."
     },
     "RAD-053/167": {
       "engine_id": 1083,
@@ -155,9 +158,13 @@
     },
     "RAD-060/167": {
       "engine_id": 1085,
-      "status": "pending",
-      "engine_scenarios": [],
-      "unverified_rules": "[Show Off] a card. (As you play me, you may reveal a card from hand or pick another friendly one.)\nWhen you play me, if you showed off a card, [Predict] equal to its Power cost, then draw 2. (Look at that many cards from your Main Deck. Recycle any of them and put the rest back in any order.)"
+      "status": "accepted",
+      "engine_scenarios": [
+        "RadianceFinal64Test.TheEmpyreanShowsOffAndDrawsTwo",
+        "RadianceFinal64Test.TheEmpyreanWithoutShowOffDoesNotDrawTwo"
+      ],
+      "verified_rules": "[Show Off] a card. (As you play me, you may reveal a card from hand or pick another friendly one.)\nWhen you play me, if you showed off a card, [Predict] equal to its Power cost, then draw 2. (Look at that many cards from your Main Deck. Recycle any of them and put the rest back in any order.)",
+      "review_note": "Printed Show Off any card, Predict equal to its Power cost and conditional draw two audited in C++ against general Predict engine; engine-path positive and negative tests confirm draw only after a real Show Off, CI 45129313864. Strict final gate remains fail-closed until 64/64."
     },
     "RAD-062/167": {
       "engine_id": 1086,
@@ -179,9 +186,13 @@
     },
     "RAD-066/167": {
       "engine_id": 1089,
-      "status": "pending",
-      "engine_scenarios": [],
-      "unverified_rules": "You may return a friendly gear to its owner's hand as an additional cost to play me.\nWhen you play me, if you paid the additional cost, ready me and give me +:rb_might: this turn equal to the Energy cost of the gear you returned."
+      "status": "accepted",
+      "engine_scenarios": [
+        "RadianceFinal64Test.SpiritOfForgeGearReturnCostReadiesAndBuffs",
+        "RadianceFinal64Test.SpiritOfForgeWithoutOptionalCostGetsNoBuff"
+      ],
+      "verified_rules": "You may return a friendly gear to its owner's hand as an additional cost to play me.\nWhen you play me, if you paid the additional cost, ready me and give me +:rb_might: this turn equal to the Energy cost of the gear you returned.",
+      "review_note": "Printed optional gear-return additional play cost, enters-ready, and Energy-cost-sized Might gain verified through positive and no-cost engine play; confirms returned gear is in owner's hand, CI 45129313864. Strict final gate remains fail-closed until 64/64."
     },
     "RAD-067/167": {
       "engine_id": 1090,
@@ -269,9 +280,12 @@
     },
     "RAD-091/167": {
       "engine_id": 1100,
-      "status": "pending",
-      "engine_scenarios": [],
-      "unverified_rules": "Your gear with [Deploy] have [Action]. (They can be played on your turn or in showdowns.)\nWhen I conquer, if there is a friendly gear with [Deploy] here, channel 1 rune exhausted."
+      "status": "accepted",
+      "engine_scenarios": [
+        "RadianceFinal64Test.JarvanDeployGearGetsActionAndConquestChannelsExhausted"
+      ],
+      "verified_rules": "Your gear with [Deploy] have [Action]. (They can be played on your turn or in showdowns.)\nWhen I conquer, if there is a friendly gear with [Deploy] here, channel 1 rune exhausted.",
+      "review_note": "Printed friendly Deploy gear Action aura and conquer-triggered channeling of one exhausted rune when friendly Deploy gear is present at same battlefield tested through real engine/aura paths, CI 45129313864. Strict final gate remains fail-closed until 64/64."
     },
     "RAD-092/167": {
       "engine_id": 1101,
@@ -305,9 +319,13 @@
     },
     "RAD-103/167": {
       "engine_id": 1105,
-      "status": "pending",
-      "engine_scenarios": [],
-      "unverified_rules": "[Hidden] (Hide now for :rb_rune_rainbow: to react with later for :rb_energy_0:.)\n[Show Off] a card with [Hidden]. (As you play me, you may reveal such a card from hand or pick another friendly one on the board.)\nWhen you play me, if you showed off, [Add] :rb_rune_rainbow:."
+      "status": "accepted",
+      "engine_scenarios": [
+        "RadianceFinal64Test.GutterGuardianAddsUniversalPowerOnlyAfterValidHiddenShowOff",
+        "RadianceFinal64Test.GutterGuardianWithoutHiddenCandidateAddsNoPower"
+      ],
+      "verified_rules": "[Hidden] (Hide now for :rb_rune_rainbow: to react with later for :rb_energy_0:.)\n[Show Off] a card with [Hidden]. (As you play me, you may reveal such a card from hand or pick another friendly one on the board.)\nWhen you play me, if you showed off, [Add] :rb_rune_rainbow:.",
+      "review_note": "Printed Hidden, optional Show Off Hidden, and +1 universal Power conditional trigger verified against implementation and engine play: Hidden card eligible in hand, ordinary card ineligible, no self Show Off. CI 45129313864. Strict final gate remains fail-closed until 64/64."
     },
     "RAD-104/167": {
       "engine_id": 1106,
