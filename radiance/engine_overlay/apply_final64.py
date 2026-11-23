@@ -660,4 +660,96 @@ block=block.replace(needle,"    if(hunter_discount)radianceMarkHunterPlay(state_
 g=g[:start]+block+g[end:]
 hunter_path.write_text(g)
 
+
+# RAD-167 Neeko's three pregame legend choices are part of a legal deck
+# submission, not arbitrary random legends chosen after the game starts.
+dh=engine/"src/rules/deck_validator.h"
+d=dh.read_text()
+anchor="    std::vector<CardDefId> sideboard;     // 0-10 cards"
+assert d.count(anchor)==1,"Neeko deck submission anchor"
+d=d.replace(anchor,anchor+"\n    std::vector<CardDefId> neeko_legends;  // exactly three named legends, if Neeko is in deck",1)
+dh.write_text(d)
+dc=engine/"src/rules/deck_validator.cpp"
+d=dc.read_text()
+marker="    checkBanList(deck, result);\n\n    return result;"
+assert d.count(marker)==1,"Neeko validator anchor"
+validate="""    checkBanList(deck, result);
+    // RAD-167: Neeko selects exactly three EXTRA legends at deck submission.
+    // Names, not printing IDs, must all differ from each other and from the
+    // starting legend (including alternate printings with the same name).
+    const bool neeko_in_deck = deck.chosen_champion==CardDefId{1131} ||
+        std::find(deck.main_deck.begin(),deck.main_deck.end(),CardDefId{1131})
+            !=deck.main_deck.end();
+    if(neeko_in_deck) {
+        if(deck.neeko_legends.size()!=3)
+            result.addError("Neeko requires exactly 3 extra legends");
+        std::set<std::string> names{legend.name};
+        for(auto id:deck.neeko_legends) {
+            if(id==kInvalidId) {
+                result.addError("Neeko legends must be valid Legend cards");
+                continue;
+            }
+            const auto& choice=db_.get(id);
+            if(choice.card_type!=CardType::Legend)
+                result.addError("Neeko legends must be Legend cards: "+choice.name);
+            if(!names.insert(choice.name).second)
+                result.addError("Neeko legends must all have different names from each other and the starting legend");
+        }
+    }else if(!deck.neeko_legends.empty()) {
+        result.addError("Neeko legends supplied without Neeko in the deck");
+    }
+
+    return result;"""
+d=d.replace(marker,validate,1)
+marker='        } else if (section == "sideboard") {\n            for (int i = 0; i < count; ++i) deck.sideboard.push_back(id);'
+assert d.count(marker)==1,"Neeko deck text parser anchor"
+d=d.replace(marker,marker+'\n        } else if (section == "neekolegends") {\n            for (int i = 0; i < count; ++i) deck.neeko_legends.push_back(id);',1)
+dc.write_text(d)
+# Persist choice and active grant pairing in the copied GameState (also
+# preserved by ISMCTS observations and simulation snapshots).
+gs=engine/"src/core/game_state.h"
+g=gs.read_text()
+marker="    GameObjectId legend_zone = kInvalidId;"
+assert g.count(marker)==1,"Neeko player legend field"
+g=g.replace(marker,marker+"""
+    std::vector<CardDefId> neeko_legend_choices;
+    struct NeekoLegendGrant {
+        GameObjectId source = kInvalidId;
+        GameObjectId legend = kInvalidId;
+    };
+    std::vector<NeekoLegendGrant> neeko_granted_legends;""",1)
+gs.write_text(g)
+# Setup binds these three to the player, not to a later random choice.
+ge=engine/"src/engine/game_engine.cpp"
+g=ge.read_text()
+marker="    ps.legend_zone = legend_id;"
+assert g.count(marker)==1,"Neeko game setup"
+g=g.replace(marker,marker+"\n    ps.neeko_legend_choices = deck.neeko_legends;",1)
+marker="    ask(ps.legend_zone);"
+assert g.count(marker)==1,"Neeko legend effects"
+g=g.replace(marker,marker+"\n    for(const auto& grant:ps.neeko_granted_legends)ask(grant.legend);",1)
+ge.write_text(g)
+# A Legend-Zone grant is a WHILE effect; immediately remove it when that
+# specific Neeko leaves the board, not when a triggered chain item resolves.
+ex=engine/"src/engine/effect_executor.cpp"
+e=ex.read_text()
+start=e.index("void EffectExecutor::leftBoard(GameObjectId object) {")
+end=e.index("void EffectExecutor::putIntoDeckFromBoard(",start)
+part=e[start:end]
+marker="    if (!state_.objectExists(object)) return;"
+assert part.count(marker)==1,"Neeko leaves board source"
+part=part.replace(marker,marker+"""
+    // RAD-167 Neeko: Legend Zone addition stops existing immediately
+    // when its granting Neeko leaves, even if another Neeko remains.
+    for(auto player:{PlayerId::Player1,PlayerId::Player2}){
+        auto& grants=state_.player(player).neeko_granted_legends;
+        for(auto it=grants.begin();it!=grants.end();){
+            if(it->source!=object){++it;continue;}
+            if(state_.objectExists(it->legend))state_.objects.erase(it->legend);
+            it=grants.erase(it);
+        }
+    }""",1)
+e=e[:start]+part+e[end:]
+ex.write_text(e)
+
 print("RADIANCE_FINAL64_OVERLAY_APPLIED: engine IDs 1068..1131 (64 distinct identities)")

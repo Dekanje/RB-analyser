@@ -128,7 +128,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install required C++ libraries and apply pinned engine overlay
-        timeout-minutes: 10
+        timeout-minutes: 16
         run: |
           set -euo pipefail
           echo "::group::System dependency update (bounded)"
@@ -141,7 +141,7 @@ jobs:
           echo "::group::System dependency install (bounded)"
           # AlphaRune CMake requires only program_options, filesystem, system, context.
           # Installing libboost-all-dev previously timed out before C++ tests started.
-          sudo env DEBIAN_FRONTEND=noninteractive timeout 240s apt-get -o DPkg::Lock::Timeout=30 -o Acquire::Retries=2 -o Acquire::http::Timeout=25 -o Acquire::https::Timeout=25 install -y -qq --no-install-recommends ccache libboost-program-options-dev libboost-filesystem-dev libboost-system-dev libboost-context-dev nlohmann-json3-dev
+          sudo env DEBIAN_FRONTEND=noninteractive timeout 420s apt-get -o DPkg::Lock::Timeout=30 -o Acquire::Retries=2 -o Acquire::http::Timeout=25 -o Acquire::https::Timeout=25 install -y -qq --no-install-recommends ccache libboost-program-options-dev libboost-filesystem-dev libboost-system-dev libboost-context-dev nlohmann-json3-dev
           echo "::endgroup::"
           echo "::group::AlphaRune checkout (bounded)"
           timeout 120s git -c http.lowSpeedLimit=1024 -c http.lowSpeedTime=30 clone --quiet https://github.com/chorlick/alpharune.git alpharune

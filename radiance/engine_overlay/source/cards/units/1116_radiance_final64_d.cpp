@@ -566,7 +566,42 @@ private:
 class R64_1131 final : public UnitCard {
 public:
  const CardDef& def() const override { return d_; }
- // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
+ unsigned choicesAtFinalization() const override { return kFinalizeTrigger; }
+ TriggerType triggerType() const override { return TriggerType::WhenYouPlayMe; }
+ void onTrigger(CardContext& c,const std::vector<GameObjectId>&) override {
+   const auto& selected=c.state.player(c.controller).neeko_legend_choices;
+   if(selected.size()!=3 || !c.registry)return;
+   std::vector<std::string> labels;
+   for(auto id:selected){
+     const auto* legend=c.registry->get(id);
+     if(!legend || legend->def().card_type!=CardType::Legend)return;
+     labels.push_back(legend->def().name);
+   }
+   const int choice=pickMode(c,"Neeko: choose a legend",3,labels);
+   if(finalizingChoices(c)||choice<0||choice>=3)return;
+   const auto* legend=c.registry->get(selected[choice]);
+   if(!legend)return;
+   const auto& def=legend->def();
+   const auto object=c.state.createObject();
+   auto& obj=c.state.getObject(object);
+   obj.card_def_id=def.id;
+   obj.owner=c.controller;
+   obj.controller=c.controller;
+   obj.name=def.name;
+   obj.card_type=def.card_type;
+   obj.super_type=def.super_type;
+   obj.tags=def.tags;
+   obj.domains=def.domains;
+   obj.keywords=def.keywords;
+   obj.base_might=def.might;
+   obj.current_might=def.might;
+   obj.assault_value=def.assault_value;
+   obj.shield_value=def.shield_value;
+   obj.deflect_value=def.deflect_value;
+   obj.might_bonus=def.might_bonus;
+   obj.zone=ZoneType::LegendZone;
+   c.state.player(c.controller).neeko_granted_legends.push_back({c.source,object});
+ }
 private:
  const CardDef d_=[] {
   auto d=mkFinal64_d(1131,167,R"RB(Neeko, Blending In)RB",CardType::Unit,6,1,4,{},Rarity::Epic,R"RB((Neutral cards can go in decks of any Domain.)

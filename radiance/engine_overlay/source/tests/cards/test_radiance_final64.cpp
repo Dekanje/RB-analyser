@@ -2,6 +2,7 @@
 // These alone DO NOT certify the 64 gameplay mechanics.
 #include "tests/cards/card_test_fixture.h"
 #include "cards/card.h"
+#include "rules/deck_validator.h"
 #include <gtest/gtest.h>
 #include <set>
 #include <string>
@@ -1936,6 +1937,58 @@ TEST_F(RadianceFinal64Test,HuntersCircleDeployGearOnlyToBattlefield) {
        std::holds_alternative<BaseLocation>(*i.play_location);
    }));
  },nullptr,nullptr,P1);
+}
+
+
+TEST_F(RadianceFinal64Test,NeekoPlayAddsOneOfTheThreeSelectedLegends){
+ state.player(P1).neeko_legend_choices={CardDefId{249},CardDefId{252},CardDefId{254}};
+ auto neeko=addUnit(P1,CardDefId{1131},4,0);
+ fireTriggerThroughEngine(neeko,TriggerType::WhenYouPlayMe);
+ const auto& active=state.player(P1).neeko_granted_legends;
+ ASSERT_EQ(active.size(),1u);
+ EXPECT_EQ(active[0].source,neeko);
+ ASSERT_TRUE(state.objectExists(active[0].legend));
+ const auto& legend=state.getObject(active[0].legend);
+ EXPECT_EQ(legend.controller,P1);
+ EXPECT_EQ(legend.zone,ZoneType::LegendZone);
+ EXPECT_EQ(legend.card_type,CardType::Legend);
+ EXPECT_TRUE(legend.card_def_id==CardDefId{249}||
+             legend.card_def_id==CardDefId{252}||
+             legend.card_def_id==CardDefId{254});
+}
+TEST_F(RadianceFinal64Test,NeekoGrantedLegendRemovedWhenNeekoLeavesBoard){
+ state.player(P1).neeko_legend_choices={CardDefId{249},CardDefId{252},CardDefId{254}};
+ auto neeko=addUnit(P1,CardDefId{1131},4,0);
+ fireTriggerThroughEngine(neeko,TriggerType::WhenYouPlayMe);
+ ASSERT_EQ(state.player(P1).neeko_granted_legends.size(),1u);
+ const auto temporary=state.player(P1).neeko_granted_legends[0].legend;
+ withEngine([&](GameEngine& e){
+   e.testHook_executor().killObject(neeko);
+   settleLikeTheEngine(e);
+ });
+ EXPECT_TRUE(state.player(P1).neeko_granted_legends.empty());
+ EXPECT_FALSE(state.objectExists(temporary));
+}
+TEST_F(RadianceFinal64Test,NeekoNoPregameOptionsDoesNotInventLegends){
+ auto neeko=addUnit(P1,CardDefId{1131},4,0);
+ fireTriggerThroughEngine(neeko,TriggerType::WhenYouPlayMe);
+ EXPECT_TRUE(state.player(P1).neeko_granted_legends.empty());
+}
+TEST_F(RadianceFinal64Test,NeekoDeckValidatorRequiresThreeDistinctLegendNames){
+ DeckSubmission d;
+ d.legend=CardDefId{249};
+ d.chosen_champion=CardDefId{1131};
+ d.neeko_legends={CardDefId{249},CardDefId{252},CardDefId{254}};
+ auto v=DeckValidator(card_db).validate(d);
+ EXPECT_TRUE(std::any_of(v.errors.begin(),v.errors.end(),[](const std::string& e){
+   return e.find("Neeko legends must all have different names")!=std::string::npos;
+ }));
+ d.neeko_legends={CardDefId{252},CardDefId{254},CardDefId{256}};
+ auto valid=DeckValidator(card_db).validate(d);
+ EXPECT_FALSE(std::any_of(valid.errors.begin(),valid.errors.end(),[](const std::string& e){
+   return e.find("Neeko legends")!=std::string::npos ||
+          e.find("Neeko requires")!=std::string::npos;
+ }));
 }
 
 TEST_F(RadianceFinal64Test, SixtyFourUniqueCardDefinitionsHaveCanonicalMetadata){
