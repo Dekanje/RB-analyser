@@ -1530,7 +1530,7 @@ TEST_F(RadianceFinal64Test, ForbiddenTechniqueHighEnergyPlayFromTrashReadiesAndB
  state.player(P1).rune_pool.power[static_cast<int>(Domain::Fury)]=4;
  auto expensive=addToHand(P1,CardDefId{1095}); // 8 Energy and 2 Fury Power.
  EnginePathAgent yes(EnginePathAgent::choosing(target,EnginePathAgent::May::Yes));
- playThroughEngine(expensive,&yes);
+ playThroughEngine(expensive,&yes,std::nullopt,nullptr,false);
  EXPECT_FALSE(state.getObject(target).is_exhausted);
  EXPECT_EQ(state.getObject(spell).zone,ZoneType::Banishment)
    <<"Replay with its own 1E/2F cost must banish this spell after it resolves";
@@ -1548,7 +1548,7 @@ TEST_F(RadianceFinal64Test, ForbiddenTechniqueLowEnergyDoesNotGrantTrashReplay){
  state.player(P1).rune_pool.power[static_cast<int>(Domain::Fury)]=4;
  auto cheap=addToHand(P1,CardDefId{1084}); // 3 Energy.
  EnginePathAgent yes(EnginePathAgent::accepting());
- playThroughEngine(cheap,&yes);
+ playThroughEngine(cheap,&yes,std::nullopt,nullptr,false);
  EXPECT_EQ(state.getObject(spell).zone,ZoneType::Trash);
  EXPECT_EQ(state.player(P1).rune_pool.power[static_cast<int>(Domain::Fury)],4);
 }
@@ -1563,7 +1563,7 @@ TEST_F(RadianceFinal64Test, ForbiddenTechniqueDecliningReplayKeepsCardInTrash){
  state.player(P1).rune_pool.power[static_cast<int>(Domain::Fury)]=4;
  auto expensive=addToHand(P1,CardDefId{1095});
  EnginePathAgent decline;
- playThroughEngine(expensive,&decline);
+ playThroughEngine(expensive,&decline,std::nullopt,nullptr,false);
  EXPECT_EQ(state.getObject(spell).zone,ZoneType::Trash)
    <<"A triggered permission is optional, not an automatic replay";
 }
@@ -1578,7 +1578,7 @@ TEST_F(RadianceFinal64Test, ForbiddenTechniqueInsufficientFuryPreventsReplay){
  state.player(P1).rune_pool.power[static_cast<int>(Domain::Fury)]=2;
  auto expensive=addToHand(P1,CardDefId{1095});
  EnginePathAgent yes(EnginePathAgent::accepting());
- playThroughEngine(expensive,&yes);
+ playThroughEngine(expensive,&yes,std::nullopt,nullptr,false);
  EXPECT_EQ(state.getObject(spell).zone,ZoneType::Trash);
 }
 
