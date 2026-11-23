@@ -43,7 +43,7 @@ def load_inputs(args):
         selected.get("hypotheses")!=3 or
         len(selected.get("choices",[]))!=3):
         raise RuntimeError("Holdout experiment changed after registration")
-    if (selected["aggregated_file_sha256"]!=sha(args.pilot):
+    if selected["aggregated_file_sha256"] != sha(args.pilot):
         raise RuntimeError("Actual frozen pilot artifact bytes do not match")
     pilot=json.loads(args.pilot.read_text(encoding="utf-8"))
     if set(pilot)!={"draven-vs-miss-fortune","leblanc-vs-reksai","masteryi-vs-ambessa"}:
