@@ -745,6 +745,45 @@ marker='        } else if (section == "sideboard") {\n            for (int i = 0
 assert d.count(marker)==1,"Neeko deck text parser anchor"
 d=d.replace(marker,marker+'\n        } else if (section == "neekolegends") {\n            for (int i = 0; i < count; ++i) deck.neeko_legends.push_back(id);',1)
 dc.write_text(d)
+
+# The seeded random-deck builder must obey the new Neeko validation rule.
+# Make all OTHER seeded choices first, then deterministically select exactly
+# three unique legend NAMES. This preserves the historical seed-1 deck hash
+# (which hashes only legend/champion/main/runes/battlefields).
+random_deck_path=engine/"src/rules/random_deck.cpp"
+rd=random_deck_path.read_text()
+build_end="""    return deck;
+}
+
+std::string RandomDeckBuilder::toDeckList(const DeckSubmission& deck) const {"""
+assert rd.count(build_end)==1,"Neeko random-deck build return anchor"
+rd=rd.replace(build_end,"""    // RAD-167: Neeko in the chosen champion slot OR Main Deck.
+    // Distinct means distinct names, including from starting legend.
+    if(deck.chosen_champion==CardDefId{1131} ||
+       std::find(deck.main_deck.begin(),deck.main_deck.end(),CardDefId{1131})
+           !=deck.main_deck.end()) {
+        std::set<std::string> seen{db_.get(deck.legend).name};
+        std::vector<CardDefId> pool;
+        for(const auto& candidate:legends_)
+            if(seen.insert(db_.get(candidate.legend).name).second)
+                pool.push_back(candidate.legend);
+        if(pool.size()<3)
+            throw std::logic_error("RandomDeckBuilder: insufficient distinct Neeko legends");
+        for(int i=0;i<3;++i) {
+            const auto j=rng.below(pool.size());
+            deck.neeko_legends.push_back(pool[j]);
+            pool.erase(pool.begin()+static_cast<std::ptrdiff_t>(j));
+        }
+    }
+    return deck;
+}
+
+std::string RandomDeckBuilder::toDeckList(const DeckSubmission& deck) const {""",1)
+print_anchor='    section("Runes", deck.rune_deck);\n    return out.str();'
+assert rd.count(print_anchor)==1,"Neeko random-deck print anchor"
+rd=rd.replace(print_anchor,'    section("Runes", deck.rune_deck);\n    if(!deck.neeko_legends.empty())section("NeekoLegends",deck.neeko_legends);\n    return out.str();',1)
+random_deck_path.write_text(rd)
+
 # Persist choice and active grant pairing in the copied GameState (also
 # preserved by ISMCTS observations and simulation snapshots).
 gs=engine/"src/core/game_state.h"

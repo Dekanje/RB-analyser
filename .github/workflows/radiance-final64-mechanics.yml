@@ -188,6 +188,8 @@ jobs:
         if: ${{ needs.preflight.outputs.mode == 'targeted' }}
         env:
           GTEST_FILTER: ${{ needs.preflight.outputs.gtest_filter }}
+          # Diagnostic output only on hidden-order divergence.
+          RIFTBOUND_LEAK_VERBOSE: '1'
         run: |
           mkdir -p results
           RIFTBOUND_ROOT=alpharune alpharune/build/riftbound_tests --gtest_list_tests --gtest_filter="$GTEST_FILTER" > results/targeted_list.txt
