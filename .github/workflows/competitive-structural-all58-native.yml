@@ -23,7 +23,7 @@ jobs:
           python3 -m unittest discover -s scripts -p 'test_structural_deck_population.py' -v
       - uses: actions/download-artifact@v4
         with:
-          run-id: 45258002938
+          run-id: 45259246337
           github-token: ${{ github.token }}
           name: worlds-all58-registered-structure-legal-unvalidated-variants
           path: results/structural
@@ -79,7 +79,7 @@ jobs:
           path: results/shards
       - uses: actions/download-artifact@v4
         with:
-          run-id: 45258002938
+          run-id: 45259246337
           github-token: ${{ github.token }}
           name: worlds-all58-registered-structure-legal-unvalidated-variants
           path: results/structural
