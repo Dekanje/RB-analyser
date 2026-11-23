@@ -455,6 +455,33 @@ TEST_F(RadianceFinal64Test, SeraphicWyvernAddsOneExhaustedRuneToReadyChannel){
  EXPECT_EQ(exhausted,1);
  EXPECT_EQ(state.player(P1).rune_deck.size(),1u);
 }
+TEST_F(RadianceFinal64Test, DuneDevourerKillsFriendlyUnitAsAdditionalPlayCostForEnergyDiscount){
+ auto sacrifice=addUnit(P1,kInvalidId,3,-1);
+ addUnit(P1,kInvalidId,2,-1);
+ auto devourer=addToHand(P1,CardDefId{1118});
+ state.player(P1).rune_pool.energy=5; // Printed 7; sacrifice discounts by 2
+ state.player(P1).rune_pool.universal_power=1;
+ EnginePathAgent yes(EnginePathAgent::accepting());
+ playThroughEngine(devourer,&yes,std::nullopt,nullptr,false);
+ EXPECT_TRUE(state.getObject(devourer).location.has_value());
+ EXPECT_EQ(state.getObject(devourer).zone,ZoneType::Base);
+ EXPECT_FALSE(state.getObject(sacrifice).location.has_value());
+ EXPECT_EQ(state.player(P1).rune_pool.energy,0);
+}
+TEST_F(RadianceFinal64Test, DuneDevourerHasCorrectOptionalAdditionalCostAndDeflect){
+ const auto* card=card_registry.get(CardDefId{1118});
+ ASSERT_NE(card,nullptr);
+ auto noFriendly=card->additionalPlayCost(state,card_db,P1,kInvalidId);
+ EXPECT_TRUE(noFriendly.exists);
+ EXPECT_FALSE(noFriendly.payable);
+ addUnit(P1,kInvalidId,2,-1);
+ auto yesFriendly=card->additionalPlayCost(state,card_db,P1,kInvalidId);
+ EXPECT_TRUE(yesFriendly.payable);
+ EXPECT_EQ(yesFriendly.best.energy_reduction,2);
+ const auto& def=card_db.get(CardDefId{1118});
+ EXPECT_TRUE(def.keywords.has(Keyword::Deflect));
+ EXPECT_EQ(def.deflect_value,1);
+}
 TEST_F(RadianceFinal64Test, BushwhackTrapGrantsExtraFacedownSlotOnlyWhileHeld){
  // A handwritten controller field does not persist through engine cleanup:
  // hold the battlefield with a friendly unit instead.
