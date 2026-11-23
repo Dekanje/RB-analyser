@@ -994,6 +994,13 @@ orianna_engine.write_text(og)
 # Sort by observable rune identity first, by ID only for equal copies.
 resource_path=engine/"src/engine/resource_payment.h"
 resources=resource_path.read_text()
+old_rune_doc="""/// `player`'s runes in their base, lowest id first (the object table is
+/// unordered; a payment must not depend on its iteration order)."""
+new_rune_doc="""/// `player`'s runes in their base, ordered by public rune identity first.
+/// Different printed runes must not be chosen by salted object IDs; identical
+/// copies use ID only as an unobservable final tie-break."""
+assert resources.count(old_rune_doc)==1,"Rune helper description changed"
+resources=resources.replace(old_rune_doc,new_rune_doc,1)
 rune_begin=resources.index("inline std::vector<GameObjectId> runesInBase(")
 rune_end=resources.index("/// Energy `player` could pay",rune_begin)
 rune_block=resources[rune_begin:rune_end]
