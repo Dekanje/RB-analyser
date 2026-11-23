@@ -149,8 +149,8 @@ TEST_F(RadianceFinal64Test, ExplosimianBombDeathChainsAndDamagesEnemy){
    e.testHook_executor().killObject(bombs.front());
    settleLikeTheEngine(e);
  },&chooseEnemy);
- EXPECT_GE(state.getObject(enemy).damage_marked,2)
-   << "Bomb death must trigger its printed damage";
+ EXPECT_EQ(state.getObject(enemy).damage_marked,6)
+   << "Each of three Bomb deaths must deal exactly 2 damage at this battlefield";
  int surviving=0;
  for(const auto& [id,o]:state.objects.onBoard())
    if(o.controller==P1&&o.isGear()&&o.name=="Bomb"&&o.isAtBattlefield())++surviving;
@@ -816,6 +816,25 @@ TEST_F(RadianceFinal64Test, DocksideLockUpWithoutBanishedCardCannotSacrificeForF
  fireTriggerThroughEngine(lock,TriggerType::WhenYouHoldHere);
  EXPECT_TRUE(state.getObject(lock).isAtBattlefield())
    << "A hold trigger without a banished card must not sacrifice the Lock-Up";
+ EXPECT_EQ(state.getObject(lock).card_counters.count("__dockside_banished_card"),0u);
+}
+
+TEST_F(RadianceFinal64Test, DocksideLockUpCannotBanishTokenUnit){
+ GameObjectId recruit=kInvalidId;
+ withEngine([&](GameEngine& e){
+   recruit=e.testHook_executor().createToken(P2,CardType::Unit,"Recruit",1,
+     {"Recruit"},KeywordSet{},BattlefieldLocation{state.battlefields[0].id},false);
+ });
+ ASSERT_NE(recruit,kInvalidId);
+ ASSERT_TRUE(state.getObject(recruit).isToken());
+ auto lock=addToHand(P1,CardDefId{1126});
+ auto& hand=state.player(P1).hand;
+ hand.erase(std::remove(hand.begin(),hand.end(),lock),hand.end());
+ state.getObject(lock).zone=ZoneType::BattlefieldZone;
+ state.getObject(lock).location=BattlefieldLocation{state.battlefields[0].id};
+ fireTriggerThroughEngine(lock,TriggerType::WhenYouPlayThis);
+ EXPECT_TRUE(state.getObject(recruit).isAtBattlefield())
+   << "A token is not a card and is not a legal banish choice";
  EXPECT_EQ(state.getObject(lock).card_counters.count("__dockside_banished_card"),0u);
 }
 TEST_F(RadianceFinal64Test, MordekaiserDiscardsOneToKillTargetOnAttackTrigger){
