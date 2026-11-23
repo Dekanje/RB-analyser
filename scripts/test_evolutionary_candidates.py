@@ -49,8 +49,8 @@ class EvolutionaryCandidateTests(unittest.TestCase):
     def test_validate_unique_sideboard_and_signature(self):
         validate_main(self.main,self.main.copy(),self.side,self.byname,self.domains)
         other = self.main.copy()
-        other["Original 01"] -= 1
-        other["Side Unit"] += 1
+        other["Original 01"] -= 2
+        other["Side Unit"] += 2
         with self.assertRaises(ValueError):
             validate_main(self.main,other,self.side,self.byname,self.domains)
         other = self.main.copy()
