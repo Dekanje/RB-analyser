@@ -300,3 +300,230 @@ jobs:
           name: competitive-worlds-repaired-engine-all174-sideboard-native-407-fitness
           path: results/sideboard_174_final/
           retention-days: 30
+
+  preregister-top12-repaired-native-sideboard-holdouts:
+    needs: verify-all-174-new-engine-407-after-580
+    runs-on: ubuntu-24.04
+    timeout-minutes: 11
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: competitive-worlds-repaired-engine-all174-sideboard-native-407-fitness
+          path: results/screen
+      - uses: actions/download-artifact@v4
+        with:
+          name: competitive-guidebot-repaired-full580-native-registered-certification
+          path: results/native_certified
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45259246337
+          github-token: ${{ github.token }}
+          name: worlds-all58-registered-structure-legal-unvalidated-variants
+          path: results/structure
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45181493632
+          github-token: ${{ github.token }}
+          name: expanded-optimized-58-independent-radiance-bo3
+          path: results/selected
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45208732588
+          github-token: ${{ github.token }}
+          name: all-58-optimized-head-to-head-rankings-and-matchups
+          path: results/ranked
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45282108093
+          github-token: ${{ github.token }}
+          name: competitive-guidebot-rule407-verified-engine-binary
+          path: engine_build
+      - name: Test strong-agent paired-score provenance and freeze twelve legal actual-swap policy hypotheses
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/sideboard_128_holdout.py scripts/test_sideboard_128_holdout.py
+          python3 -m unittest discover -s scripts -p 'test_sideboard_128_holdout.py' -v
+          python3 scripts/sideboard_128_holdout.py --select \
+            --selected results/selected \
+            --variants results/structure \
+            --registry engine_build/registry.json \
+            --certification results/native_certified/acceptance.json \
+            --ranked results/ranked/all_58_ranked.json \
+            --screen results/screen/summary.json \
+            --evidence results/screen/all_sideboard_policy_evidence.json \
+            --agent ismcts:sims=128 --repetitions 2 --seed 202611271300 \
+            --output results/frozen_12/selection.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: competitive-repaired-native-174-sideboard-holdout-preregistration
+          path: results/frozen_12/
+          retention-days: 30
+  evaluate-12-independent-repaired-128-native-sideboard-holdouts:
+    needs: preregister-top12-repaired-native-sideboard-holdouts
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        index: [0,1,2,3,4,5,6,7,8,9,10,11]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: competitive-repaired-native-174-sideboard-holdout-preregistration
+          path: results/selection
+      - uses: actions/download-artifact@v4
+        with:
+          name: competitive-worlds-repaired-engine-all174-sideboard-native-407-fitness
+          path: results/screen
+      - uses: actions/download-artifact@v4
+        with:
+          name: competitive-guidebot-repaired-full580-native-registered-certification
+          path: results/native_certified
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45259246337
+          github-token: ${{ github.token }}
+          name: worlds-all58-registered-structure-legal-unvalidated-variants
+          path: results/structure
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45181493632
+          github-token: ${{ github.token }}
+          name: expanded-optimized-58-independent-radiance-bo3
+          path: results/selected
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45208732588
+          github-token: ${{ github.token }}
+          name: all-58-optimized-head-to-head-rankings-and-matchups
+          path: results/ranked
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45282108093
+          github-token: ${{ github.token }}
+          name: competitive-guidebot-rule407-verified-engine-binary
+          path: engine_build
+      - name: Install pinned corrected C++ dynamic runtime for 128 ISMCTS
+        timeout-minutes: 12
+        run: |
+          set -euo pipefail
+          if ! sudo env DEBIAN_FRONTEND=noninteractive timeout -k 10s 55s apt-get -o Acquire::Retries=0 update -qq; then
+            echo '::warning::using cached apt package indexes'
+          fi
+          sudo env DEBIAN_FRONTEND=noninteractive timeout 360s apt-get -o Acquire::Retries=2 install -y -qq --no-install-recommends libboost-program-options1.83.0 libboost-filesystem1.83.0 libboost-system1.83.0 libboost-context1.83.0
+          chmod +x engine_build/riftbound
+          if ldd engine_build/riftbound | grep -q 'not found'; then exit 1; fi
+      - name: Independently play six unseen elite opponents, both seats, two repetitions, real G2/G3 swaps
+        timeout-minutes: 102
+        run: |
+          set -euo pipefail
+          python3 -u scripts/sideboard_128_holdout.py \
+            --selected results/selected \
+            --variants results/structure \
+            --registry engine_build/registry.json \
+            --certification results/native_certified/acceptance.json \
+            --ranked results/ranked/all_58_ranked.json \
+            --screen results/screen/summary.json \
+            --evidence results/screen/all_sideboard_policy_evidence.json \
+            --selection results/selection/selection.json \
+            --engine engine_build/riftbound --index ${{ matrix.index }} \
+            --agent ismcts:sims=128 --repetitions 2 --seed 202611271300 \
+            --workers 3 --timeout 260 \
+            --output results/sideboard-holdout-${{ matrix.index }}/holdout.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: repaired-sideboard-policy-holdout-${{ matrix.index }}
+          path: results/sideboard-holdout-${{ matrix.index }}/
+          retention-days: 30
+          if-no-files-found: warn
+  verify-preregistered-12-actual-sideboard-holdouts-holm:
+    needs: evaluate-12-independent-repaired-128-native-sideboard-holdouts
+    runs-on: ubuntu-24.04
+    timeout-minutes: 17
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: competitive-repaired-native-174-sideboard-holdout-preregistration
+          path: results/selection
+      - uses: actions/download-artifact@v4
+        with:
+          name: competitive-worlds-repaired-engine-all174-sideboard-native-407-fitness
+          path: results/screen
+      - uses: actions/download-artifact@v4
+        with:
+          name: competitive-guidebot-repaired-full580-native-registered-certification
+          path: results/native_certified
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: repaired-sideboard-policy-holdout-*
+          path: results/holdout_parts
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45259246337
+          github-token: ${{ github.token }}
+          name: worlds-all58-registered-structure-legal-unvalidated-variants
+          path: results/structure
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45181493632
+          github-token: ${{ github.token }}
+          name: expanded-optimized-58-independent-radiance-bo3
+          path: results/selected
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45208732588
+          github-token: ${{ github.token }}
+          name: all-58-optimized-head-to-head-rankings-and-matchups
+          path: results/ranked
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45282108093
+          github-token: ${{ github.token }}
+          name: competitive-guidebot-rule407-verified-engine-binary
+          path: engine_build
+      - name: Strict twelve-policy native game receipts and Holm FWER across independent paired outcomes
+        run: |
+          set -euo pipefail
+          mkdir -p results/holdout_input
+          python3 - <<'PY'
+          from pathlib import Path
+          source=Path('results/holdout_parts')
+          for i in range(12):
+              p=source/f'repaired-sideboard-policy-holdout-{i}'
+              if not (p/'holdout.json').is_file():
+                  raise RuntimeError(f'Missing independent policy holdout #{i}')
+              (Path('results/holdout_input')/f'sideboard-holdout-{i}').symlink_to(
+                  p.resolve(),target_is_directory=True)
+          PY
+          python3 scripts/sideboard_128_holdout.py --aggregate \
+            --selected results/selected \
+            --variants results/structure \
+            --registry engine_build/registry.json \
+            --certification results/native_certified/acceptance.json \
+            --ranked results/ranked/all_58_ranked.json \
+            --screen results/screen/summary.json \
+            --evidence results/screen/all_sideboard_policy_evidence.json \
+            --selection results/selection/selection.json \
+            --input results/holdout_input \
+            --agent ismcts:sims=128 --repetitions 2 --seed 202611271300 \
+            --output results/independent_sideboard_policy_final/report.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path('results/independent_sideboard_policy_final/report.json').read_text())
+          assert d['hypotheses']==12
+          assert d['completed_paired_bo3']==288
+          assert d['registered_decks_auto_modified'] is False
+          assert d['confirmed_causal_tech_card_effects']==0
+          print('ALL12_REPAIRED_ENGINE_ACTUAL_SIDEBOARD_128_HOLDOUT_PASS',
+                d['candidate_policy_signals'])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: competitive-repaired-native-all12-independent-128-sideboard-policy-407-decisions
+          path: results/independent_sideboard_policy_final/
+          retention-days: 30
