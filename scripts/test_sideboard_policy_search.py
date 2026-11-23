@@ -39,8 +39,13 @@ class SideboardPolicyResearchTest(unittest.TestCase):
         )
 
     def test_plans_are_registered_legal_and_strict(self):
-        candidates=legal_plans(self.original,self.db,3)
-        self.assertGreaterEqual(len(candidates),4)
+        candidates=legal_plans(self.original,self.db,3,max_swap_depth=3)
+        self.assertGreaterEqual(len(candidates),6)
+        singles=[x for x in candidates if len(x["plan"].get("swaps",[]))==1]
+        self.assertEqual(len({x["plan"]["swaps"][0]["side_in"] for x in singles}),3)
+        self.assertEqual(len({x["plan"]["swaps"][0]["main_out"] for x in singles}),3)
+        self.assertTrue(any(len(x["plan"].get("swaps",[]))==2 for x in candidates))
+        self.assertTrue(any(len(x["plan"].get("swaps",[]))==3 for x in candidates))
         self.assertTrue(any(x["loser_chooses_start"]=="opponent"
                             for x in candidates))
         self.assertTrue(any(x["plan"].get("chosen_champion")=="Draven Alternate"
