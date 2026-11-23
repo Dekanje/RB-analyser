@@ -1,4 +1,4 @@
-name: Worlds remaining 174 registered sideboard tech variants actual 407 BO3 fitness
+name: Worlds all-174 legal sideboard cards played in actual 407 BO3 fitness
 on:
   push:
     branches: ['research/competitive-agent-benchmark-v1-2026-11-23']
