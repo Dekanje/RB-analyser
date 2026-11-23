@@ -455,6 +455,17 @@ TEST_F(RadianceFinal64Test, SeraphicWyvernAddsOneExhaustedRuneToReadyChannel){
  EXPECT_EQ(exhausted,1);
  EXPECT_EQ(state.player(P1).rune_deck.size(),1u);
 }
+TEST_F(RadianceFinal64Test, CommandAttackLooksAtTopFiveAndDrawsOnlyRevealedGear){
+ auto eligible=addToDeck(P1,CardDefId{1116});
+ addToDeck(P1,CardDefId{1117});
+ addToDeck(P1,CardDefId{1118});
+ addToDeck(P1,CardDefId{1125});
+ auto spell=addToHand(P1,CardDefId{1078});
+ EnginePathAgent accept(EnginePathAgent::accepting());
+ playThroughEngine(spell,&accept);
+ EXPECT_TRUE(inHand(P1,eligible));
+ EXPECT_EQ(state.player(P1).main_deck.size(),3u);
+}
 TEST_F(RadianceFinal64Test, WhirlingTwirligigExhaustsToPlayAnExhaustedGold){
  auto source=addToHand(P1,CardDefId{1076});
  playThroughEngine(source);
