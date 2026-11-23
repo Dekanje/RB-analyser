@@ -1,0 +1,125 @@
+name: Competitive all-58 multi-card mutation discovery (one-shot)
+on:
+  push:
+    branches: ['research/competitive-agent-benchmark-v1-2026-11-23']
+    paths: ['.github/workflows/competitive-all58-candidates.yml']
+permissions:
+  contents: read
+  actions: read
+jobs:
+  validate-provenance-harness:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile and test frozen-source, paired-game and aggregation invariants
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/competitive_all58_candidates.py scripts/test_competitive_all58_candidates.py
+          python3 -m unittest discover -s scripts -p 'test_competitive_all58_candidates.py' -v
+  run-frozen-all58-discovery:
+    needs: validate-provenance-harness
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45181493632
+          github-token: ${{ github.token }}
+          name: expanded-optimized-58-independent-radiance-bo3
+          path: results/selected
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45223997723
+          github-token: ${{ github.token }}
+          name: competitive-all58-unvalidated-2320-proposals
+          path: results/proposals
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45208732588
+          github-token: ${{ github.token }}
+          name: all-58-optimized-head-to-head-rankings-and-matchups
+          path: results/previous
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45205260187
+          github-token: ${{ github.token }}
+          name: repaired-fullfield-engine-1123
+          path: engine_build
+      - name: Verify all pinned source files and Linux C++ runtime
+        timeout-minutes: 12
+        run: |
+          set -euo pipefail
+          if ! sudo env DEBIAN_FRONTEND=noninteractive timeout -k 10s 55s apt-get -o Acquire::Retries=0 update -qq; then
+            echo '::warning::using cached package indexes'
+          fi
+          sudo env DEBIAN_FRONTEND=noninteractive timeout 360s apt-get -o Acquire::Retries=2 install -y -qq --no-install-recommends libboost-program-options1.83.0 libboost-filesystem1.83.0 libboost-system1.83.0 libboost-context1.83.0
+          chmod +x engine_build/riftbound
+          test "$(find results/selected/selected_decks -maxdepth 1 -name '*.txt' | wc -l)" -eq 58
+          test -f results/proposals/manifest.json
+          test -f results/previous/all_58_ranked.json
+          if ldd engine_build/riftbound | grep -q 'not found'; then exit 1; fi
+      - name: Evaluate four independent broad mutants for each assigned Legend
+        timeout-minutes: 60
+        run: |
+          python3 -u scripts/competitive_all58_candidates.py \
+            --selected results/selected --proposals results/proposals \
+            --ranked results/previous/all_58_ranked.json \
+            --engine engine_build/riftbound \
+            --output results/all58-mutation/${{ matrix.shard }} \
+            --shards 29 --shard ${{ matrix.shard }} \
+            --candidates 4 --opponents 3 --workers 2 \
+            --agent ismcts:sims=24 --timeout 150 --seed 202611240700
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: all58-mutation-${{ matrix.shard }}
+          path: results/all58-mutation/${{ matrix.shard }}/
+          retention-days: 30
+          if-no-files-found: warn
+  conservatively-rank-only-untested-improvements:
+    needs: run-frozen-all58-discovery
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: all58-mutation-*
+          path: results/shards
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45181493632
+          github-token: ${{ github.token }}
+          name: expanded-optimized-58-independent-radiance-bo3
+          path: results/selected
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45223997723
+          github-token: ${{ github.token }}
+          name: competitive-all58-unvalidated-2320-proposals
+          path: results/proposals
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45208732588
+          github-token: ${{ github.token }}
+          name: all-58-optimized-head-to-head-rankings-and-matchups
+          path: results/previous
+      - name: Verify all 232 candidate comparisons plus 58 baseline receipts
+        run: |
+          python3 scripts/competitive_all58_candidates.py --aggregate \
+            --selected results/selected --proposals results/proposals \
+            --ranked results/previous/all_58_ranked.json \
+            --input results/shards --output results/all58_mutation_discovery \
+            --shards 29 --candidates 4 --opponents 3 \
+            --agent ismcts:sims=24 --seed 202611240700
+      - uses: actions/upload-artifact@v4
+        with:
+          name: competitive-all58-exploratory-mutation-scores
+          path: results/all58_mutation_discovery/
+          retention-days: 30
