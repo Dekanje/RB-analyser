@@ -5,9 +5,10 @@ name: Radiance Final64 - 64 cards and full mechanics
 # Registry target: 1,123 definitions, 167/167 Radiance base cards, zero duplicates.
 on:
   push:
-    branches: ['radiance/final64-complete-set-2026-11-23', 'radiance/final64-remaining-mechanics-2026-11-23', 'radiance/final64-full-regression-work-2026-11-23']
+    branches: ['radiance/final64-complete-set-2026-11-23', 'radiance/final64-remaining-mechanics-2026-11-23', 'radiance/final64-full-regression-work-2026-11-23', 'radiance/final64-mechanics-wave2-2026-11-23']
     paths:
       - '.github/workflows/radiance-batch10-mechanics.yml'
+      - '.github/workflows/radiance-final64-mechanics.yml'
       - 'radiance/engine_overlay/**'
       - 'radiance/verify_final64_registry.py'
       - 'radiance/final64/**'
