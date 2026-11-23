@@ -36,11 +36,6 @@ def playable_pool(byname: dict, domains: set) -> list[dict]:
             continue
         if c.get("banned") or key(c["name"]) in BAN_KEYS:
             continue
-        # RAD-167 needs three additional registered Legends. This exporter
-        # does not yet support the special 401.2.a deck-registration fields.
-        # Exclude it instead of proposing silently illegal tournament lists.
-        if c["name"]=="Neeko, Blending In":
-            continue
         if "signature" in supertype or "token" in supertype:
             continue
         if set(c.get("domains") or ()) - domains:
@@ -198,6 +193,34 @@ def generate_candidate(
     return current, changes
 
 
+# Distinct actual C++ registry Legend names, not display titles.
+# The choices are a proof-of-legality baseline, not optimized Neeko strategy.
+NEEKO_PROVISIONAL_LEGENDS = (
+    "Loose Cannon", "Nine-Tailed Fox", "Blind Monk", "Relentless Storm"
+)
+
+
+def registered_neeko_deck(original_text: str, changed: collections.Counter,
+                          starting_legend: str, byname: dict):
+    rendered = render_deck(original_text, changed)
+    if changed.get("Neeko, Blending In", 0) <= 0:
+        return rendered, []
+    starting_name = starting_legend.split(", ", 1)[-1]
+    candidates = [
+        n for n in NEEKO_PROVISIONAL_LEGENDS
+        if n != starting_name and n in byname and byname[n]["card_type"]=="legend"
+    ]
+    if len(candidates)<3:
+        raise ValueError("Fewer than three distinct compiled Neeko Legends")
+    chosen = candidates[:3]
+    if len(set(chosen+[starting_name]))!=4:
+        raise ValueError("Neeko additional Legends are not all distinct")
+    # The pinned Radiance engine parser recognizes this official special section.
+    return rendered.rstrip()+"\n\nNeekoLegends:\n"+(
+        "\n".join(f"1 {name}" for name in chosen)
+    )+"\n", chosen
+
+
 def generate_for_legend(
     name: str,
     deck: pathlib.Path,
@@ -232,7 +255,9 @@ def generate_for_legend(
         if proposal is None:
             continue
         changed, sequence = proposal
-        rendered = render_deck(source_text, changed)
+        rendered, additional_legends = registered_neeko_deck(
+            source_text, changed, name, byname
+        )
         blob = hashlib.sha256(rendered.encode("utf-8")).hexdigest()
         if blob in seen:
             continue
@@ -246,6 +271,7 @@ def generate_for_legend(
             "sha256": blob, "changed_main_slots": distance,
             "mutation_steps": sequence, "engine_simulated": False,
             "status": "UNTESTED_STRUCTURAL_CANDIDATE",
+            "neeko_additional_legends":additional_legends,
         })
     return {
         "legend": name, "source_sha256": sha(deck),
