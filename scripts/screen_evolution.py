@@ -62,11 +62,33 @@ def validate_candidate_text(baseline:pathlib.Path, candidate:pathlib.Path, expec
     if ("MainDeck:" not in before or "Battlefields:" not in before or
         "MainDeck:" not in after or "Battlefields:" not in after):
         raise RuntimeError("Malformed constructed deck")
-    # Only main-deck section may differ; no silent changes to chosen champion,
-    # Legend, runes, battlefields or registered sideboard.
-    if (before.split("MainDeck:",1)[0]!=after.split("MainDeck:",1)[0] or
-        before.split("Battlefields:",1)[1]!=after.split("Battlefields:",1)[1]):
-        raise RuntimeError("Candidate changed registered non-main deck sections")
+    # MainDeck contents may change. The ONLY permitted non-main delta is
+    # an appended NeekoLegends section with exactly three distinct Legends,
+    # required by card RAD-167's registration rule. The base Legend, chosen
+    # Champion, battlefield, rune and sideboard declarations are immutable.
+    if before.split("MainDeck:",1)[0] != after.split("MainDeck:",1)[0]:
+        raise RuntimeError("Candidate changed registered Legend/Champion")
+    base_tail=before.split("Battlefields:",1)[1].rstrip()
+    changed_tail=after.split("Battlefields:",1)[1].rstrip()
+    if changed_tail!=base_tail:
+        delimiter="\nNeekoLegends:\n"
+        if changed_tail.count(delimiter)!=1:
+            raise RuntimeError("Candidate changed registered non-main deck sections")
+        original_tail, additional=changed_tail.split(delimiter,1)
+        if original_tail.rstrip()!=base_tail:
+            raise RuntimeError("Candidate altered original battlefield/rune/sideboard")
+        lines=additional.splitlines()
+        if len(lines)!=3 or any(not line.startswith("1 ") for line in lines):
+            raise RuntimeError("Neeko special registration needs exactly three Legends")
+        legends=[line[2:].strip() for line in lines]
+        current_legend=before.split("Legend:",1)[1].split("Champion:",1)[0]
+        source_legend=current_legend.strip().removeprefix("1 ").split(",",1)[-1].strip()
+        if (len(set(legends))!=3 or any(not x for x in legends) or
+            source_legend in legends):
+            raise RuntimeError("Neeko registered Legends must be distinct, excluding self")
+        main=after.split("MainDeck:",1)[1].split("Battlefields:",1)[0]
+        if "Neeko, Blending In" not in main:
+            raise RuntimeError("Neeko additional Legends supplied without Neeko")
     return True
 
 
