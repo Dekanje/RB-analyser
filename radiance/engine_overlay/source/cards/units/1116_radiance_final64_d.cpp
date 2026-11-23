@@ -458,7 +458,63 @@ I have +1 [M] for each other exhausted unit you control.)RB");
 class R64_1129 final : public BattlefieldCard {
 public:
  const CardDef& def() const override { return d_; }
- // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
+ // The ability is usable by either player, not only the battlefield holder.
+ // Grant one separately indexed ability per Black Market battlefield to both
+ // players' legends. That works even when the BF is uncontrolled.
+ static constexpr int kMaxBattlefieldSlots=8;
+ std::vector<ActivatedAbility> activatedAbilities()const override{
+   std::vector<ActivatedAbility> out(kMaxBattlefieldSlots);
+   for(auto& a:out){a.cost.power=2;a.cost.power_any_domain=true;}
+   return out;
+ }
+ void applyPassiveAura(GameState& s,PlayerId)const override{
+   for(int index=0;index<static_cast<int>(s.battlefields.size())&&
+                   index<kMaxBattlefieldSlots;++index){
+     const auto bfcard=s.battlefields[index].card_object_id;
+     if(bfcard==kInvalidId||!s.objectExists(bfcard)||
+        s.getObject(bfcard).card_def_id!=cardDefId())continue;
+     for(auto player:{PlayerId::Player1,PlayerId::Player2}){
+       const auto legend=s.player(player).legend_zone;
+       if(legend==kInvalidId||!s.objectExists(legend))continue;
+       auto& obj=s.getObject(legend);
+       bool present=false;
+       for(const auto& grant:obj.granted_abilities)
+         if(grant.source_def_id==cardDefId()&&grant.ability_index==index)
+           present=true;
+       if(!present)obj.granted_abilities.push_back({cardDefId(),index});
+     }
+   }
+ }
+ bool canActivateAbilityAt(const GameState& s,PlayerId player,
+                            GameObjectId source,int index)const override{
+   if(player!=s.turn.turn_player||index<0||
+      index>=static_cast<int>(s.battlefields.size())||
+      index>=kMaxBattlefieldSlots||!s.objectExists(source))return false;
+   const auto bfcard=s.battlefields[index].card_object_id;
+   if(bfcard==kInvalidId||!s.objectExists(bfcard)||
+      s.getObject(bfcard).card_def_id!=cardDefId())return false;
+   const auto& obj=s.getObject(source);
+   if(obj.controller!=player||obj.zone!=ZoneType::LegendZone)return false;
+   const auto key=std::string("__black_market_used_")+std::to_string(index);
+   auto it=obj.card_counters.find(key);
+   if(it!=obj.card_counters.end()&&it->second==s.turn.turn_number+1)
+     return false;
+   // The ability is spent as soon as it enters the chain. Without this
+   // check it could be activated twice before the first draw resolves.
+   for(const auto& item:s.chain.items)
+     if(item.source==source&&item.is_ability&&
+        item.granted_ability_def==cardDefId()&&item.ability_index==index)
+       return false;
+   return true;
+ }
+ void onActivate(CardContext& c,int index,
+                 const std::vector<GameObjectId>&)override{
+   if(c.state.objectExists(c.source))
+     c.state.getObject(c.source).card_counters[
+       std::string("__black_market_used_")+std::to_string(index)]
+         =c.state.turn.turn_number+1;
+   c.executor.drawCards(c.controller,1);
+ }
 private:
  const CardDef d_=[] {
   auto d=mkFinal64_d(1129,158,R"RB(Black Market)RB",CardType::Battlefield,0,0,0,{},Rarity::Uncommon,R"RB([A][A]: Draw 1. Each player may use this ability once on their turn (even if they don't control this battlefield).)RB");
