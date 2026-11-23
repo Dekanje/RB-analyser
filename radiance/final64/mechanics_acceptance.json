@@ -34,9 +34,12 @@
     },
     "RAD-016/167": {
       "engine_id": 1073,
-      "status": "pending",
-      "engine_scenarios": [],
-      "unverified_rules": "At the end of your turn, recycle all your runes, then channel 4 runes exhausted."
+      "status": "accepted",
+      "engine_scenarios": [
+        "RadianceFinal64Test.CoalescedEnergyRecyclesRunesAndChannelsThemExhausted"
+      ],
+      "verified_rules": "At the end of your turn, recycle all your runes, then channel 4 runes exhausted.",
+      "review_note": "Printed rules reviewed against implemented C++ and dedicated passing engine-path scenarios, including death replacement or deck/board invariants where relevant. Full-suite 64-card gate remains fail-closed."
     },
     "RAD-018/167": {
       "engine_id": 1074,
@@ -104,12 +107,12 @@
     },
     "RAD-045/167": {
       "engine_id": 1081,
-      "status": "in_review",
+      "status": "accepted",
       "engine_scenarios": [
         "RadianceFinal64Test.KSanteDauntlessDoublesFriendlyShieldAtItsBattlefield"
       ],
-      "unverified_rules": "[Shield] (+1 :rb_might: while I'm a defender.)\nWhen I attack or defend, double the [Shield] of a unit you control here this turn.",
-      "review_note": "Engine code and focused scenarios authored; compiled gameplay and remaining interaction/edge-case audit required before acceptance."
+      "review_note": "Printed rules reviewed against implemented C++ and dedicated passing engine-path scenarios, including death replacement or deck/board invariants where relevant. Full-suite 64-card gate remains fail-closed.",
+      "verified_rules": "[Shield] (+1 :rb_might: while I'm a defender.)\nWhen I attack or defend, double the [Shield] of a unit you control here this turn."
     },
     "RAD-046/167": {
       "engine_id": 1082,
@@ -317,14 +320,14 @@
     },
     "RAD-123/167": {
       "engine_id": 1116,
-      "status": "in_review",
+      "status": "accepted",
       "engine_scenarios": [
         "RadianceFinal64Test.ProtectorsShieldQuickDrawAttachesAndGivesMight",
         "RadianceFinal64Test.ProtectorsShieldEquipCostsOneEnergyNoPower",
         "RadianceFinal64Test.ProtectorsShieldEquipInactiveWhileAttachedButWorksWhenDetached"
       ],
-      "unverified_rules": "[Quick-Draw] (This has [Reaction]. When you play it, attach it to a unit you control.)\n[Equip] :rb_energy_1: (:rb_energy_1:: Attach this to a unit you control.)",
-      "review_note": "Engine code and focused scenarios authored; compiled gameplay and remaining interaction/edge-case audit required before acceptance."
+      "review_note": "Printed rules reviewed against implemented C++ and dedicated passing engine-path scenarios, including death replacement or deck/board invariants where relevant. Full-suite 64-card gate remains fail-closed.",
+      "verified_rules": "[Quick-Draw] (This has [Reaction]. When you play it, attach it to a unit you control.)\n[Equip] :rb_energy_1: (:rb_energy_1:: Attach this to a unit you control.)"
     },
     "RAD-124/167": {
       "engine_id": 1117,
@@ -337,14 +340,15 @@
     },
     "RAD-125/167": {
       "engine_id": 1118,
-      "status": "in_review",
+      "status": "accepted",
       "engine_scenarios": [
         "RadianceFinal64Test.DuneDevourerKillsFriendlyUnitAsAdditionalPlayCostForEnergyDiscount",
         "RadianceFinal64Test.DuneDevourerHasCorrectOptionalAdditionalCostAndDeflect",
-        "RadianceFinal64Test.DuneDevourerCanPayPrintedCostWithoutSacrificing"
+        "RadianceFinal64Test.DuneDevourerCanPayPrintedCostWithoutSacrificing",
+        "RadianceFinal64Test.DuneDevourerDoesNotDiscountPreventedSacrifice"
       ],
-      "unverified_rules": "You may kill a friendly unit as an additional cost to play me. If you do, I cost :rb_energy_2: less.\n[Deflect] (Opponents must pay :rb_rune_rainbow: to choose me with a spell or ability.)",
-      "review_note": "Engine code and focused scenarios authored; compiled gameplay and remaining interaction/edge-case audit required before acceptance."
+      "review_note": "Printed rules reviewed against implemented C++ and dedicated passing engine-path scenarios, including death replacement or deck/board invariants where relevant. Full-suite 64-card gate remains fail-closed.",
+      "verified_rules": "You may kill a friendly unit as an additional cost to play me. If you do, I cost :rb_energy_2: less.\n[Deflect] (Opponents must pay :rb_rune_rainbow: to choose me with a spell or ability.)"
     },
     "RAD-127/167": {
       "engine_id": 1119,
