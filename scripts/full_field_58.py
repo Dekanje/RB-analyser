@@ -193,7 +193,7 @@ def aggregate(args):
     selected, selected_reports = read_selected(args.selected, originals)
     records=[]
     for shard in range(args.shards):
-        path = args.input / f"shard-{shard}" / "full_field.json"
+        path = args.input / f"full-field-shard-{shard}" / "full_field.json"
         package = json.loads(path.read_text())
         if package["shard"] != shard or package["shards"] != args.shards:
             raise RuntimeError("Wrong shard provenance: "+str(path))
