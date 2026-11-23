@@ -1,0 +1,176 @@
+name: Extended 58-legend Radiance optimization with legal two-card bundles
+on:
+  push:
+    branches: ['optimization/expanded-58-bundles-2026-11-23']
+    paths:
+      - '.github/workflows/optimize-all58-expanded-bundles.yml'
+      - 'scripts/optimize_58.py'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: optimize-expanded-58-${{ github.ref }}-${{ github.sha }}
+  cancel-in-progress: false
+jobs:
+  full-engine-build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - name: Syntax-check optimizer and independent BO3 runner
+        run: |
+          python3 -m py_compile scripts/optimize_58.py scripts/evaluate_radiance_ismcts.py scripts/legal_candidate.py scripts/run_actual_games.py
+      - name: Install pinned engine prerequisites
+        timeout-minutes: 13
+        run: |
+          set -euo pipefail
+          if ! sudo env DEBIAN_FRONTEND=noninteractive timeout -k 10s 65s apt-get -o Acquire::Retries=0 -o Acquire::http::Timeout=12 -o Acquire::https::Timeout=12 update -qq; then
+            echo "::warning::apt update failed; attempting cached package indexes"
+          fi
+          sudo env DEBIAN_FRONTEND=noninteractive timeout 420s apt-get -o DPkg::Lock::Timeout=30 -o Acquire::Retries=2 -o Acquire::http::Timeout=25 -o Acquire::https::Timeout=25 install -y -qq --no-install-recommends ccache libboost-program-options-dev libboost-filesystem-dev libboost-system-dev libboost-context-dev nlohmann-json3-dev
+          timeout 120s git -c http.lowSpeedLimit=1024 -c http.lowSpeedTime=30 clone --quiet https://github.com/chorlick/alpharune.git alpharune
+          git -C alpharune checkout --quiet --detach ec90f0fed002aed374d06249fa95e83e3cfbd386
+      - name: Apply every accepted Radiance implementation
+        run: |
+          set -euo pipefail
+          python3 radiance/engine_overlay/apply.py
+          python3 radiance/engine_overlay/wave1_regression_fix.py
+          python3 radiance/engine_overlay/apply_wave2.py
+          python3 radiance/engine_overlay/apply_wave3.py
+          python3 radiance/engine_overlay/apply_wave4.py
+          python3 radiance/engine_overlay/apply_batch6.py
+          python3 radiance/engine_overlay/apply_batch7.py
+          python3 radiance/engine_overlay/apply_batch8.py
+          python3 radiance/engine_overlay/apply_batch9.py
+          python3 radiance/engine_overlay/apply_batch9_battlefields.py
+          python3 radiance/engine_overlay/apply_batch9_disarm_chain.py
+          python3 radiance/engine_overlay/apply_batch10.py
+          python3 radiance/engine_overlay/apply_final64.py
+      - uses: actions/cache/restore@v4
+        with:
+          path: ~/.cache/ccache
+          key: rad64-pch-safe-linux-gcc13-${{ github.sha }}
+          restore-keys: |
+            rad64-pch-safe-linux-gcc13-
+      - name: Compile the actual complete game engine and dump card registry
+        run: |
+          set -euo pipefail
+          ccache -M 3G
+          cmake -S alpharune -B alpharune/build -G Ninja -DCMAKE_BUILD_TYPE=Release -DRIFTBOUND_BUILD_JOBS=3 "-DCMAKE_CXX_COMPILER_LAUNCHER=env;CCACHE_SLOPPINESS=pch_defines,time_macros;$(pwd)/alpharune/scripts/ccache_pch_safe.sh"
+          cmake --build alpharune/build --target riftbound -j 3
+          mkdir -p engine_build
+          cp alpharune/build/riftbound engine_build/riftbound
+          engine_build/riftbound --dump-registry engine_build/registry.json
+          python3 radiance/verify_final64_registry.py engine_build/registry.json
+      - name: Enforce all 58 decks, Nov 23 bans and 167/167 registered Radiance cards
+        run: |
+          python3 scripts/optimize_58.py --preflight-only --registry engine_build/registry.json --output optimization/full_radiance_preflight
+          test "$(find optimization/full_radiance_preflight/legal_inputs -type f -name '*.txt' | wc -l)" -eq 58
+      - uses: actions/upload-artifact@v4
+        with:
+          name: independent-58-compiled-engine
+          path: |
+            engine_build/riftbound
+            engine_build/registry.json
+            optimization/full_radiance_preflight/legal_source_manifest.json
+          retention-days: 14
+  optimize-every-legend:
+    needs: full-engine-build
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0,1,2,3,4,5,6,7,8,9,10,11]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 65
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: independent-58-compiled-engine
+          path: .
+      - name: Install compiled binary runtime dependencies
+        timeout-minutes: 12
+        run: |
+          set -euo pipefail
+          if ! sudo env DEBIAN_FRONTEND=noninteractive timeout -k 10s 55s apt-get -o Acquire::Retries=0 update -qq; then
+            echo "::warning::using cached package indexes"
+          fi
+          sudo env DEBIAN_FRONTEND=noninteractive timeout 360s apt-get -o Acquire::Retries=2 install -y -qq --no-install-recommends libboost-program-options1.83.0 libboost-filesystem1.83.0 libboost-system1.83.0 libboost-context1.83.0
+          chmod +x engine_build/riftbound
+          ldd engine_build/riftbound
+          if ldd engine_build/riftbound | grep -q "not found"; then exit 1; fi
+      - name: Independent hill-climb on this legend shard (frozen opposing decks)
+        timeout-minutes: 52
+        run: |
+          python3 -u scripts/optimize_58.py \
+            --registry engine_build/registry.json \
+            --engine engine_build/riftbound \
+            --output optimization/expanded-shard-${{ matrix.shard }} \
+            --shards 12 --shard ${{ matrix.shard }} \
+            --agent ismcts:sims=24 --rounds 3 --candidates 12 --bundles 4 \
+            --shortlist 3 --prefilter-samples 2 \
+            --opponents 6 --samples 3 --holdout 4 --min-gain 1 \
+            --workers 5 --timeout 60 --seed 2026112302
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: expanded-optimizer-shard-${{ matrix.shard }}
+          path: optimization/expanded-shard-${{ matrix.shard }}/
+          retention-days: 30
+          if-no-files-found: ignore
+  aggregate-58-independent:
+    needs: optimize-every-legend
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: expanded-optimizer-shard-*
+          path: results/shards
+      - name: Fail-closed validate and aggregate exactly 58 distinct selected decks
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,pathlib,shutil,csv
+          base=pathlib.Path('results/shards')
+          dest=pathlib.Path('results/expanded_optimized_58_full_radiance')
+          roster=dest/'selected_decks'
+          roster.mkdir(parents=True,exist_ok=True)
+          reports=[];summaries=[];names=set();filenames=set()
+          for i in range(12):
+              folder=base/f'expanded-optimizer-shard-{i}'
+              summary=json.loads((folder/'summary.json').read_text())
+              rows=json.loads((folder/'results.json').read_text())
+              assert summary['legends_tested']==len(rows),(i,summary)
+              chosen=sorted((folder/'selected_decks').glob('*.txt'))
+              assert len(chosen)==len(rows),(i,len(chosen),len(rows))
+              summaries.append(summary)
+              for r in rows:
+                  assert r['legend'] not in names,r['legend']
+                  names.add(r['legend'])
+                  reports.append(r)
+              for f in chosen:
+                  assert f.name not in filenames,f.name
+                  filenames.add(f.name)
+                  (roster/f.name).write_bytes(f.read_bytes())
+          assert len(reports)==len(filenames)==58,(len(reports),len(filenames))
+          reports.sort(key=lambda x:x['legend'])
+          (dest/'all_58_trials.json').write_text(json.dumps(reports,indent=2))
+          with (dest/'all_58.csv').open('w',newline='') as f:
+              w=csv.writer(f)
+              w.writerow(['legend','changed','baseline_sha256','selected_sha256','swap_count'])
+              for r in reports:
+                  w.writerow([r['legend'],r['selected'],r['original_sha256'],r['effective_sha256'],len(r['selected_swaps'])])
+          meta={'legends':58,'improved_provisionally':sum(r['selected'] for r in reports),
+                'bo3_evaluations':sum(r['simulations'] for r in summaries),
+                'all_167_radiance_cards_compiled':True,'originals_untouched':True,
+                'globally_optimal':False,'sideboarded_bo3':False,
+                'status':'COMPLETE_EXPLORATORY_SEARCH'}
+          (dest/'summary.json').write_text(json.dumps(meta,indent=2))
+          print('ALL_58_INDEPENDENT_RESULTS',json.dumps(meta),flush=True)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: expanded-optimized-58-independent-radiance-bo3
+          path: results/expanded_optimized_58_full_radiance/
+          retention-days: 30
