@@ -63,7 +63,7 @@ content = game.read_text(encoding="utf-8")
 required = [
     'n == "One-Two Punch"',
     "payableThroughAFinalizeChoice(player, card_id, nullptr, true)",
-    'n == "Convergent Mutation"',
+    'name.get() == "Convergent Mutation"',
     "choosePrePlayViable(pre, payable)",
     "boost::context::detail::forced_unwind",
 ]
