@@ -66,7 +66,8 @@ class All58EvolutionTests(unittest.TestCase):
                     path=proposals/f"candidate_{i:02d}_{n:02d}.txt"
                     path.write_text(prefix+f"36 Base\n3 New {n}\n"+suffix)
                     candidates.append({"sha256":sha(path),
-                                       "path":path.name,"changed_main_slots":3})
+                                       "path":path.name,"changed_main_slots":3,
+                                       "mutation_steps":[]})
                 records[name]={"candidates":candidates}
             dirs=root/"shards"
             for shard in range(29):
@@ -87,6 +88,7 @@ class All58EvolutionTests(unittest.TestCase):
                         output.append({
                             "candidate_index":n,"candidate_path":row["path"],
                             "candidate_sha256":row["sha256"],"changed_main_slots":3,
+                            "status":"COMPLETED_SCREENING_ONLY",
                             "paired_completed":6,"paired_scenarios":samples,
                             "score":score(samples)
                         })
@@ -118,11 +120,26 @@ class All58EvolutionTests(unittest.TestCase):
                 aggregate(args)
                 result=json.loads((args.output/"all58_candidate_screening.json").read_text())
                 self.assertEqual(result["legends"],58)
-                self.assertEqual(result["total_candidate_comparisons"],232)
+                self.assertEqual(result["completed_candidate_comparisons"],232)
+                self.assertEqual(result["blocked_special_deckbuilding"],0)
                 self.assertFalse(result["any_confirmed"])
                 to_corrupt=dirs/"all58-mutation-0"/"shard.json"
                 payload=json.loads(to_corrupt.read_text())
-                payload["results"][0]["candidate_results"][0]["paired_scenarios"][0]["candidate_win"]=None
+                blocked=payload["results"][0]["candidate_results"][0]
+                blocked["status"]="BLOCKED_SPECIAL_DECKBUILDING"
+                blocked["reason"]="Neeko requires three registered additional Legends"
+                blocked["paired_completed"]=0
+                blocked["paired_scenarios"]=[]
+                blocked["score"]=None
+                name=payload["results"][0]["legend"]
+                records[name]["candidates"][0]["mutation_steps"]=[
+                    {"add":"Neeko, Blending In"}]
+                to_corrupt.write_text(json.dumps(payload))
+                aggregate(args)
+                partial=json.loads((args.output/"all58_candidate_screening.json").read_text())
+                self.assertEqual(partial["blocked_special_deckbuilding"],1)
+                self.assertEqual(partial["completed_candidate_comparisons"],231)
+                payload["results"][0]["candidate_results"][1]["paired_scenarios"][0]["candidate_win"]=None
                 to_corrupt.write_text(json.dumps(payload))
                 with self.assertRaises(RuntimeError):
                     aggregate(args)
