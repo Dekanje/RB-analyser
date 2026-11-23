@@ -4,9 +4,13 @@
   "cards": {
     "RAD-006/167": {
       "engine_id": 1068,
-      "status": "pending",
-      "engine_scenarios": [],
-      "unverified_rules": "[Action] (Play on your turn or in showdowns.)\nDeal 5 damage split among units at a single battlefield."
+      "status": "accepted",
+      "engine_scenarios": [
+        "RadianceFinal64Test.ScorchedEarthDealsExactlyFiveAllocatedDamageAtOneBattlefield",
+        "RadianceFinal64Test.ScorchedEarthMayDamageFriendlyUnitAtSecondBattlefield"
+      ],
+      "verified_rules": "[Action] (Play on your turn or in showdowns.)\nDeal 5 damage split among units at a single battlefield.",
+      "review_note": "Printed Action keyword and 5 split damage audited against actual candidate/selection code and shared damage-allocation engine. Dedicated passing tests cover independent battlefield choices, friendly targets, exact total damage and no cross-battlefield damage (targeted CI 45127376772). Full Final64 gate remains fail-closed for all other cards."
     },
     "RAD-010/167": {
       "engine_id": 1069,
@@ -130,9 +134,13 @@
     },
     "RAD-053/167": {
       "engine_id": 1083,
-      "status": "pending",
-      "engine_scenarios": [],
-      "unverified_rules": "When I become exhausted, [Predict]. (Look at the top card of your Main Deck. You may recycle it.)"
+      "status": "accepted",
+      "engine_scenarios": [
+        "RadianceFinal64Test.StrigianOraclePredictsWhenExhausted",
+        "RadianceFinal64Test.StrigianOraclePredictRecyclesTopToBottomWithoutDuplication"
+      ],
+      "verified_rules": "When I become exhausted, [Predict]. (Look at the top card of your Main Deck. You may recycle it.)",
+      "review_note": "Printed exhaustion-triggered Predict audited against the card callback and shared AlphaRune Predict implementation. Real engine exhaustion and a choice to recycle the known top card preserve a two-card deck without duplication (targeted CI 45127376772). Full Final64 gate remains fail-closed for all other cards."
     },
     "RAD-054/167": {
       "engine_id": 1084,
