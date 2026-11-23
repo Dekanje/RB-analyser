@@ -1972,7 +1972,7 @@ TEST_F(RadianceFinal64Test,NeekoGrantedLooseCannonTriggersBeginningPhase){
  auto top=addToDeck(P1,CardDefId{1084});
  ASSERT_TRUE(state.player(P1).hand.empty());
  withEngine([&](GameEngine& e){
-   events.emit(PhaseChangedEvent{TurnPhase::AwakeningStep,TurnPhase::BeginningStep,P1});
+   events.emit(PhaseChangedEvent{TurnPhase::MainPhase,TurnPhase::BeginningStep,P1});
    settleLikeTheEngine(e);
  });
  EXPECT_TRUE(inHand(P1,top));
