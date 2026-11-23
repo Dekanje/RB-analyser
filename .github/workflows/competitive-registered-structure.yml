@@ -2,7 +2,10 @@ name: Worlds registered structure population across all 58 Legends (research-onl
 on:
   push:
     branches: ['research/competitive-agent-benchmark-v1-2026-11-23']
-    paths: ['.github/workflows/competitive-registered-structure.yml']
+    paths:
+      - '.github/workflows/competitive-registered-structure.yml'
+      - 'scripts/structural_deck_population.py'
+      - 'scripts/test_structural_deck_population.py'
 permissions:
   contents: read
   actions: read
