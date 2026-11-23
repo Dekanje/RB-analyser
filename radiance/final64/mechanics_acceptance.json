@@ -203,9 +203,13 @@
     },
     "RAD-074/167": {
       "engine_id": 1093,
-      "status": "pending",
-      "engine_scenarios": [],
-      "unverified_rules": "When I move, reveal the top card of your Main Deck. If it's [Mighty], draw it. Otherwise, recycle it. (A unit is Mighty while it has 5+ :rb_might:.)"
+      "status": "accepted",
+      "engine_scenarios": [
+        "RadianceFinal64Test.RavingWitnessRecyclingTopCardDoesNotDuplicateDeckObject",
+        "RadianceFinal64Test.RavingWitnessDrawsMightyRevealedUnit"
+      ],
+      "verified_rules": "When I move, reveal the top card of your Main Deck. If it's [Mighty], draw it. Otherwise, recycle it. (A unit is Mighty while it has 5+ :rb_might:.)",
+      "review_note": "Printed move-trigger revealed top Mighty unit is drawn; non-Mighty top card is recycled without object duplication. Shared reveal and recycle helpers audited, passing engine-path tests CI 45128572504. Final64 gate remains fail-closed until all 64 pass."
     },
     "RAD-078/167": {
       "engine_id": 1094,
@@ -227,15 +231,23 @@
     },
     "RAD-082/167": {
       "engine_id": 1096,
-      "status": "pending",
-      "engine_scenarios": [],
-      "unverified_rules": "[Show Off] a unit. (As you play this, you may reveal a unit from hand or pick a friendly unit.)\nIf you showed off a unit, deal damage equal to that unit's Might to a unit."
+      "status": "accepted",
+      "engine_scenarios": [
+        "RadianceFinal64Test.PrimordialRoarUsesShownUnitMightForDamage",
+        "RadianceFinal64Test.PrimordialRoarWithoutShowOffDoesNotDamageUnit"
+      ],
+      "verified_rules": "[Show Off] a unit. (As you play this, you may reveal a unit from hand or pick a friendly unit.)\nIf you showed off a unit, deal damage equal to that unit's Might to a unit.",
+      "review_note": "Printed optional Show Off on playing the spell and Might-based damage effect audited against handler: actual engine play with a unit shown deals damage; absent Show Off causes no damage. Targeted CI 45128572504 passed. Final64 gate remains fail-closed until all 64 pass."
     },
     "RAD-084/167": {
       "engine_id": 1097,
-      "status": "pending",
-      "engine_scenarios": [],
-      "unverified_rules": "Opponents can't play spells this turn.\nMove a friendly unit to an occupied enemy battlefield."
+      "status": "accepted",
+      "engine_scenarios": [
+        "RadianceFinal64Test.CataclysmBlocksOpponentSpellsAndMovesIntoOccupiedEnemyBattlefield",
+        "RadianceFinal64Test.CataclysmRequiresAnOccupiedEnemyHeldBattlefield"
+      ],
+      "verified_rules": "Opponents can't play spells this turn.\nMove a friendly unit to an occupied enemy battlefield.",
+      "review_note": "Printed opponent spell prevention and relocation to occupied enemy-held battlefield are verified with positive engine play and negative playability requirement; target selection audited against sources and targeted CI 45128572504 passed. Final64 gate remains fail-closed until all 64 pass."
     },
     "RAD-085/167": {
       "engine_id": 1098,
@@ -335,9 +347,14 @@
     },
     "RAD-111/167": {
       "engine_id": 1110,
-      "status": "pending",
-      "engine_scenarios": [],
-      "unverified_rules": "At the start of your Beginning Phase, each player reveals the top card of their Main Deck. If you revealed a card with the lowest Energy cost, draw it. Recycle the rest."
+      "status": "accepted",
+      "engine_scenarios": [
+        "RadianceFinal64Test.MechanicalBanditOpponentLowCardStillRecyclesNotDraws",
+        "RadianceFinal64Test.MechanicalBanditControllerLowCardDrawnAndOpponentHighRecycled",
+        "RadianceFinal64Test.MechanicalBanditTiedEnergyStillOnlyControllerDraws"
+      ],
+      "verified_rules": "At the start of your Beginning Phase, each player reveals the top card of their Main Deck. If you revealed a card with the lowest Energy cost, draw it. Recycle the rest.",
+      "review_note": "Printed conditional draw ownership corrected and verified: only controller draws their own card if tied or lower, while opponent reveal is recycled; both decks preserve unique objects. Source reviewed, tests passed targeted CI 45128572504. Final64 gate remains fail-closed until all 64 pass."
     },
     "RAD-112/167": {
       "engine_id": 1111,
