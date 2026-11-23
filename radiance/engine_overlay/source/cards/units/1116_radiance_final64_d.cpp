@@ -151,7 +151,53 @@ Play two 1 [M] Recruit unit tokens to your base. If you showed off, play four to
 class R64_1120 final : public UnitCard {
 public:
  const CardDef& def() const override { return d_; }
- // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
+ TriggerType triggerType() const override{return TriggerType::WhenYouPlayMe;}
+ static std::vector<GameObjectId> topFour(const CardContext& c){
+   std::vector<GameObjectId> out;
+   const auto& deck=c.state.player(c.controller).main_deck;
+   for(auto it=deck.rbegin();it!=deck.rend()&&out.size()<4;++it)
+     if(c.state.objectExists(*it))out.push_back(*it);
+   return out;
+ }
+ static std::vector<GameObjectId> eligible(CardContext& c){
+   std::vector<GameObjectId> out;
+   for(auto id:topFour(c)){
+     const auto& o=c.state.getObject(id);
+     if(!o.isUnit()&&!o.isGear())continue;
+     const auto& d=c.executor.cardDB().get(o.card_def_id);
+     if(d.energy_cost<=3&&d.power_cost<=1)out.push_back(id);
+   }
+   return out;
+ }
+ void onTrigger(CardContext& c,const std::vector<GameObjectId>&)override{
+   const auto& ri=c.state.chain.resuming;
+   if(!ri.has_value()||ri->resume_point==0)
+     for(auto id:topFour(c))
+       knowledge::shown(c.state,id,knowledge::only(c.controller));
+   const int yes=confirmOptional(c,"Trifarian Captain: reveal a cheap unit or gear from top 4 and draw?",[&]{
+      return !eligible(c).empty();
+   });
+   if(yes==-1)return;
+   const auto top=topFour(c);
+   GameObjectId chosen=kInvalidId;
+   if(yes==1){
+     chosen=pickUnseenCard(c,"Trifarian Captain: choose unit or gear to reveal",eligible(c));
+     if(chosen==kInvalidId&&ri.has_value()&&ri->resume_point==7)return;
+   }
+   std::vector<GameObjectId> recycle;
+   for(auto id:top){
+     deck::take(c.state,id,deck::Place::Held,knowledge::only(c.controller),false);
+     if(id!=chosen)recycle.push_back(id);
+   }
+   if(!recycle.empty())c.executor.recycleCards(c.controller,recycle);
+   if(chosen!=kInvalidId&&c.state.objectExists(chosen)){
+     const auto& card=c.state.getObject(chosen);
+     c.events.emit(CardRevealedEvent{chosen,card.card_def_id,card.owner,
+       true,c.controller,ZoneType::MainDeck});
+     deck::putOnTop(c.state,c.controller,chosen,deck::Place::Held,knowledge::everyone());
+     c.executor.drawCards(c.controller,1);
+   }
+ }
 private:
  const CardDef d_=[] {
   auto d=mkFinal64_d(1120,129,R"RB(Trifarian Captain)RB",CardType::Unit,2,0,1,{Domain::Order},Rarity::Uncommon,R"RB(When you play me, look at the top 4 cards of your Main Deck. You may reveal from among them a unit or gear with Energy cost no more than [3] and with Power cost no more than [A] and draw it. Recycle the rest.)RB");
