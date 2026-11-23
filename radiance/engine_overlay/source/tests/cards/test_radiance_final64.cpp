@@ -624,7 +624,8 @@ TEST_F(RadianceFinal64Test, RememberTheFallenPlaysEligibleTrashCardsButNotExpens
 TEST_F(RadianceFinal64Test, RememberTheFallenPlaysNoMoreThanThreeCheapTrashCards){
  std::vector<GameObjectId> cheap;
  for(int i=0;i<4;++i){
-   auto id=addToHand(P1,CardDefId{i%2==0?1084:1083});
+   const auto def=(i%2==0)?CardDefId{1084}:CardDefId{1083};
+   auto id=addToHand(P1,def);
    auto& hand=state.player(P1).hand;
    hand.erase(std::remove(hand.begin(),hand.end(),id),hand.end());
    state.getObject(id).zone=ZoneType::Trash;
