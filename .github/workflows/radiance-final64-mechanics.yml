@@ -177,7 +177,11 @@ jobs:
           # Direct ccache previously classified 121/123 calls as uncacheable.
           ccache -M 3G
           ccache --zero-stats
-          cmake -S alpharune -B alpharune/build -G Ninja -DCMAKE_BUILD_TYPE=Release -DRIFTBOUND_BUILD_JOBS=3 "-DCMAKE_CXX_COMPILER_LAUNCHER=env;CCACHE_SLOPPINESS=pch_defines,time_macros;${PWD}/alpharune/scripts/ccache_pch_safe.sh"
+          # Targeted mechanics checks need correctness, not optimized search speed.
+          # Preserve release optimization for batch and full-regression gates.
+          build_options=()
+          if [ "$VALIDATION_MODE" = targeted ]; then build_options+=("-DRIFTBOUND_OPT_LEVEL=0"); fi
+          cmake -S alpharune -B alpharune/build -G Ninja -DCMAKE_BUILD_TYPE=Release -DRIFTBOUND_BUILD_JOBS=3 "${build_options[@]}" "-DCMAKE_CXX_COMPILER_LAUNCHER=env;CCACHE_SLOPPINESS=pch_defines,time_macros;${PWD}/alpharune/scripts/ccache_pch_safe.sh"
           if [ "$VALIDATION_MODE" = targeted ]; then
             cmake --build alpharune/build --target riftbound_tests -j 3
           else
