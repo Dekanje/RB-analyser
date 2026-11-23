@@ -47,3 +47,15 @@ opponent-card play, Seraphic Wyvern channel replacement, Conquest tracking,
 Mind/Body/Chaos spells, Show Off as-you-play spell core hook, Bushwhack Trap
 facedown capacity, and multiple activated unit abilities with real engine-path
 scenarios. Full compilation, correctness and regression remain unverified.
+
+## Focused test failure correction — 23 November 2026
+
+GitHub Actions run 45094719006 compiled all 64 added definitions, but the
+focused test suite passed only 164/167 cases. The three failures are now
+corrected in the test's engine-path setup: Scorched Earth must choose a
+battlefield before its split-damage target; Armored Tusker must explicitly
+choose the enemy after opting into its optional trigger; and Bushwhack Trap
+must have a friendly unit actually maintaining control through engine cleanup.
+These are scenario/fixture corrections and are **not** claims that the 64
+mechanics have been accepted. Re-run the complete focused suite, strict
+compiled-registry check, and independent mechanics acceptance after that.
