@@ -87,10 +87,12 @@ def change_one(
     rng: random.Random,
     weighted_popularity: collections.Counter,
     domains: set,
+    previously_added: set[str],
+    previously_removed: set[str],
 ) -> tuple[str, str] | None:
     removable = [
         name for name, n in counts.items()
-        if n > 0 and name in byname and
+        if n > 0 and name in byname and name not in previously_added and
         "signature" not in (byname[name].get("super_type") or "").lower()
     ]
     if not removable:
@@ -104,7 +106,7 @@ def change_one(
     candidates = []
     for c in pool:
         new = c["name"]
-        if new == old:
+        if new == old or new in previously_removed:
             continue
         cap = 1 if is_unique(c) else 3
         if counts.get(new, 0) + side.get(new, 0) >= cap:
@@ -161,19 +163,23 @@ def generate_candidate(
     count = rng.randint(min_swaps, max_swaps)
     current = original.copy()
     changes = []
+    previously_added = set()
+    previously_removed = set()
     for _ in range(count):
         # Limit retry inflation, but preserve actual legal mutations.
         result = None
         for __ in range(20):
             result = change_one(
                 current, original, side, byname, pool, rng,
-                popularity, domains,
+                popularity, domains, previously_added, previously_removed,
             )
             if result is not None:
                 break
         if result is None:
             return None
         changes.append({"remove": result[0], "add": result[1]})
+        previously_removed.add(result[0])
+        previously_added.add(result[1])
     validate_main(original, current, side, byname, domains)
     if current == original:
         return None
