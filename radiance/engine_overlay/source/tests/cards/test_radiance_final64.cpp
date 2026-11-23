@@ -1,4 +1,6 @@
-// Final Radiance batch: independent printing and metadata tests.
+// Final Radiance batch: independent printing, mechanics, and cross-set QA tests.
+// QA scope and outstanding exhaustive-interaction limitations:
+// radiance/qa/2026-11-23-full-qa.md
 // These alone DO NOT certify the 64 gameplay mechanics.
 #include "tests/cards/card_test_fixture.h"
 #include "cards/card.h"
