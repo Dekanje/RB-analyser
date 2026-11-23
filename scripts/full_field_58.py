@@ -45,7 +45,7 @@ def indexed(paths):
 def read_selected(root, originals):
     rows = json.loads((root / "all_58_trials.json").read_text(encoding="utf8"))
     selected = indexed(list((root / "selected_decks").glob("*.txt")))
-    if len(rows) != len(selected) != 58:
+    if len(rows) != 58 or len(selected) != 58:
         raise RuntimeError("Expected exactly 58 selected decks")
     expected = set(originals)
     if set(selected) != expected or {r["legend"] for r in rows} != expected:
@@ -140,7 +140,7 @@ def assess_row(name, baseline, candidate, opponents, exe, agent, timeout,
             "baseline_wins": sum(r["baseline_win"] for r in rows),
             "candidate_wins": sum(r["candidate_win"] for r in rows),
             "candidate_delta": sum(r["candidate_win"]-r["baseline_win"] for r in rows)})
-    record = {"legend": name, "changed": changed, "total_opponents": 57,
+    record = {"legend": name, "changed": changed, "total_opponents": len(opponents)-1,
               "expected": len(matches), "completed": len(complete),
               "incomplete": len(matches)-len(complete),
               "baseline_wins": baseline_wins, "candidate_wins": candidate_wins,
