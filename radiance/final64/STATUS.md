@@ -100,3 +100,7 @@ regression failures remain open and the final64 mechanics ledger is pending.
   Shield doubling also have development implementations and tests.
 - The 64-entry per-card mechanics ledger is still *pending*; none of these
   fixes silently changes acceptance flags or removes regression tests.
+
+## Consolidated full regression — zone fixes and paid gear cost
+
+All three revealed-top recycle paths now take the card out of Main Deck before placing it at bottom, preventing duplicate deck/hand IDs. Original hidden-order reproduction passed on diagnostic branch (run 45101910298). Whirling Twirligig's gear sacrifice now uses a true cost-object selection and its targeted engine test passed on run 45102040885. This branch must pass focused, all AlphaRune tests, and 64-card mechanics acceptance separately; the final64 ledger remains fail-closed.
