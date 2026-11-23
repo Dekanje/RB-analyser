@@ -37,15 +37,26 @@
     },
     "RAD-012/167": {
       "engine_id": 1071,
-      "status": "pending",
-      "engine_scenarios": [],
-      "unverified_rules": "When you play this or when this leaves the board, banish the top card of your Main Deck. Until your next Ending Phase, you may play that card. (You still pay its costs.)\n:rb_energy_2::rb_rune_fury:, :rb_exhaust:: Kill this."
+      "status": "accepted",
+      "engine_scenarios": [
+        "RadianceFinal64Test.RunebladeOnPlayBanishedTopAndGrantsAccess",
+        "RadianceFinal64Test.RunebladeLeavesBoardBanishesAnotherTop",
+        "RadianceFinal64Test.RunebladeActivatedAbilityHasCorrectCost",
+        "RadianceFinal64Test.RunebladePermissionExpiresByOwnersNextEnding"
+      ],
+      "verified_rules": "When you play this or when this leaves the board, banish the top card of your Main Deck. Until your next Ending Phase, you may play that card. (You still pay its costs.)\n:rb_energy_2::rb_rune_fury:, :rb_exhaust:: Kill this.",
+      "review_note": "Source-audited actual engine trigger and play-permission implementation; all cases under the combined 7-test RadianceFinal64Test.Runeblade*:RadianceFinal64Test.Akali* targeted GoogleTest filter passed compiled engine CI run #45155726545 attempt 2. Shared banishment play permission charges normal costs, restricts normal timing, and expires at owner's next Ending Step. Targeted CI green does not mean full regression or match simulation accepted."
     },
     "RAD-015/167": {
       "engine_id": 1072,
-      "status": "pending",
-      "engine_scenarios": [],
-      "unverified_rules": "The first time I move each turn, [Add] :rb_energy_1::rb_rune_rainbow:.\nThe second time I move each turn, banish the top card of your Main Deck. Until your next Ending Phase, you may play that card. (You still pay its costs.)"
+      "status": "accepted",
+      "engine_scenarios": [
+        "RadianceFinal64Test.AkaliFirstMoveAddsEnergyAndUniversalPower",
+        "RadianceFinal64Test.AkaliSecondMoveBanishedCardGrantsAccess",
+        "RadianceFinal64Test.AkaliThirdMoveDoesNotBanishOrAdd"
+      ],
+      "verified_rules": "The first time I move each turn, [Add] :rb_energy_1::rb_rune_rainbow:.\nThe second time I move each turn, banish the top card of your Main Deck. Until your next Ending Phase, you may play that card. (You still pay its costs.)",
+      "review_note": "Source-audited actual engine trigger and play-permission implementation; all cases under the combined 7-test RadianceFinal64Test.Runeblade*:RadianceFinal64Test.Akali* targeted GoogleTest filter passed compiled engine CI run #45155726545 attempt 2. Shared banishment play permission charges normal costs, restricts normal timing, and expires at owner's next Ending Step. Targeted CI green does not mean full regression or match simulation accepted."
     },
     "RAD-016/167": {
       "engine_id": 1073,
