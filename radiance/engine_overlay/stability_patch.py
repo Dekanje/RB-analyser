@@ -55,7 +55,8 @@ replace_once(
     "     state_.getObject(what).name.get() == \"One-Two Punch\" ||\n"
     "     state_.getObject(what).name.get() == \"Primordial Roar\" ||\n"
     "     state_.getObject(what).name.get() == \"Burn Away\" ||\n"
-    "     state_.getObject(what).name.get() == \"Mesmerize\");\n"
+    "     state_.getObject(what).name.get() == \"Mesmerize\" ||\n"
+    "     state_.getObject(what).name.get() == \"Lost to the Sands\");\n"
     "done = (too_dear || requires_complete_viability)\n"
     "           ? choosePrePlayViable(pre, payable)\n"
     "           : collectFinalizeChoices(std::move(pre));"
@@ -172,7 +173,7 @@ replace_once(
             // A chain-resuming context cannot be probed by this engine; its
             // normal finalization legality path remains in place there.
             const auto& n = card.name.get();
-            if ((n == "Mesmerize" || n == "Rocket Barrage" || n == "One-Two Punch" || n == "Burn Away") &&
+            if ((n == "Mesmerize" || n == "Rocket Barrage" || n == "One-Two Punch" || n == "Burn Away" || n == "Lost to the Sands") &&
                 !state_.chain.resuming.has_value() &&
                 !payableThroughAFinalizeChoice(player, card_id, nullptr, true))
                 continue;
