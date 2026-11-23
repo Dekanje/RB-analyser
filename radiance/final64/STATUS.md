@@ -108,3 +108,7 @@ Targeted CI now traces the first real overlap between a player's Hand and Main D
 ## Privacy regression correction trial
 
 Re-test the original reproducible seed and position with the three revealed-top recycle callsites fixed. The focused test must pass for all decisions of game 29; diagnostics remain enabled only here. This does not alter acceptance flags.
+
+## Broader regression after original hidden-order replay passed
+
+Run the full AlphaRune suite (including 60-game hidden-order tests and pool-deck action-ID/knowledge checks) on this diagnostic branch. The single-seed replay is confirmed passing; the larger regression remains unverified. The mechanics acceptance gate is still fail-closed.
