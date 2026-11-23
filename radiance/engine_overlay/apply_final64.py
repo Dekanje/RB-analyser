@@ -544,4 +544,120 @@ assert g.count(spella)==1,"spell remove source"
 g=g.replace(spella,"    } else if (intent.play_source == Intent::PlaySource::Banishment &&\n               card.zone == ZoneType::Banishment) {\n        auto& zone=state_.player(card.owner).banishment;\n        zone.erase(std::remove(zone.begin(),zone.end(),intent.card),zone.end());\n        card.card_counters.erase(\"__rad_play_until_turn\");\n"+spella,1)
 gp.write_text(g)
 
+
+# RAD-163 Hunters Circle: location-aware discount for the first unit or gear
+# each player plays to this battlefield on their own turn.
+hunter_path=engine/"src/engine/game_engine.cpp"
+g=hunter_path.read_text()
+hunter_helper="""static const char* radianceHunterKey(PlayerId p) {
+    return p==PlayerId::Player1?"__rad_hc_p1_turn":"__rad_hc_p2_turn";
+}
+static bool radianceHuntersFirstPlayHere(const GameState& s,PlayerId p,
+                                GameObjectId card,
+                                const std::optional<LocationId>& dest) {
+    if(s.turn.turn_player!=p||!s.objectExists(card)||!dest.has_value()||
+       !std::holds_alternative<BattlefieldLocation>(*dest))return false;
+    const auto& played=s.getObject(card);
+    if(!played.isUnit()&&!played.isGear())return false;
+    const auto where=std::get<BattlefieldLocation>(*dest).id;
+    for(const auto& b:s.battlefields) {
+       if(b.id!=where||!s.objectExists(b.card_object_id))continue;
+       const auto& source=s.getObject(b.card_object_id);
+       if(source.card_def_id!=CardDefId{1130})return false;
+       const auto it=source.card_counters.find(radianceHunterKey(p));
+       return it==source.card_counters.end()||it->second!=s.turn.turn_number;
+    }
+    return false;
+}
+static void radianceMarkHunterPlay(GameState& s,PlayerId p,
+                                   const std::optional<LocationId>& dest) {
+    const auto where=std::get<BattlefieldLocation>(*dest).id;
+    for(const auto& b:s.battlefields)if(b.id==where&&s.objectExists(b.card_object_id)){
+        s.getObject(b.card_object_id).card_counters[radianceHunterKey(p)]
+            =s.turn.turn_number;
+        return;
+    }
+}
+"""
+anchor="std::vector<Intent> GameEngine::generateMainPhaseActions(PlayerId player) const {"
+assert g.count(anchor)==1,"Hunter helpers anchor"
+g=g.replace(anchor,hunter_helper+anchor,1)
+start=g.index(anchor);end=g.index("std::vector<Intent> GameEngine::generateMulliganActions(",start)
+block=g[start:end]
+discount_expr="""        bool hunter_ok=false;
+        Card::PlayCostAdjust hunter_adj;
+        hunter_adj.energy_reduction=1;
+        if(passesPlayGates(player,card_id))for(const auto& bf:state_.battlefields){
+            const std::optional<LocationId> to=BattlefieldLocation{bf.id};
+            if(radianceHuntersFirstPlayHere(state_,player,card_id,to)&&
+               canAffordWith(player,card_id,0,hunter_adj)){hunter_ok=true;break;}
+        }
+"""
+needle="        const bool printed_ok = canAfford(player, card_id);\n        if (!printed_ok && !alt_ok) continue;"
+assert block.count(needle)==1,"hunter unit entry"
+block=block.replace(needle,"        const bool printed_ok = canAfford(player, card_id);\n"+discount_expr+"        if (!printed_ok && !alt_ok && !hunter_ok) continue;",1)
+needle="            if (alt == 0 && !printed_ok) continue;"
+assert block.count(needle)==1,"hunter unit alt gate"
+block=block.replace(needle,"            if (alt == 0 && !printed_ok && !hunter_ok) continue;",1)
+needle="            play_intent.play_location = BaseLocation{player};\n            actions.push_back(play_intent);"
+assert block.count(needle)==1,"hunter unit base"
+block=block.replace(needle,"            if(alt==1||printed_ok){\n                play_intent.play_location = BaseLocation{player};\n                actions.push_back(play_intent);\n            }",1)
+needle="                if (can_play_here) {\n                    Intent bf_play = play_intent;"
+assert block.count(needle)==1,"hunter BF slot"
+block=block.replace(needle,"""                const std::optional<LocationId> to=BattlefieldLocation{bf.id};
+                const bool hunter_afford=alt==0&&passesPlayGates(player,card_id)&&
+                    radianceHuntersFirstPlayHere(state_,player,card_id,to)&&
+                    canAffordWith(player,card_id,0,hunter_adj);
+                if (can_play_here && (alt==1||printed_ok||hunter_afford)) {
+                    Intent bf_play = play_intent;""",1)
+# Deploy gear can only be played at BFs, and its cost may be discounted here.
+needle="        if (!canAfford(player, card_id)) continue;\n\n        Intent play_intent;"
+assert block.count(needle)==1,"hunter gear affordability"
+block=block.replace(needle,"""        const bool printed_ok=canAfford(player,card_id);
+        Card::PlayCostAdjust hunter_adj;hunter_adj.energy_reduction=1;
+        bool hunter_ok=false;
+        if(card.keywords.has(Keyword::Deploy)&&passesPlayGates(player,card_id))
+            for(const auto& bf:state_.battlefields){
+                const std::optional<LocationId> to=BattlefieldLocation{bf.id};
+                if(radianceHuntersFirstPlayHere(state_,player,card_id,to)&&
+                   canAffordWith(player,card_id,0,hunter_adj))hunter_ok=true;
+            }
+        if(!printed_ok&&!hunter_ok)continue;
+
+        Intent play_intent;""",1)
+needle="        play_intent.play_location = BaseLocation{player};\n        actions.push_back(play_intent);"
+assert block.count(needle)==1,"hunter gear destination"
+block=block.replace(needle,"""        if(card.keywords.has(Keyword::Deploy)){
+            for(const auto& bf:state_.battlefields){
+                const std::optional<LocationId> to=BattlefieldLocation{bf.id};
+                const bool with_discount=radianceHuntersFirstPlayHere(state_,player,card_id,to)&&
+                    canAffordWith(player,card_id,0,hunter_adj);
+                if(!printed_ok&&!with_discount)continue;
+                Intent playing=play_intent;
+                playing.play_location=to;
+                actions.push_back(playing);
+            }
+        } else {
+            play_intent.play_location=BaseLocation{player};
+            actions.push_back(play_intent);
+        }""",1)
+g=g[:start]+block+g[end:]
+start=g.index("void GameEngine::executePlayCard(const Intent& intent) {")
+end=g.index("void GameEngine::executePlaySpell(",start)
+block=g[start:end]
+needle="    bool paid_via_grant = false;\n    if (intent.play_source == Intent::PlaySource::Trash)"
+assert block.count(needle)==1,"hunter cost setup"
+block=block.replace(needle,"    const bool hunter_discount=radianceHuntersFirstPlayHere(state_,intent.player,intent.card,intent.play_location);\n"+needle,1)
+needle="    if (!intent.use_alt_play_cost && !paid_via_grant)\n        prepay = payAdditionalPlayCosts(intent.player, intent.card, location_power);"
+assert block.count(needle)==1,"hunter prepay"
+block=block.replace(needle,needle+"\n    if(hunter_discount)prepay.energy_reduction+=1;",1)
+needle="        payAdditionalCost(intent.player, alt.energy, alt.power, d, spendForObject(card));"
+assert block.count(needle)==1,"hunter alt cost"
+block=block.replace(needle,"        payAdditionalCost(intent.player, std::max(0,alt.energy-(hunter_discount?1:0)), alt.power, d, spendForObject(card));",1)
+needle="    // Track play count\n    ps.cards_played_this_turn++;"
+assert block.count(needle)==1,"hunter use count"
+block=block.replace(needle,"    if(hunter_discount)radianceMarkHunterPlay(state_,intent.player,intent.play_location);\n"+needle,1)
+g=g[:start]+block+g[end:]
+hunter_path.write_text(g)
+
 print("RADIANCE_FINAL64_OVERLAY_APPLIED: engine IDs 1068..1131 (64 distinct identities)")

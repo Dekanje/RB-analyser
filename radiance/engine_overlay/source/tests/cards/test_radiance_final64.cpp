@@ -1867,6 +1867,77 @@ TEST_F(RadianceFinal64Test, OriannaAuraNotGrantedFromBaseOrToOpponent){
  });
 }
 
+
+static GameObjectId installHunterBattlefield(GameState& s,int index=0) {
+ const auto bf=s.createObject();
+ auto& obj=s.getObject(bf);
+ obj.card_def_id=CardDefId{1130};
+ obj.card_type=CardType::Battlefield;
+ obj.zone=ZoneType::BattlefieldZone;
+ obj.name="Hunters' Circle";
+ obj.location=BattlefieldLocation{s.battlefields[index].id};
+ s.battlefields[index].card_object_id=bf;
+ return bf;
+}
+TEST_F(RadianceFinal64Test,HuntersCircleFirstPlayAtThisBattlefieldDiscountsUnit) {
+ installHunterBattlefield(state);
+ auto unit=addToHand(P1,CardDefId{1070}); // printed 4 Energy
+ state.player(P1).rune_pool.energy=3;
+ withEngineDefaultTurn([&](GameEngine& e) {
+   auto options=e.generateLegalActions();
+   EXPECT_TRUE(std::any_of(options.begin(),options.end(),[&](const Intent& i){
+     return i.card==unit&&i.play_location.has_value()&&
+       *i.play_location==LocationId{BattlefieldLocation{state.battlefields[0].id}};
+   }));
+   EXPECT_FALSE(std::any_of(options.begin(),options.end(),[&](const Intent& i){
+     return i.card==unit&&i.play_location.has_value()&&
+       std::holds_alternative<BaseLocation>(*i.play_location);
+   }));
+ },nullptr,nullptr,P1);
+}
+TEST_F(RadianceFinal64Test,HuntersCircleSecondUnitOnSameTurnNotDiscounted) {
+ auto bf=installHunterBattlefield(state);
+ auto unit=addToHand(P1,CardDefId{1070});
+ state.player(P1).rune_pool.energy=3;
+ state.getObject(bf).card_counters["__rad_hc_p1_turn"]=state.turn.turn_number;
+ withEngineDefaultTurn([&](GameEngine& e) {
+   auto options=e.generateLegalActions();
+   EXPECT_FALSE(std::any_of(options.begin(),options.end(),[&](const Intent& i){
+     return i.card==unit;
+   }));
+ },nullptr,nullptr,P1);
+}
+TEST_F(RadianceFinal64Test,HuntersCircleFirstPlayTrackedSeparatelyForEachPlayer) {
+ auto bf=installHunterBattlefield(state);
+ auto unit=addToHand(P1,CardDefId{1070});
+ state.player(P1).rune_pool.energy=3;
+ state.getObject(bf).card_counters["__rad_hc_p2_turn"]=state.turn.turn_number;
+ withEngineDefaultTurn([&](GameEngine& e) {
+   auto options=e.generateLegalActions();
+   EXPECT_TRUE(std::any_of(options.begin(),options.end(),[&](const Intent& i){
+     return i.card==unit&&i.play_location.has_value()&&
+       *i.play_location==LocationId{BattlefieldLocation{state.battlefields[0].id}};
+   }));
+ },nullptr,nullptr,P1);
+}
+TEST_F(RadianceFinal64Test,HuntersCircleDeployGearOnlyToBattlefield) {
+ installHunterBattlefield(state);
+ auto gear=addToHand(P1,CardDefId{1086});
+ state.player(P1).rune_pool.energy=4;
+ state.player(P1).rune_pool.universal_power=1;
+ withEngineDefaultTurn([&](GameEngine& e) {
+   auto options=e.generateLegalActions();
+   EXPECT_TRUE(std::any_of(options.begin(),options.end(),[&](const Intent& i){
+     return i.card==gear&&i.play_location.has_value()&&
+       *i.play_location==LocationId{BattlefieldLocation{state.battlefields[0].id}};
+   }));
+   EXPECT_FALSE(std::any_of(options.begin(),options.end(),[&](const Intent& i){
+     return i.card==gear&&i.play_location.has_value()&&
+       std::holds_alternative<BaseLocation>(*i.play_location);
+   }));
+ },nullptr,nullptr,P1);
+}
+
 TEST_F(RadianceFinal64Test, SixtyFourUniqueCardDefinitionsHaveCanonicalMetadata){
  ASSERT_EQ(expected.size(),64u);
  std::set<int> ids,numbers;std::set<std::string> public_codes;
