@@ -1991,6 +1991,60 @@ TEST_F(RadianceFinal64Test,NeekoDeckValidatorRequiresThreeDistinctLegendNames){
  }));
 }
 
+
+TEST_F(RadianceFinal64Test, OriannaDiscountOnlyOncePerSourcePerTurn) {
+ auto orianna=addUnit(P1,CardDefId{1091},5,0);
+ auto first=addToHand(P1,CardDefId{1080});
+ auto second=addToHand(P1,CardDefId{1080});
+ state.player(P1).rune_pool.energy=3;
+ state.player(P1).rune_pool.universal_power=1;
+ withEngine([&](GameEngine& e){
+   e.testHook_recalculateAuras();
+   EXPECT_TRUE(e.testHook_payCardCost(P1,first));
+ });
+ ASSERT_EQ(state.getObject(orianna).card_counters["__rad_orianna_used_turn"],state.turn.turn_number);
+ state.player(P1).rune_pool.energy=4;
+ state.player(P1).rune_pool.universal_power=2;
+ withEngine([&](GameEngine& e){
+   e.testHook_recalculateAuras();
+   const auto& mods=e.mutableState().player(P1).cost_modifiers;
+   EXPECT_TRUE(std::any_of(mods.begin(),mods.end(),[&](const auto& m){
+     return m.source==orianna&&m.radiance_orianna_once;
+   }));
+   EXPECT_TRUE(e.testHook_payCardCost(P1,second));
+ });
+ EXPECT_EQ(state.player(P1).rune_pool.energy,0);
+ EXPECT_EQ(state.player(P1).rune_pool.universal_power,0);
+}
+TEST_F(RadianceFinal64Test, OriannaMayDeclineFirstAndDiscountSecondGear) {
+ auto orianna=addUnit(P1,CardDefId{1091},5,0);
+ auto first=addToHand(P1,CardDefId{1080});
+ auto second=addToHand(P1,CardDefId{1080});
+ state.player(P1).rune_pool.energy=20;
+ state.player(P1).rune_pool.universal_power=20;
+ EnginePathAgent no([](const std::vector<Intent>& options) {
+   auto it=std::find_if(options.begin(),options.end(),[](const Intent& i) {
+     return i.choice_label.rfind("No",0)==0;
+   });
+   return it==options.end()?options.front():*it;
+ });
+ withEngine([&](GameEngine& e){
+   e.testHook_recalculateAuras();
+   EXPECT_TRUE(e.testHook_payCardCost(P1,first));
+ },&no);
+ EXPECT_EQ(state.player(P1).rune_pool.energy,16);
+ EXPECT_EQ(state.player(P1).rune_pool.universal_power,18);
+ EXPECT_EQ(state.getObject(orianna).card_counters.count("__rad_orianna_used_turn"),0u);
+ EnginePathAgent yes(EnginePathAgent::accepting());
+ withEngine([&](GameEngine& e){
+   e.testHook_recalculateAuras();
+   EXPECT_TRUE(e.testHook_payCardCost(P1,second));
+ },&yes);
+ EXPECT_EQ(state.player(P1).rune_pool.energy,13);
+ EXPECT_EQ(state.player(P1).rune_pool.universal_power,17);
+ EXPECT_EQ(state.getObject(orianna).card_counters["__rad_orianna_used_turn"],state.turn.turn_number);
+}
+
 TEST_F(RadianceFinal64Test, SixtyFourUniqueCardDefinitionsHaveCanonicalMetadata){
  ASSERT_EQ(expected.size(),64u);
  std::set<int> ids,numbers;std::set<std::string> public_codes;

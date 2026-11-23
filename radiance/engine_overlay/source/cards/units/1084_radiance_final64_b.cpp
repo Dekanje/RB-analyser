@@ -255,7 +255,7 @@ public:
      m.energy_reduction=1;
      m.power_reduction=1;
      m.gear_only=true;
-     m.first_gear_per_turn=true;
+     m.radiance_orianna_once=true; // per-source per-turn, optionally spent on ANY gear play
      m.affects_friendly_only=true;
      m.this_turn_only=false;
      mods.push_back(m);

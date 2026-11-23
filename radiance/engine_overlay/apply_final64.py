@@ -752,4 +752,75 @@ part=part.replace(marker,marker+"""
 e=e[:start]+part+e[end:]
 ex.write_text(e)
 
+
+# RAD-068 Orianna, Mechanical Marvel: an optional gear discount (1 Energy
+# AND 1 any Power) per active Orianna source per turn, not just the first
+# gear played. An unspent discount may be saved for a later gear.
+orianna_state=engine/"src/core/game_state.h"
+os=orianna_state.read_text()
+oa="        bool first_gear_per_turn = false;"
+assert os.count(oa)==1,"Orianna modifier-field anchor"
+os=os.replace(oa,oa+"""
+        bool radiance_orianna_once = false;       // one discount per source/turn
+        bool radiance_orianna_declined = false;   // temporarily excluded for this payment""",1)
+orianna_state.write_text(os)
+
+orianna_engine=engine/"src/engine/game_engine.cpp"
+og=orianna_engine.read_text()
+applies_anchor="    if (mod.gear_only && !card.isGear()) return false;"
+assert og.count(applies_anchor)==1,"Orianna applies anchor"
+og=og.replace(applies_anchor,applies_anchor+"""
+    if (mod.radiance_orianna_once) {
+        if (mod.radiance_orianna_declined || !state.objectExists(mod.source)) return false;
+        const auto& source=state.getObject(mod.source);
+        if (source.card_def_id!=CardDefId{1091} ||
+            source.controller!=payer || !source.isAtBattlefield())return false;
+        const auto it=source.card_counters.find("__rad_orianna_used_turn");
+        if (it!=source.card_counters.end() && it->second==state.turn.turn_number)
+            return false;
+    }""",1)
+payment_start=og.index("GameEngine::CostPaymentAdvance GameEngine::beginCostPayment(")
+payment_end=og.index("GameEngine::CostPaymentAdvance GameEngine::beginPaymentOf(",payment_start)
+payment_block=og[payment_start:payment_end]
+payment_anchor="""    auto& ps = state_.player(player);
+    const auto cost = effectiveCardCost(state_, def, card_registry_.get(card.card_def_id),
+                                        player, card, adj);"""
+assert payment_block.count(payment_anchor)==1,"Orianna payment anchor"
+payment_patch="""    auto& ps = state_.player(player);
+    // Affordability checks assume all optional Orianna discounts can be used.
+    // At actual payment, offer each source independently and preserve
+    // unspent discounts for another gear later in this turn.
+    std::vector<GameObjectId> orianna_used;
+    if (card.isGear()) {
+        for (auto& m : ps.cost_modifiers) {
+            if (!m.radiance_orianna_once ||
+                !costModifierApplies(state_,m,true,player,card,
+                                     anyCombatInProgress(state_),def.energy_cost))
+                continue;
+            m.radiance_orianna_declined = true;
+            // A legal play cannot decline its last necessary discount.
+            const bool can_skip=canAffordWith(player,card_obj,0,adj);
+            if (!can_skip ||
+                effect_executor_->confirmNow(player,
+                    "Orianna: spend this source's [1][A] gear discount?")) {
+                m.radiance_orianna_declined = false;
+                orianna_used.push_back(m.source);
+            }
+        }
+    }
+    const auto cost = effectiveCardCost(state_, def, card_registry_.get(card.card_def_id),
+                                        player, card, adj);
+    for (auto& m : ps.cost_modifiers)
+        if (m.radiance_orianna_once) m.radiance_orianna_declined=false;
+    // A source used for this paid play cannot be used again this turn;
+    // its standing aura is restored on the next aura pass but the counter
+    // survives until the turn number changes.
+    for (auto id : orianna_used)
+        if (state_.objectExists(id))
+            state_.getObject(id).card_counters["__rad_orianna_used_turn"]
+                = state_.turn.turn_number;"""
+payment_block=payment_block.replace(payment_anchor,payment_patch);
+og=og.slice(0,payment_start)+payment_block+og.slice(payment_end);
+orianna_engine.write_text(og)
+
 print("RADIANCE_FINAL64_OVERLAY_APPLIED: engine IDs 1068..1131 (64 distinct identities)")
