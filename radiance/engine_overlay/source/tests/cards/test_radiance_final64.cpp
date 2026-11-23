@@ -1395,6 +1395,16 @@ TEST_F(RadianceFinal64Test, BushwhackTrapGrantsExtraFacedownSlotOnlyWhileHeld){
  EXPECT_EQ(state.battlefields[0].facedown_max_occupancy,1);
 }
 
+TEST_F(RadianceFinal64Test, KaisaRebelDisarmDamagesEnemyMightOnAttack){
+ auto kaisa=addUnit(P1,CardDefId{1087},5,0);
+ auto enemy=addUnit(P2,kInvalidId,6,0);
+ EnginePathAgent choice(EnginePathAgent::choosing(enemy));
+ resolveThroughEngine([&](EffectExecutor&,GameState&){
+   events.emit(CombatStartedEvent{state.battlefields[0].id,P1,P2});
+ },&choice);
+ EXPECT_TRUE(state.getObject(kaisa).hasKeyword(Keyword::Disarm));
+ EXPECT_EQ(state.getObject(enemy).temp_might_bonus,-1);
+}
 TEST_F(RadianceFinal64Test, KaisaRebelGivesOrdinarySpellReactionOnlyAtHerShowdown){
  auto kaisa=addUnit(P1,CardDefId{1087},5,0);
  auto spell=addToHand(P1,CardDefId{1069}); // Forbidden Technique: no printed timing keyword.
