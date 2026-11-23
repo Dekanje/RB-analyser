@@ -282,7 +282,9 @@ TEST_F(RadianceFinal64Test, ScorchedEarthDealsExactlyFiveAllocatedDamageAtOneBat
  auto target=addUnit(P2,kInvalidId,12,0);
  auto unaffected=addUnit(P2,kInvalidId,12,1);
  auto spell=addToHand(P1,CardDefId{1068});
- EnginePathAgent select(EnginePathAgent::choosing(target));
+ // First select the battlefield (mode 0), then the only unit that may
+ // receive this battlefield's damage. Other battlefields stay unaffected.
+ EnginePathAgent select(EnginePathAgent::script({0,static_cast<int>(target.raw())}));
  playThroughEngine(spell,&select);
  EXPECT_EQ(state.getObject(target).damage_marked,5);
  EXPECT_EQ(state.getObject(unaffected).damage_marked,0);
@@ -327,7 +329,10 @@ TEST_F(RadianceFinal64Test, ZeroPointInflectionDrawsTwoAfterPlayingAnotherCard){
 TEST_F(RadianceFinal64Test, ArmoredTuskerOptionalMoveTriggerDealsShieldDamage){
  auto tusker=addUnit(P1,CardDefId{1094},4,-1);
  auto enemy=addUnit(P2,kInvalidId,12,1);
- EnginePathAgent accept(EnginePathAgent::accepting());
+ // An unconditional accepting agent chooses the FIRST eligible unit
+ // (the Tusker itself), not necessarily the intended opponent.
+ // Explicitly say Yes to the optional trigger, then choose the enemy.
+ EnginePathAgent accept(EnginePathAgent::script({1,static_cast<int>(enemy.raw())}));
  resolveThroughEngine([&](EffectExecutor& exec,GameState&){
    exec.moveToBattlefield(tusker,state.battlefields[1].id);
  },&accept);
@@ -451,6 +456,9 @@ TEST_F(RadianceFinal64Test, SeraphicWyvernAddsOneExhaustedRuneToReadyChannel){
  EXPECT_EQ(state.player(P1).rune_deck.size(),1u);
 }
 TEST_F(RadianceFinal64Test, BushwhackTrapGrantsExtraFacedownSlotOnlyWhileHeld){
+ // A handwritten controller field does not persist through engine cleanup:
+ // hold the battlefield with a friendly unit instead.
+ addUnit(P1,kInvalidId,2,0);
  state.battlefields[0].controller=P1;
  auto trap=addToHand(P1,CardDefId{1107});
  playThroughEngine(trap,nullptr,
