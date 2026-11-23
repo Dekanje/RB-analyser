@@ -6,6 +6,7 @@
 #include "cards/card_registry.h"
 #include "core/game_state.h"
 #include "engine/effect_executor.h"
+#include "engine/resource_payment.h"
 #include <algorithm>
 #include <memory>
 #include <string>
@@ -564,7 +565,39 @@ private:
 class R64_1115 final : public UnitCard {
 public:
  const CardDef& def() const override { return d_; }
- // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
+ // This is a TRASH-zone trigger, not a persistent permission to play later.
+ // TriggerManager queues it only on a completed 7+-Energy printed-card play.
+ TriggerType triggerType() const override { return TriggerType::WhenYouPlayACard; }
+ unsigned choicesAtFinalization() const override { return kFinalizeTrigger; }
+ void onTrigger(CardContext& c,const std::vector<GameObjectId>&) override {
+   auto eligible=[&](){
+     if(!c.state.objectExists(c.source)) return false;
+     const auto& self=c.state.getObject(c.source);
+     if(self.zone!=ZoneType::Trash || self.owner!=c.controller) return false;
+     const auto& trash=c.state.player(c.controller).trash;
+     if(std::find(trash.begin(),trash.end(),c.source)==trash.end())return false;
+     return resource::canPayIn(c.state,c.controller,0,1,
+                              resource::maskOf(Domain::Order));
+   };
+   const int yes=confirmOptional(c,
+       "Meticulous Restorationist: play me from trash for [O]?",eligible);
+   if(yes!=1){(void)finalizingChoices(c);return;}
+   const auto where=playLocationsFor(c,c.controller,c.source);
+   if(where.locations.empty()){(void)finalizingChoices(c);return;}
+   const uint32_t mask=where.locations.size()>=32?0xFFFFFFFFu:
+                       ((1u<<where.locations.size())-1u);
+   int place=pickMode(c,"Restorationist: choose play location",
+                      static_cast<int>(where.locations.size()),
+                      where.labels,mask);
+   if(place<0 || static_cast<size_t>(place)>=where.locations.size())return;
+   if(finalizingChoices(c))return;
+   // When the trigger resolves, the new play pays its alternative 0E/1 Order
+   // cost and enters using the ordinary full-engine effect-play path.
+   if(!eligible())return;
+   if(!resource::payIn(c.state,c.events,c.controller,0,1,
+                       resource::maskOf(Domain::Order)))return;
+   c.executor.playIgnoringCost(c.controller,c.source,where.locations[place]);
+ }
 private:
  const CardDef d_=[] {
   auto d=mkFinal64_c(1115,120,R"RB(Meticulous Restorationist)RB",CardType::Unit,2,0,2,{Domain::Order},Rarity::Common,R"RB(When you play a card with Energy cost [7] or more, you may play me from your trash for [O].)RB");

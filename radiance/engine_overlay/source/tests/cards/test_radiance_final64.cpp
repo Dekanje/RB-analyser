@@ -1469,6 +1469,54 @@ TEST_F(RadianceFinal64Test, KaisaRebelDoesNotGrantEnemySpellsReaction){
  });
 }
 
+
+TEST_F(RadianceFinal64Test, RestorationistHighEnergyPlayFromTrashPaysOrderPower){
+ auto fromTrash=addToHand(P1,CardDefId{1115});
+ auto& hand=state.player(P1).hand;
+ hand.erase(std::remove(hand.begin(),hand.end(),fromTrash),hand.end());
+ state.getObject(fromTrash).zone=ZoneType::Trash;
+ state.player(P1).trash.push_back(fromTrash);
+ auto expensive=addToHand(P1,CardDefId{1095}); // Bloodscent Swarm (printed 8 Energy).
+ state.player(P1).rune_pool.energy=20;
+ state.player(P1).rune_pool.universal_power=2; // Expensive card consumes 2 Fury-compatible Power.
+ state.player(P1).rune_pool.power[static_cast<int>(Domain::Order)]=1;
+ EnginePathAgent accept(EnginePathAgent::accepting());
+ playThroughEngine(expensive,&accept);
+ EXPECT_TRUE(state.getObject(fromTrash).location.has_value())
+   <<"A 7+-Energy play must trigger the optional Restorationist play";
+ EXPECT_NE(state.getObject(fromTrash).zone,ZoneType::Trash);
+ EXPECT_EQ(state.player(P1).rune_pool.power[static_cast<int>(Domain::Order)],0)
+   <<"Alternative play must actually pay one Order Power";
+}
+TEST_F(RadianceFinal64Test, RestorationistLowEnergyPlayDoesNotTriggerFromTrash){
+ auto fromTrash=addToHand(P1,CardDefId{1115});
+ auto& hand=state.player(P1).hand;
+ hand.erase(std::remove(hand.begin(),hand.end(),fromTrash),hand.end());
+ state.getObject(fromTrash).zone=ZoneType::Trash;
+ state.player(P1).trash.push_back(fromTrash);
+ state.player(P1).rune_pool.energy=20;
+ state.player(P1).rune_pool.power[static_cast<int>(Domain::Order)]=2;
+ auto cheap=addToHand(P1,CardDefId{1084}); // 3 Energy unit.
+ EnginePathAgent accept(EnginePathAgent::accepting());
+ playThroughEngine(cheap,&accept);
+ EXPECT_EQ(state.getObject(fromTrash).zone,ZoneType::Trash);
+ EXPECT_EQ(state.player(P1).rune_pool.power[static_cast<int>(Domain::Order)],2);
+}
+TEST_F(RadianceFinal64Test, RestorationistHighEnergyDeclineLeavesCardInTrash){
+ auto fromTrash=addToHand(P1,CardDefId{1115});
+ auto& hand=state.player(P1).hand;
+ hand.erase(std::remove(hand.begin(),hand.end(),fromTrash),hand.end());
+ state.getObject(fromTrash).zone=ZoneType::Trash;
+ state.player(P1).trash.push_back(fromTrash);
+ state.player(P1).rune_pool.energy=20;
+ state.player(P1).rune_pool.universal_power=3;
+ auto expensive=addToHand(P1,CardDefId{1095});
+ EnginePathAgent decline;
+ playThroughEngine(expensive,&decline);
+ EXPECT_EQ(state.getObject(fromTrash).zone,ZoneType::Trash)
+   <<"The optional trash play must be declining, not automatic";
+}
+
 TEST_F(RadianceFinal64Test, SixtyFourUniqueCardDefinitionsHaveCanonicalMetadata){
  ASSERT_EQ(expected.size(),64u);
  std::set<int> ids,numbers;std::set<std::string> public_codes;

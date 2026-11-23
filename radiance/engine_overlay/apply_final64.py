@@ -276,4 +276,44 @@ source=source.replace(reaction_anchor,
     "            radianceRebelGrantsSpellReaction(state_, player);")
 game_engine_path.write_text(source)
 
+
+# RAD-120: a 7+-Energy card just FINISHED being played (a spell only on
+# resolution, as AlphaRune's native WhenYouPlayACard event semantics require).
+# Unlike [Flow], this queues a specific optional trigger for the Restorationist
+# in its owner's Trash; it does not grant permission for the rest of the turn.
+tm_path=engine/"src/engine/trigger_manager.cpp"
+tm=tm_path.read_text()
+trash_hook="""    // Radiance Restorationist: the card itself can trigger from Trash.
+    // Printed Energy cost, NOT the actual amount spent, is the criterion.
+    if (state_.objectExists(played_card)) {
+        const auto& played=state_.getObject(played_card);
+        const Card* played_class=played.card_def_id!=kInvalidId
+            ?card_registry_.get(played.card_def_id):nullptr;
+        if (played_class && played_class->def().energy_cost>=7) {
+            std::vector<GameObjectId> from_trash;
+            for(auto id:state_.player(playing_player).trash) {
+                if(state_.objectExists(id) &&
+                   state_.getObject(id).card_def_id==CardDefId{1115} &&
+                   state_.getObject(id).zone==ZoneType::Trash &&
+                   state_.getObject(id).owner==playing_player)
+                    from_trash.push_back(id);
+            }
+            for(auto id:from_trash)
+                fireTrigger(id,playing_player,0,TriggerType::WhenYouPlayACard,
+                            played_card);
+        }
+    }
+"""
+first_anchor="    // [Vision] (CR 817):"
+assert tm.count(first_anchor)==1,"Restorationist permanent event anchor moved"
+tm=tm.replace(first_anchor,
+    "    { const auto played_card=e.object; const auto playing_player=e.player;\\n"
+    +trash_hook+"    }\\n\\n"+first_anchor,1)
+spell_anchor="    // The same play, completed: if it was not from a hand (finding G12)."
+assert tm.count(spell_anchor)==1,"Restorationist spell resolved event anchor moved"
+tm=tm.replace(spell_anchor,
+    "    { const auto played_card=e.spell; const auto playing_player=e.controller;\\n"
+    +trash_hook+"    }\\n\\n"+spell_anchor,1)
+tm_path.write_text(tm)
+
 print("RADIANCE_FINAL64_OVERLAY_APPLIED: engine IDs 1068..1131 (64 distinct identities)")
