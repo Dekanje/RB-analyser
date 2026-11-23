@@ -532,6 +532,30 @@ TEST_F(RadianceFinal64Test, WhirlingTwirligigExhaustsToPlayAnExhaustedGold){
  }
  EXPECT_EQ(gold,1);
 }
+TEST_F(RadianceFinal64Test, RavingWitnessRecyclingTopCardDoesNotDuplicateDeckObject){
+ auto revealed=addToDeck(P1,CardDefId{1116}); // Gear, not a Mighty unit
+ auto witness=addUnit(P1,CardDefId{1093},3,0);
+ fireTriggerThroughEngine(witness,TriggerType::WhenIMove);
+ const auto& deck=state.player(P1).main_deck;
+ EXPECT_EQ(std::count(deck.begin(),deck.end(),revealed),1);
+ EXPECT_TRUE(std::find(state.player(P1).hand.begin(),
+                       state.player(P1).hand.end(),revealed)==state.player(P1).hand.end());
+ EXPECT_EQ(state.getObject(revealed).zone,ZoneType::MainDeck);
+}
+TEST_F(RadianceFinal64Test, MechanicalBanditRecycleAndDrawLeaveUniqueDeckMembership){
+ auto high=addToDeck(P1,CardDefId{1118}); // Dune Devourer, Energy 7
+ auto low=addToDeck(P2,CardDefId{1116}); // Protector's Shield, Energy 1
+ auto bandit=addToHand(P1,CardDefId{1110});
+ playThroughEngine(bandit);
+ fireTriggerThroughEngine(bandit,TriggerType::AtStartOfBeginning);
+ const auto& deck1=state.player(P1).main_deck;
+ const auto& deck2=state.player(P2).main_deck;
+ EXPECT_EQ(std::count(deck1.begin(),deck1.end(),high),1);
+ EXPECT_EQ(std::count(deck2.begin(),deck2.end(),low),0);
+ EXPECT_TRUE(inHand(P2,low));
+ EXPECT_EQ(state.getObject(high).zone,ZoneType::MainDeck);
+ EXPECT_EQ(state.getObject(low).zone,ZoneType::Hand);
+}
 TEST_F(RadianceFinal64Test, WhirlingTwirligigPaysFriendlyGearDeathToCreateRecruit){
  auto gear=addToHand(P1,CardDefId{1088});
  playThroughEngine(gear);
