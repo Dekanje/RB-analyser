@@ -455,6 +455,20 @@ TEST_F(RadianceFinal64Test, SeraphicWyvernAddsOneExhaustedRuneToReadyChannel){
  EXPECT_EQ(exhausted,1);
  EXPECT_EQ(state.player(P1).rune_deck.size(),1u);
 }
+TEST_F(RadianceFinal64Test, TrifarianCaptainRevealsAndDrawsOnlyEligibleFromTopFour){
+ const auto cheapGear=addToDeck(P1,CardDefId{1116});
+ const auto expensiveUnit=addToDeck(P1,CardDefId{1118});
+ const auto spell=addToDeck(P1,CardDefId{1117});
+ const auto expensiveSpell=addToDeck(P1,CardDefId{1125});
+ auto captain=addToHand(P1,CardDefId{1120});
+ EnginePathAgent accept(EnginePathAgent::accepting());
+ playThroughEngine(captain,&accept);
+ EXPECT_TRUE(inHand(P1,cheapGear));
+ EXPECT_FALSE(inHand(P1,expensiveUnit));
+ EXPECT_FALSE(inHand(P1,spell));
+ EXPECT_FALSE(inHand(P1,expensiveSpell));
+ EXPECT_EQ(state.player(P1).main_deck.size(),3u);
+}
 TEST_F(RadianceFinal64Test, DuneDevourerCanPayPrintedCostWithoutSacrificing){
  auto devourer=addToHand(P1,CardDefId{1118});
  state.player(P1).rune_pool.energy=7;
