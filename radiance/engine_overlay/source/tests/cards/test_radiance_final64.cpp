@@ -240,6 +240,22 @@ TEST_F(RadianceFinal64Test, StrigianOraclePredictsWhenExhausted){
  EXPECT_TRUE(state.getObject(oracle).is_exhausted);
  EXPECT_FALSE(state.game_over);
 }
+
+TEST_F(RadianceFinal64Test, StrigianOraclePredictRecyclesTopToBottomWithoutDuplication){
+ const auto originalBottom=addToDeck(P1,CardDefId{1084});
+ const auto originalTop=addToDeck(P1,CardDefId{1070});
+ auto oracle=addUnit(P1,CardDefId{1083},2,0);
+ EnginePathAgent recycle(EnginePathAgent::choosing(originalTop));
+ withEngine([&](GameEngine& e){
+   e.testHook_executor().exhaustObject(oracle);
+   settleLikeTheEngine(e);
+ },&recycle);
+ EXPECT_TRUE(state.getObject(oracle).is_exhausted);
+ const auto& deck=state.player(P1).main_deck;
+ ASSERT_EQ(deck.size(),2u) << "Predict may recycle a card, not duplicate it";
+ EXPECT_EQ(deck.front(),originalTop);
+ EXPECT_EQ(deck.back(),originalBottom);
+}
 TEST_F(RadianceFinal64Test, SeraphinePlayCreatesRecruitAndExhaustedFriendsAddMight){
  auto other=addUnit(P1,kInvalidId,2,0);
  state.getObject(other).is_exhausted=true;
@@ -329,6 +345,17 @@ TEST_F(RadianceFinal64Test, ScorchedEarthDealsExactlyFiveAllocatedDamageAtOneBat
  playThroughEngine(spell,&select);
  EXPECT_EQ(state.getObject(target).damage_marked,5);
  EXPECT_EQ(state.getObject(unaffected).damage_marked,0);
+}
+
+TEST_F(RadianceFinal64Test, ScorchedEarthMayDamageFriendlyUnitAtSecondBattlefield){
+ // The printed split is not enemy-only and the battlefield is selected by the player.
+ auto elsewhere=addUnit(P2,kInvalidId,12,0);
+ auto friendly=addUnit(P1,kInvalidId,12,1);
+ auto spell=addToHand(P1,CardDefId{1068});
+ EnginePathAgent select(EnginePathAgent::script({1,static_cast<int>(friendly.raw())}));
+ playThroughEngine(spell,&select);
+ EXPECT_EQ(state.getObject(friendly).damage_marked,5);
+ EXPECT_EQ(state.getObject(elsewhere).damage_marked,0);
 }
 TEST_F(RadianceFinal64Test, TrinketPeddlerSharedDisarmReducesEnemyMight){
  auto peddler=addUnit(P1,CardDefId{1084},3,0);
