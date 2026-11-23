@@ -175,7 +175,7 @@ public:
    if(finalizingChoices(c))return;
    if(mask&&picked>=0&&static_cast<size_t>(picked)<c.state.battlefields.size())
      c.executor.moveToBattlefield(unit,c.state.battlefields[picked].id);
-   else c.executor.giveTemporaryKeyword(unit,Keyword::Ganking);
+   else c.executor.giveTemporaryKeyword(unit,Keyword::Ganking,0);
  }
 
 private:
