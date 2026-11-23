@@ -69,7 +69,7 @@ jobs:
           run-id: 45205260187
           github-token: ${{ github.token }}
           name: repaired-fullfield-engine-1123
-          path: .
+          path: engine_build
       - name: Install pinned compiled engine libraries
         timeout-minutes: 12
         run: |
