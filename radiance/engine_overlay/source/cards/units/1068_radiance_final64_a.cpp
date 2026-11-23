@@ -306,7 +306,40 @@ Look at the top 5 cards of your Main Deck. You may reveal a gear from among them
 class R64_1079 final : public UnitCard {
 public:
  const CardDef& def() const override { return d_; }
- // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
+ TriggerType triggerType()const override{return TriggerType::WhenIBecomeExhausted;}
+ unsigned choicesAtFinalization()const override{return kFinalizeTrigger;}
+ void onTrigger(CardContext& c,const std::vector<GameObjectId>&)override{
+   if(!c.state.objectExists(c.source)){(void)finalizingChoices(c);return;}
+   const auto& src=c.state.getObject(c.source);
+   const auto& counts=src.card_counters;
+   const int turn=static_cast<int>(c.state.turn.turn_number)+1;
+   const auto it=counts.find("__riven43_turn");
+   const int used=(it!=counts.end()&&it->second==turn)
+      ?(counts.count("__riven43_mask")?counts.at("__riven43_mask"):0):0;
+   uint32_t legal=0;
+   if(!(used&1))legal|=1u;
+   if(src.buff_count>0&&!(used&2))legal|=2u;
+   if(src.buff_count>0&&!(used&4))legal|=4u;
+   const auto enemies=boardObjects(c.state,[&](const GameObject& o){
+      return o.isUnit()&&o.controller!=c.controller&&o.location;
+   });
+   if(enemies.empty())legal&=~2u;
+   const int mode=pickMode(c,"Riven, Broken Blade: choose an unused mode",3,
+       {"Buff me","Spend my buff to stun an enemy unit","Spend my buff to ready me"},legal);
+   GameObjectId target=kInvalidId;
+   if(mode==1)target=pickTarget(c,"Riven: stun enemy unit",enemies);
+   if(finalizingChoices(c))return;
+   if(mode<0||mode>=3)return;
+   auto& obj=c.state.getObject(c.source);
+   obj.card_counters["__riven43_turn"]=turn;
+   obj.card_counters["__riven43_mask"]=used|(1<<mode);
+   if(mode==0)c.executor.buffUnit(c.source);
+   else if(obj.buff_count>0&&mode==1&&target!=kInvalidId&&
+           c.executor.spendBuff(c.source,c.controller))
+      c.executor.stunUnitBy(target,c.source);
+   else if(obj.buff_count>0&&mode==2&&c.executor.spendBuff(c.source,c.controller))
+      c.executor.readyObject(c.source);
+ }
 private:
  const CardDef d_=[] {
   auto d=mkFinal64_a(1079,43,R"RB(Riven, Broken Blade)RB",CardType::Unit,4,0,4,{Domain::Calm},Rarity::Rare,R"RB(When I become exhausted, choose one that hasn't been chosen this turn —[Buff] me. (Give me a +1 [M] buff if I don't have one.)Spend my buff to [Stun] an enemy unit. (It doesn't deal combat damage this turn.)Spend my buff to ready me.)RB");
