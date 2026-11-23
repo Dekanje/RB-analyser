@@ -498,9 +498,14 @@
     },
     "RAD-130/167": {
       "engine_id": 1121,
-      "status": "pending",
-      "engine_scenarios": [],
-      "unverified_rules": "When a friendly gear at a battlefield dies, you may pay :rb_energy_1: to return it to its owner's hand."
+      "status": "accepted",
+      "engine_scenarios": [
+        "RadianceFinal64Test.BattlefieldArmorerPaysEnergyWhenFriendlyBattlefieldGearDies",
+        "RadianceFinal64Test.BattlefieldArmorerNoEnergyCannotReturnDeadGear",
+        "RadianceFinal64Test.BattlefieldArmorerIgnoresEnemyGearDeathAndFriendlyBaseGear"
+      ],
+      "verified_rules": "When a friendly gear at a battlefield dies, you may pay :rb_energy_1: to return it to its owner's hand.",
+      "review_note": "Printed friendly gear / at-a-battlefield / dies trigger, optional 1 Energy payment, and return to its owner's hand audited against C++ WhenFriendlyGearDiesAtBattlefield and zone transitions. Three real engine-path scenarios verify positive recovery with payment, insufficient energy, and exclusion of enemy or base gear. All 3 passed in targeted CI 45132119951 at commit f729f779f0d0c57211353845af0304083de5c883. Full 64-card acceptance gate remains fail-closed for outstanding cards."
     },
     "RAD-131/167": {
       "engine_id": 1122,
