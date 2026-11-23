@@ -39,7 +39,7 @@ class ActualSideboardPolicyHoldoutTests(unittest.TestCase):
         self.assertTrue(all(r["source_screen_delta"]>0 for r in got))
         self.assertEqual([r["index"] for r in got],list(range(FAMILY)))
         self.assertEqual(got[0]["source_screen_delta"],3)
-        screen["best_unconfirmed_by_legend"][0]["score"]["delta"]=99
+        screen["best_unconfirmed_by_legend"][0]["score"]={"delta":99,"candidate_wins":3}
         with self.assertRaises(RuntimeError):
             shortlist(screen,evidence,manifest)
 
