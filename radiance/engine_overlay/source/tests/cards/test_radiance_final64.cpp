@@ -532,6 +532,24 @@ TEST_F(RadianceFinal64Test, WhirlingTwirligigExhaustsToPlayAnExhaustedGold){
  }
  EXPECT_EQ(gold,1);
 }
+TEST_F(RadianceFinal64Test, WhirlingTwirligigPaysFriendlyGearDeathToCreateRecruit){
+ auto gear=addToHand(P1,CardDefId{1088});
+ playThroughEngine(gear);
+ auto source=addToHand(P1,CardDefId{1076});
+ playThroughEngine(source);
+ Intent act;act.type=IntentType::ActivateAbility;act.player=P1;
+ act.ability_source=source;act.ability_index=1;
+ EnginePathAgent choose(EnginePathAgent::choosing(gear));
+ withEngineDefaultTurn([&](GameEngine& e){
+   e.testHook_executeIntent(act);settleLikeTheEngine(e);
+ },&choose,nullptr,P1);
+ EXPECT_FALSE(state.getObject(gear).location.has_value());
+ EXPECT_TRUE(state.getObject(source).is_exhausted);
+ int recruits=0;
+ for(const auto& [id,o]:state.objects.onBoard())
+   if(o.controller==P1&&o.isUnit()&&o.name=="Recruit")++recruits;
+ EXPECT_EQ(recruits,1);
+}
 TEST_F(RadianceFinal64Test, WhirlingTwirligigSacrificeOnlyTargetsFriendlyUnit){
  auto friendly=addUnit(P1,kInvalidId,2,-1);
  auto enemy=addUnit(P2,kInvalidId,2,-1);
