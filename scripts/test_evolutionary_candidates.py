@@ -35,13 +35,16 @@ class EvolutionaryCandidateTests(unittest.TestCase):
         self.byname["Banned New"] = card("Banned New",banned=True)
         self.byname["Off Domain"] = card("Off Domain", domains=["calm"])
         self.byname["Signature New"] = card("Signature New",supertype="Signature")
+        self.byname["Neeko, Blending In"] = card(
+            "Neeko, Blending In",supertype="champion",domains=[])
         self.domains = {"fury"}
         self.pop = collections.Counter(self.main)
         self.pool = playable_pool(self.byname,self.domains)
 
     def test_legal_pool_filters_prohibited_entries(self):
         names = {c["name"] for c in self.pool}
-        for disallowed in ("Banned New","Off Domain","Signature New"):
+        for disallowed in ("Banned New","Off Domain","Signature New",
+                           "Neeko, Blending In"):
             self.assertNotIn(disallowed,names)
         self.assertIn("Unique New", names)
         self.assertIn("New Card 01", names)
