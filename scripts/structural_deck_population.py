@@ -58,6 +58,7 @@ def legal_registration(original:DeckState, candidate:DeckState, byname:dict)->No
     if any(
         byname.get(name,{}).get("card_type")!="battlefield"
         or byname[name].get("banned") or key(name) in BAN_KEYS
+        or "token" in (byname[name].get("super_type") or "").lower()
         or copies!=1
         for name,copies in candidate.battlefields.items()
     ):
@@ -107,6 +108,7 @@ def battlefield_variants(original:DeckState,byname:dict,seed:int,limit:int=3):
         name for name,card in byname.items()
         if card.get("card_type")=="battlefield"
         and not card.get("banned") and key(name) not in BAN_KEYS
+        and "token" not in (card.get("super_type") or "").lower()
         and name not in original.battlefields
     )
     if len(available)<limit:
