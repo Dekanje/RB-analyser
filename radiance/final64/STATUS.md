@@ -104,3 +104,21 @@ regression failures remain open and the final64 mechanics ledger is pending.
 ## Consolidated full regression — zone fixes and paid gear cost
 
 All three revealed-top recycle paths now take the card out of Main Deck before placing it at bottom, preventing duplicate deck/hand IDs. Original hidden-order reproduction passed on diagnostic branch (run 45101910298). Whirling Twirligig's gear sacrifice now uses a true cost-object selection and its targeted engine test passed on run 45102040885. This branch must pass focused, all AlphaRune tests, and 64-card mechanics acceptance separately; the final64 ledger remains fail-closed.
+
+## Full regression audit repairs following 45102270144
+
+The previous full run passed 3,823 of 3,825 tests and all 187 focused tests,
+with zero missing Radiance base cards. Its ONLY full-suite failures were:
+
+- StrongIds: RAD-136 Dockside Lock-Up's raw GameObjectId stored under
+  __dockside_banished_card lacked an explicit matching writer/reader audit
+  entry. The pinned engine overlay now extends that audit (plain raw ID,
+  missing key means none; reader checks existence and Banishment zone).
+- SweepCosts: RAD-033 Command: Attack now explicitly declares it may choose
+  friendly on-board Deploy gear in its first mode, and no other board object,
+  for finalize-pass card-selection / discount purposes.
+
+These two fixes are now submitted for the exact full AlphaRune regression
+without disabling or skipping tests. The separate 64-card printed-effect
+mechanics gate remains fail-closed, with 54 pending and 10 in review. A clean
+engine-wide result is NOT equivalent to mechanics acceptance.
