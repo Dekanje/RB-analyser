@@ -1,0 +1,11 @@
+GATE: ACCEPTED
+COMPLETE_58_X_8_PAIRED_MUTATION_RUN: 45255031902
+STATUS: SUCCESS (attempt 2 artifact aggregator after transient ECONNRESET)
+COMPLETED_CANDIDATE_COMPARISONS: 464/464
+REGISTERED_NEEKO_VARIANTS: SUPPORTED
+INCOMPLETE_SIMULATIONS: 0
+SOURCE_58_BASELINES_UNCHANGED: true
+NEXT: Preregister top positive independently optimized Legends and five elite anchors
+HOLDOUT: Six opponents never in screening field; new random seeds; ISMCTS 128; mirrored BO3
+SIGNIFICANCE: Holm FWER 5% across all selected hypotheses
+NO_ACCEPTANCE_BEFORE_INDEPENDENT_RESULTS: true
