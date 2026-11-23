@@ -1,0 +1,72 @@
+{
+  "schema": 1,
+  "status": "PREREGISTERED_407_POLICY_HOLDOUT_NO_ADOPTION",
+  "pilot_aggregate_run": 45251930166,
+  "aggregated_file_sha256": "3dd33ef7c9b9d76fa0d40302e2108975fa1a24756298d3212c5ff11d0fb99ce0",
+  "original_58_roster_run": 45181493632,
+  "verified_407_engine_run": 45244227502,
+  "new_seed": 202611250531,
+  "agent": "ismcts:sims=128",
+  "repetitions": 2,
+  "hypotheses": 3,
+  "sideboard_policy_before_game1": false,
+  "choices": [
+    {
+      "source_matchup": "draven-vs-miss-fortune",
+      "legend": "Draven, Glorious Executioner",
+      "policy_index": 1,
+      "opponents": [
+        "Miss Fortune, Bounty Hunter",
+        "Rek'Sai, Void Burrower"
+      ],
+      "plan": {
+        "swaps": [
+          {
+            "main_out": "Brittle Steel",
+            "side_in": "Evelynn, Entrancing",
+            "copies": 1
+          }
+        ]
+      },
+      "loser_chooses_start": "self"
+    },
+    {
+      "source_matchup": "leblanc-vs-reksai",
+      "legend": "LeBlanc, Deceiver",
+      "policy_index": 0,
+      "opponents": [
+        "Rek'Sai, Void Burrower",
+        "Draven, Glorious Executioner"
+      ],
+      "plan": {
+        "swaps": [
+          {
+            "main_out": "Heroic Charge",
+            "side_in": "Covert Informant",
+            "copies": 1
+          }
+        ]
+      },
+      "loser_chooses_start": "self"
+    },
+    {
+      "source_matchup": "masteryi-vs-ambessa",
+      "legend": "Master Yi, Wuju Bladesman",
+      "policy_index": 0,
+      "opponents": [
+        "Ambessa, Matriarch of War",
+        "Miss Fortune, Bounty Hunter"
+      ],
+      "plan": {
+        "swaps": [
+          {
+            "main_out": "Defy",
+            "side_in": "Brutal Hunter",
+            "copies": 1
+          }
+        ]
+      },
+      "loser_chooses_start": "self"
+    }
+  ]
+}
