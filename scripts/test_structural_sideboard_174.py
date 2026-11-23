@@ -33,7 +33,7 @@ class Sideboard174ActualNativeTests(unittest.TestCase):
         }
         for n in range(13):
             self.db[f"Main {n:02d}"]=stub(f"Main {n:02d}")
-        for n in range(4):
+        for n in range(5):
             self.db[f"Tech {n:02d}"]=stub(f"Tech {n:02d}")
         self.base=DeckState(
             "Draven, Glorious Executioner","Draven Starting",
@@ -42,11 +42,11 @@ class Sideboard174ActualNativeTests(unittest.TestCase):
                                  "Battlefield C":1}),
             collections.Counter({"Fury Rune":6,"Chaos Rune":6}),
             collections.Counter({"Tech 00":3,"Tech 01":3,"Tech 02":3,
-                                 "Draven Starting":0,"Tech 03":1}),
+                                 "Tech 04":1}),
         )
         # Each candidate is a legal sideboard-only swap at fixed 10-card size.
         self.changed=self.base.clone()
-        self.changed.sideboard["Tech 02"]-=1
+        self.changed.sideboard["Tech 04"]-=1
         self.changed.sideboard["Tech 03"]+=1
         self.changed.sideboard=+self.changed.sideboard
         self.db["Tech 03"]["might"]=4
