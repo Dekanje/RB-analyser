@@ -104,3 +104,7 @@ regression failures remain open and the final64 mechanics ledger is pending.
 ## Privacy leak origin probe
 
 Targeted CI now traces the first real overlap between a player's Hand and Main Deck, including the immediately preceding action, before hidden-card permutation. This is diagnostic only and cannot count toward acceptance.
+
+## Privacy regression correction trial
+
+Re-test the original reproducible seed and position with the three revealed-top recycle callsites fixed. The focused test must pass for all decisions of game 29; diagnostics remain enabled only here. This does not alter acceptance flags.
