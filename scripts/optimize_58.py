@@ -153,10 +153,46 @@ def benchmark(exe,deck1,deck2,seed,agent,timeout,env):
     return dict(status=status,winner=int(hit.group(1)) if hit else None,
                 seconds=round(time.monotonic()-start,3),error=p.stderr[-250:] if status=='error' else '')
 
+def benchmark_bo3(exe,deck1,deck2,seed,agent,timeout,env):
+    """Actual 2-of-3 fixed-deck series with alternating seats; no sideboard changes."""
+    one=two=0
+    games=[]
+    for number in range(3):
+        flip=number%2==1
+        a,b=(deck2,deck1) if flip else (deck1,deck2)
+        result=benchmark(exe,a,b,stable_seed(seed,"bo3",number),agent,timeout,env)
+        games.append(result)
+        if result["status"]!="complete":
+            return {"status":"incomplete","winner":None,"games":games,
+                    "error":result.get("error","game did not complete")}
+        win=3-result["winner"] if flip else result["winner"]
+        one+=win==1
+        two+=win==2
+        if one>=2 or two>=2:
+            break
+    return {"status":"complete","winner":1 if one>=2 else 2,"games":games}
+
+def audit_full_pool_and_bans(paths, registry_path):
+    """Fail closed on missing Radiance cards or any Standard-banned baseline."""
+    raw=json.loads(registry_path.read_text(encoding="utf8"))["cards"]
+    assert len(raw)==1123, "Full accepted overlay must have 1123 engine identities"
+    codes={r.get("public_code") for r in raw}
+    assert all(f"RAD-{n:03d}/167" in codes for n in range(1,168)), "Missing Radiance"
+    for legend,path in sorted(paths.items()):
+        for line in path.read_text(encoding="utf8").splitlines():
+            m=re.fullmatch(r"\s*\d+\s+(.+)",line)
+            if m and key(m.group(1)) in BAN_KEYS:
+                raise RuntimeError(f"Standard ban on 2026-11-23: {legend}: {m.group(1)}")
+    print("58_LEGENDS_OFFICIAL_BANS_AND_FULL_167_RADIANCE_PREFLIGHT_PASS",flush=True)
+
 def main(args):
     output=args.output.resolve();output.mkdir(parents=True,exist_ok=True)
     original=decode()
     sources=make_legal_candidate(original,output/'legal_inputs',output/'legal_source_manifest.json')
+    audit_full_pool_and_bans(sources,args.registry)
+    if args.preflight_only:
+        print("PREFLIGHT_ALL_58_COMPLETE",len(sources),flush=True)
+        return
     byname=registry(args.registry)
     total_pop=collections.Counter()
     for p in sources.values():
@@ -167,6 +203,7 @@ def main(args):
         if not names:raise ValueError('No legends matched --legends')
     else:names=legends
     if args.max_legends:names=names[:args.max_legends]
+    names=[n for i,n in enumerate(names) if i%args.shards==args.shard]
     exe=args.engine.resolve()
     env=os.environ.copy()
     if args.ld_library_path:env['LD_LIBRARY_PATH']=str(args.ld_library_path)
@@ -188,9 +225,15 @@ def main(args):
               dest.parent.mkdir(parents=True,exist_ok=True)
               dest.write_text(p['text'],encoding='utf-8')
               candidates.append({**p,'path':dest})
+          # Every search faces a frozen legal opponent field; no deck is
+          # downgraded merely to improve another legend's ranking.
           eligible_top=[n for n in TOP if n in sources and n!=name]
+          other_field=[n for n in sorted(sources) if n!=name and n not in eligible_top]
           r=random.Random(stable_seed(args.seed,name,round_ix,'opponents'))
-          opponents=r.sample(eligible_top,min(args.opponents,len(eligible_top)))
+          r.shuffle(eligible_top);r.shuffle(other_field)
+          panel=eligible_top[:min(len(eligible_top),(args.opponents+1)//2)]
+          panel+=other_field[:max(0,args.opponents-len(panel))]
+          opponents=r.sample(panel,len(panel))
           def compare(candidate_path, phase, samples, agent_override=None):
               play_agent=agent_override or args.agent
               schedule=[]
@@ -203,7 +246,7 @@ def main(args):
                   a,b=(deck,sources[op]) if seat==0 else (sources[op],deck)
                   game_key=(file_sha(a),file_sha(b),seed,play_agent)
                   if game_key not in game_cache:
-                      game_cache[game_key]=executor.submit(benchmark,exe,a,b,seed,play_agent,args.timeout,env)
+                      game_cache[game_key]=executor.submit(benchmark_bo3,exe,a,b,seed,play_agent,args.timeout,env)
                   game=game_cache[game_key].result()
                   return game, int(game['winner']==seat+1) if game['status']=='complete' else None
               for op,seat,seed in schedule:
@@ -211,7 +254,7 @@ def main(args):
                       a,b=(deck,sources[op]) if seat==0 else (sources[op],deck)
                       game_key=(file_sha(a),file_sha(b),seed,play_agent)
                       if game_key not in game_cache:
-                          game_cache[game_key]=executor.submit(benchmark,exe,a,b,seed,play_agent,args.timeout,env)
+                          game_cache[game_key]=executor.submit(benchmark_bo3,exe,a,b,seed,play_agent,args.timeout,env)
               baseline=[];challenger=[];errors=[]
               for op,seat,seed in schedule:
                   for deck,out in [(baseline_path,baseline),(candidate_path,challenger)]:
@@ -258,14 +301,14 @@ def main(args):
                                   for r in rounds if r['selected']],
                 'rounds':rounds,'agent':args.agent,'samples':args.samples,
                 'holdout_samples':args.holdout,
-                'rule':'Accept only if training AND independent holdout gain >= threshold; no synthetic wins.'}
+                'rule':'Independent per-legend selection against frozen legal field; heldout BO3 gains are exploratory, not proof of global optimality.'}
         results.append(report)
         (output/'results.json').write_text(json.dumps(results,indent=2),encoding='utf-8')
     finally: executor.shutdown(wait=True)
     summary={'legends_tested':len(results),'improved':sum(r['selected'] for r in results),
              'failed':len(results)-len(names),'agent':args.agent,'seed':args.seed,
              'simulations':len(game_cache),'seconds':round(time.monotonic()-start,2),
-             'note':'Exploratory holdout-gated changes only; not proof of globally optimal decks.'}
+             'note':'Independent full-Radiance paired BO3 ISMCTS experiment: no other deck weakened, no sideboarding; not proof of global optimality.'}
     (output/'summary.json').write_text(json.dumps(summary,indent=2),encoding='utf-8')
     print('OPTIMIZATION_SUMMARY',json.dumps(summary),flush=True)
 
@@ -276,6 +319,9 @@ if __name__=='__main__':
     p.add_argument('--output',type=pathlib.Path,default=ROOT/'optimization/results')
     p.add_argument('--agent',default='ismcts:sims=24')
     p.add_argument('--legends',nargs='*',default=[])
+    p.add_argument('--shards',type=int,default=1)
+    p.add_argument('--shard',type=int,default=0)
+    p.add_argument('--preflight-only',action='store_true')
     p.add_argument('--max-legends',type=int,default=0)
     p.add_argument('--candidates',type=int,default=3)
     p.add_argument('--shortlist',type=int,default=2)
@@ -290,5 +336,5 @@ if __name__=='__main__':
     p.add_argument('--seed',type=int,default=20261121)
     p.add_argument('--ld-library-path',type=pathlib.Path)
     a=p.parse_args()
-    if not (1<=a.shortlist<=a.candidates and 1<=a.prefilter_samples<=40 and 1<=a.rounds<=8 and 1<=a.candidates<=30 and 1<=a.opponents<=12 and 1<=a.samples<=50 and 1<=a.holdout<=50 and 1<=a.min_gain and 1<=a.workers<=32):p.error('Invalid search budget')
+    if not (0<=a.shard<a.shards<=58 and 1<=a.shortlist<=a.candidates and 1<=a.prefilter_samples<=40 and 1<=a.rounds<=8 and 1<=a.candidates<=30 and 1<=a.opponents<=58 and 1<=a.samples<=50 and 1<=a.holdout<=50 and 1<=a.min_gain and 1<=a.workers<=32):p.error('Invalid search budget')
     main(a)
