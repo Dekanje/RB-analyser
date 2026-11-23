@@ -1,0 +1,83 @@
+name: Competitive sideboard-aware BO3 legality and real-engine smoke
+on:
+  push:
+    branches: ['research/competitive-agent-benchmark-v1-2026-11-23']
+    paths: ['.github/workflows/competitive-sideboard-bo3-smoke.yml']
+permissions:
+  contents: read
+  actions: read
+jobs:
+  sideboard-champion-rules-tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test 403.4 chosen champion changes, one-for-one swaps, no pregame swaps
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/tournament_bo3_policy.py scripts/test_tournament_bo3_policy.py
+          python3 -m unittest discover -s scripts -p 'test_tournament_bo3_policy.py' -v
+  actual-compiled-engine-bo3:
+    needs: sideboard-champion-rules-tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45181493632
+          github-token: ${{ github.token }}
+          name: expanded-optimized-58-independent-radiance-bo3
+          path: results/selected
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45205260187
+          github-token: ${{ github.token }}
+          name: repaired-fullfield-engine-1123
+          path: engine_build
+      - name: Resolve pinned C++ Linux engine dependencies
+        timeout-minutes: 12
+        run: |
+          set -euo pipefail
+          if ! sudo env DEBIAN_FRONTEND=noninteractive timeout -k 10s 55s apt-get -o Acquire::Retries=0 update -qq; then
+            echo '::warning::using cached package indexes'
+          fi
+          sudo env DEBIAN_FRONTEND=noninteractive timeout 360s apt-get -o Acquire::Retries=2 install -y -qq --no-install-recommends libboost-program-options1.83.0 libboost-filesystem1.83.0 libboost-system1.83.0 libboost-context1.83.0
+          chmod +x engine_build/riftbound
+          if ldd engine_build/riftbound | grep -q 'not found'; then exit 1; fi
+      - name: Play real Draven versus LeBlanc BO3 with declared between-game changes
+        timeout-minutes: 18
+        run: |
+          python3 -u scripts/tournament_bo3_policy.py \
+            --engine engine_build/riftbound \
+            --registry engine_build/registry.json \
+            --deck1 results/selected/selected_decks/draven_glorious_executioner.txt \
+            --deck2 results/selected/selected_decks/leblanc_deceiver.txt \
+            --policy data/competitive_sideboard_smoke_2026-11-23.json \
+            --agent ismcts:sims=24 --seed 202611240006 \
+            --timeout 180 \
+            --output results/tournament_sideboard/smoke.json
+      - name: Verify changes were actually used and no engine errors hidden
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('results/tournament_sideboard/smoke.json')
+          x=json.loads(p.read_text())
+          assert x['status']=='COMPLETE_SIDEBOARD_AWARE_APPROXIMATION'
+          assert x['sideboarding_applied'] is True
+          assert len(x['games'])>=2
+          assert all(g['engine_status']=='complete' for g in x['games'])
+          assert all(g['registered_deck_sha256']==x['games'][0]['registered_deck_sha256'] for g in x['games'])
+          assert all(a==b for a,b in zip(x['games'][0]['active_deck_sha256'],x['games'][0]['registered_deck_sha256']))
+          assert x['games'][1]['active_deck_sha256']!=x['games'][0]['active_deck_sha256']
+          assert not x['exact_tournament_play_first_policy']
+          print('SIDEBORD_ENGINE_SMOKE_PASS', len(x['games']), x['score'])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: competitive-sideboard-real-engine-smoke-receipt
+          path: results/tournament_sideboard/
+          if-no-files-found: warn
+          retention-days: 30
