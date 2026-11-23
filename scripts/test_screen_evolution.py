@@ -31,25 +31,25 @@ class EvolutionScreenTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             root=pathlib.Path(temp)
             before=root/"before.txt";after=root/"after.txt"
-            start=("Legend:\\n1 Draven, Glorious Executioner\\n\\n"
-                   "Champion:\\n1 Draven, Showboat\\n\\nMainDeck:\\n")
-            suffix=("\\nBattlefields:\\n1 Field A\\n1 Field B\\n1 Field C\\n\\n"
-                    "Runes:\\n6 Fury Rune\\n6 Chaos Rune\\n\\nSideboard:\\n1 Tech\\n")
-            before.write_text(start+"39 Card A\\n"+suffix)
-            core=start+"38 Card A\\n1 Neeko, Blending In\\n"+suffix
-            extra="\\nNeekoLegends:\\n1 Loose Cannon\\n1 Blind Monk\\n1 Nine-Tailed Fox\\n"
+            start=("Legend:\n1 Draven, Glorious Executioner\n\n"
+                   "Champion:\n1 Draven, Showboat\n\nMainDeck:\n")
+            suffix=("\nBattlefields:\n1 Field A\n1 Field B\n1 Field C\n\n"
+                    "Runes:\n6 Fury Rune\n6 Chaos Rune\n\nSideboard:\n1 Tech\n")
+            before.write_text(start+"39 Card A\n"+suffix)
+            core=start+"38 Card A\n1 Neeko, Blending In\n"+suffix
+            extra="\nNeekoLegends:\n1 Loose Cannon\n1 Blind Monk\n1 Nine-Tailed Fox\n"
             after.write_text(core.rstrip()+extra)
             self.assertTrue(validate_candidate_text(before,after,sha(after)))
-            after.write_text(core.rstrip()+"\\nNeekoLegends:\\n1 Loose Cannon\\n1 Loose Cannon\\n1 Blind Monk\\n")
+            after.write_text(core.rstrip()+"\nNeekoLegends:\n1 Loose Cannon\n1 Loose Cannon\n1 Blind Monk\n")
             with self.assertRaises(RuntimeError):
                 validate_candidate_text(before,after,sha(after))
             after.write_text(core.replace("1 Tech","1 Unapproved Tech").rstrip()+extra)
             with self.assertRaises(RuntimeError):
                 validate_candidate_text(before,after,sha(after))
-            after.write_text(start+"39 Card A\\n"+suffix.rstrip()+extra)
+            after.write_text(start+"39 Card A\n"+suffix.rstrip()+extra)
             with self.assertRaises(RuntimeError):
                 validate_candidate_text(before,after,sha(after))
-            after.write_text(core.rstrip()+"\\nNeekoLegends:\\n1 Glorious Executioner\\n1 Blind Monk\\n1 Nine-Tailed Fox\\n")
+            after.write_text(core.rstrip()+"\nNeekoLegends:\n1 Glorious Executioner\n1 Blind Monk\n1 Nine-Tailed Fox\n")
             with self.assertRaises(RuntimeError):
                 validate_candidate_text(before,after,sha(after))
 
