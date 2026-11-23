@@ -446,9 +446,14 @@
     },
     "RAD-120/167": {
       "engine_id": 1115,
-      "status": "pending",
-      "engine_scenarios": [],
-      "unverified_rules": "When you play a card with Energy cost :rb_energy_7: or more, you may play me from your trash for :rb_rune_order:."
+      "status": "accepted",
+      "engine_scenarios": [
+        "RadianceFinal64Test.RestorationistHighEnergyPlayFromTrashPaysOrderPower",
+        "RadianceFinal64Test.RestorationistLowEnergyPlayDoesNotTriggerFromTrash",
+        "RadianceFinal64Test.RestorationistHighEnergyDeclineLeavesCardInTrash"
+      ],
+      "verified_rules": "When you play a card with Energy cost :rb_energy_7: or more, you may play me from your trash for :rb_rune_order:.",
+      "review_note": "Printed high-Energy trigger from Trash, optional play and alternative 1 Order Power cost reviewed against event-driven trigger and engine effect-play path. All three targeted engine scenarios passed in CI 45140705889 (2026-11-23). Full 64-card gate remains fail-closed while other mechanics are pending."
     },
     "RAD-123/167": {
       "engine_id": 1116,
