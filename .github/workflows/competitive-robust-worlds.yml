@@ -1,0 +1,60 @@
+name: Competitive robust 919 Worlds lineups under meta uncertainty
+on:
+  push:
+    branches: ['research/competitive-agent-benchmark-v1-2026-11-23']
+    paths: ['.github/workflows/competitive-robust-worlds.yml']
+permissions:
+  contents: read
+  actions: read
+jobs:
+  sample-opponent-meta-and-matchup-uncertainty:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test quantiles, controlled posterior sampling and lineup legality
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/worlds_robust_lineups.py scripts/test_worlds_robust_lineups.py
+          python3 -m unittest discover -s scripts -p 'test_worlds_robust_lineups.py' -v
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45222607317
+          github-token: ${{ github.token }}
+          name: elite-58-stronger-agent-rankings-and-evidence
+          path: results/elite_58
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45181493632
+          github-token: ${{ github.token }}
+          name: expanded-optimized-58-independent-radiance-bo3
+          path: results/selected
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45205260187
+          github-token: ${{ github.token }}
+          name: repaired-fullfield-engine-1123
+          path: engine_build
+      - name: Compare all 919 domain-disjoint lineups with opponent-mix uncertainty
+        run: |
+          python3 -u scripts/worlds_robust_lineups.py \
+            --field results/elite_58 \
+            --selected results/selected \
+            --registry engine_build/registry.json \
+            --output results/robust_worlds_lineups \
+            --worlds 600 --concentration 1.0 --seed 202611240900
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          x=json.loads(Path('results/robust_worlds_lineups/robust_lineups.json').read_text())
+          assert x['status']=='EXPLORATORY_FIXED_DECK_ROBUSTNESS_NOT_WORLDS_WIN_CHANCE'
+          assert x['compatible_lineups']==919
+          assert x['result_is_worlds_win_probability'] is False
+          assert len(x['top20_robust'])==20
+          print('WORLDS_METAGAME_UNCERTAINTY_PASS',x['top20_robust'][0]['lineup'])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: competitive-919-robust-worlds-lineup-uncertainty-analysis
+          path: results/robust_worlds_lineups/
+          retention-days: 30
