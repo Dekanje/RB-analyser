@@ -538,6 +538,7 @@ TEST_F(RadianceFinal64Test, WhirlingTwirligigSacrificesUnitAsCostToCreateMech){
  playThroughEngine(source);
  Intent act;act.type=IntentType::ActivateAbility;act.player=P1;
  act.ability_source=source;act.ability_index=2;
+ act.targets={sacrifice}; // required target chosen as the activation's cost
  withEngineDefaultTurn([&](GameEngine& e){
    e.testHook_executeIntent(act);settleLikeTheEngine(e);
  },nullptr,nullptr,P1);
