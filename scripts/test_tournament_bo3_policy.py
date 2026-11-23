@@ -87,6 +87,7 @@ class SideboardBo3Tests(unittest.TestCase):
         original.main["Draven Alternate"]=1
         original.main["Draven Main 00"]-=1
         original.sideboard["Draven Alternate"]-=1
+        del original.sideboard["Draven Alternate"]
         original.sideboard["Draven Main 00"]+=1
         changed=transition(original,{"chosen_champion":"Draven Alternate"},
                            self.db,game_no=2)
