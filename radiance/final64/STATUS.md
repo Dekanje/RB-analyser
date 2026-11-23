@@ -162,3 +162,16 @@ The unit-sacrifice-to-Mech mode must **not** create a Mech if Soraka saves
 the sacrificed unit. The focused test covers that replacement and both
 normal sacrifices. RAD-022 stays in review until the test is compiled and
 passes. The accepted count is 10 (54 still unaccepted).
+
+## Expanded mechanics acceptance after replacement-safe unit cost
+
+Ledger review now has 23 accepted, 6 in review and 35 pending Final64
+cards. The most recent standalone Whirling Twirligig pass confirmed 5 of
+5 focused tests, including the Soraka prevented-death case (45104538770).
+The Dune Devourer and Coalesced Energy adversarial checks also passed
+(45104062547). All new card entries are linked to specific full-engine
+GoogleTest cases, not identity-only assertions.
+
+Re-run the entire upstream AlphaRune suite and strict registry audit at
+this revision, then retain final CI failure only for still-unaccepted
+printed mechanics (41 cards).
