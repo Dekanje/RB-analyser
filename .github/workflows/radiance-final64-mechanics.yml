@@ -31,8 +31,8 @@ on:
         required: false
         default: 'RadianceFinal64Test.*'
 concurrency:
-  group: radiance-final64-staged-${{ github.ref }}
-  cancel-in-progress: true
+  group: radiance-final64-staged-${{ github.ref }}-${{ github.sha }}
+  cancel-in-progress: false
 permissions:
   contents: read
   statuses: write
