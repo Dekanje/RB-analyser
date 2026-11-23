@@ -43,7 +43,7 @@ def evaluate_robustness(outcomes,domains,anchors,repetitions=500,concentration=1
         raise ValueError("No three disjoint-domain decks")
     names=sorted(domains)
     metrics={trio:[] for trio in triples}
-    playoffs={trio:[] for trio in triples}
+    playoffs={trio:{name:[] for name in trio} for trio in triples}
     rng=random.Random(seed)
     for rep in range(repetitions):
         # A common opponent mix and a common matchup sample for all lineups
@@ -68,13 +68,16 @@ def evaluate_robustness(outcomes,domains,anchors,repetitions=500,concentration=1
         for trio in triples:
             # Exactly three Swiss rounds assigned to each registered deck.
             metrics[trio].append(3*sum(rates[n] for n in trio))
-            # Playoff candidate is chosen before tournament; max sampled
-            # here measures *potential*, not a finalized designation.
-            playoffs[trio].append(max(rates[n] for n in trio))
+            # Fix the playoff designation across all scenarios; choosing the
+            # best member separately inside each scenario biases it upward.
+            for n in trio:
+                playoffs[trio][n].append(rates[n])
     ranked=[]
     for trio in triples:
         swiss=metrics[trio]
-        playoff=playoffs[trio]
+        designator=sorted(trio,key=lambda n:(
+            -statistics.mean(playoffs[trio][n]),n))[0]
+        playoff=playoffs[trio][designator]
         ranked.append({
             "lineup":list(trio),
             "domains":{n:sorted(domains[n]) for n in trio},
@@ -82,7 +85,9 @@ def evaluate_robustness(outcomes,domains,anchors,repetitions=500,concentration=1
             "swiss_expected_wins_p10":round(quantile(swiss,.1),5),
             "swiss_expected_wins_p50":round(quantile(swiss,.5),5),
             "swiss_expected_wins_p90":round(quantile(swiss,.9),5),
-            "playoff_best_member_rate_mean":round(statistics.mean(playoff),5),
+            "predesignated_playoff_legend":designator,
+            "predesignated_playoff_deck_rate_mean":round(statistics.mean(playoff),5),
+            "predesignated_playoff_deck_rate_p10":round(quantile(playoff,.1),5),
             "sampled_worlds":repetitions,
         })
     ranked.sort(key=lambda r:(-r["swiss_expected_wins_p10"],
