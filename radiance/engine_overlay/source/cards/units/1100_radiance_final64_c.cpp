@@ -355,13 +355,15 @@ public:
      return def==kInvalidId?999:c.executor.cardDB().get(def).energy_cost;
    };
    const int lowest=std::min(energy(yours),energy(theirs));
-   for(const auto [owner,card] :
-       std::vector<std::pair<PlayerId,GameObjectId>>{
-           {c.controller,yours},{opponent(c.controller),theirs}}){
-     if(card==kInvalidId||!c.state.objectExists(card))continue;
-     if(energy(card)==lowest)c.executor.drawCards(owner,1);
-     else f64RecycleRevealedTop(c,owner,card);
+   // The printed "you" means this gear's controller. Opponents reveal
+   // for the comparison, but do NOT draw even if they revealed the
+   // lower-cost card. Recycle every revealed card not drawn by us.
+   if(yours!=kInvalidId&&c.state.objectExists(yours)){
+     if(energy(yours)==lowest)c.executor.drawCards(c.controller,1);
+     else f64RecycleRevealedTop(c,c.controller,yours);
    }
+   if(theirs!=kInvalidId&&c.state.objectExists(theirs))
+     f64RecycleRevealedTop(c,opponent(c.controller),theirs);
  }
 
 private:
