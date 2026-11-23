@@ -69,3 +69,12 @@ acceptance records are still pending; the final workflow must fail closed
 until comprehensive printed-effect tests exist and pass. Keep full-regression
 failure logs separate from mechanics acceptance. This is a diagnostic run,
 not a declaration of final acceptance.
+
+## Remaining-mechanics development branch
+
+After the first full-regression run (45096185998) failed 4 of 3,805 tests,
+RAD-125 Dune Devourer has a cast-time optional kill-and-discount effect and
+RAD-123 Protector's Shield now declares its real Equipment, Quick-Draw,
+Reaction and [1] Equip behavior. Four new dedicated tests were added.
+Those edits remain provisional until compiled CI proves them. The known
+regression failures remain open and the final64 mechanics ledger is pending.
