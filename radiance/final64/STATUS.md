@@ -153,3 +153,12 @@ replacement does not earn the 2-Energy discount. A new real-engine path
 tests paid-but-prevented sacrifice and full printed cost. Coalesced Energy's
 end-turn test also checks that exactly four runes remain on-board, to catch
 accidental duplication during recycle/channel. Pending cached targeted CI.
+
+## Whirling Twirligig replacement-safe Mech cost
+
+Both of the card's sacrifice modes now use actual finalization-time
+kill-as-cost with a friendly chosen object, without a target/Deflect charge.
+The unit-sacrifice-to-Mech mode must **not** create a Mech if Soraka saves
+the sacrificed unit. The focused test covers that replacement and both
+normal sacrifices. RAD-022 stays in review until the test is compiled and
+passes. The accepted count is 10 (54 still unaccepted).
