@@ -1582,6 +1582,95 @@ TEST_F(RadianceFinal64Test, ForbiddenTechniqueInsufficientFuryPreventsReplay){
  EXPECT_EQ(state.getObject(spell).zone,ZoneType::Trash);
 }
 
+
+TEST_F(RadianceFinal64Test, GravityFieldStandardMovePaysOneEnergyAndPower){
+ auto gravity=addToHand(P1,CardDefId{1086});
+ playThroughEngine(gravity,nullptr,LocationId{BattlefieldLocation{state.battlefields[0].id}});
+ auto enemy=addUnit(P2,kInvalidId,3,-1);
+ ASSERT_TRUE(state.getObject(enemy).isAtBase());
+ state.player(P2).rune_pool.energy=1;
+ state.player(P2).rune_pool.universal_power=1;
+ state.turn.turn_player=P2;
+ const auto bf=state.battlefields[0].id;
+ const auto dest=LocationId{BattlefieldLocation{bf}};
+ Intent move=Intent::standardMove(P2,{enemy},dest);
+ withEngineDefaultTurn([&](GameEngine& e){
+   e.testHook_recalculateAuras();
+   const auto opts=e.generateLegalActions();
+   EXPECT_TRUE(std::any_of(opts.begin(),opts.end(),[&](const Intent& i){
+     return i.type==IntentType::StandardMove && i.move_destination==dest &&
+            !i.units_to_move.empty()&&i.units_to_move.front()==enemy;
+   }));
+   e.testHook_executeIntent(move);
+   settleLikeTheEngine(e);
+ },nullptr,nullptr,P2);
+ EXPECT_EQ(state.getObject(enemy).battlefieldId(),bf);
+ EXPECT_EQ(state.player(P2).rune_pool.energy,0);
+ EXPECT_EQ(state.player(P2).rune_pool.universal_power,0);
+}
+TEST_F(RadianceFinal64Test, GravityFieldRefusesUnpayableOpponentStandardMove){
+ auto gravity=addToHand(P1,CardDefId{1086});
+ playThroughEngine(gravity,nullptr,LocationId{BattlefieldLocation{state.battlefields[0].id}});
+ auto enemy=addUnit(P2,kInvalidId,3,-1);
+ const auto bf=state.battlefields[0].id;
+ const auto dest=LocationId{BattlefieldLocation{bf}};
+ state.player(P2).rune_pool.energy=0;
+ state.player(P2).rune_pool.universal_power=1;
+ state.turn.turn_player=P2;
+ Intent move=Intent::standardMove(P2,{enemy},dest);
+ withEngineDefaultTurn([&](GameEngine& e){
+   e.testHook_recalculateAuras();
+   const auto opts=e.generateLegalActions();
+   EXPECT_FALSE(std::any_of(opts.begin(),opts.end(),[&](const Intent& i){
+     return i.type==IntentType::StandardMove && i.move_destination==dest &&
+            !i.units_to_move.empty()&&i.units_to_move.front()==enemy;
+   }));
+   e.testHook_executeIntent(move);
+   settleLikeTheEngine(e);
+ },nullptr,nullptr,P2);
+ EXPECT_TRUE(state.getObject(enemy).isAtBase());
+ EXPECT_EQ(state.player(P2).rune_pool.universal_power,1);
+}
+TEST_F(RadianceFinal64Test, GravityFieldEffectMoveChargesEffectControllerNotUnitOwner){
+ auto gravity=addToHand(P1,CardDefId{1086});
+ playThroughEngine(gravity,nullptr,LocationId{BattlefieldLocation{state.battlefields[0].id}});
+ auto victim=addUnit(P1,kInvalidId,3,-1);
+ auto hunting=addToHand(P2,CardDefId{1080}); // Hunting Blind moves ENEMY unit.
+ auto& hand=state.player(P2).hand;
+ hand.erase(std::remove(hand.begin(),hand.end(),hunting),hand.end());
+ state.getObject(hunting).zone=ZoneType::BattlefieldZone;
+ state.getObject(hunting).location=BattlefieldLocation{state.battlefields[0].id};
+ state.player(P1).rune_pool.energy=0;
+ state.player(P1).rune_pool.universal_power=0;
+ state.player(P2).rune_pool.energy=1;
+ state.player(P2).rune_pool.universal_power=1;
+ EnginePathAgent chosen(EnginePathAgent::choosing(victim,EnginePathAgent::May::Yes));
+ fireTriggerThroughEngine(hunting,TriggerType::WhenYouPlayThis,
+                          nullptr,kInvalidId,&chosen);
+ EXPECT_TRUE(state.getObject(victim).isAtBattlefield());
+ EXPECT_EQ(state.getObject(victim).battlefieldId(),state.battlefields[0].id);
+ EXPECT_EQ(state.player(P2).rune_pool.energy,0)
+   <<"The player performing the effect move pays, not the target's owner";
+ EXPECT_EQ(state.player(P2).rune_pool.universal_power,0);
+}
+TEST_F(RadianceFinal64Test, GravityFieldEffectMoveFailsIfEffectControllerCannotPay){
+ auto gravity=addToHand(P1,CardDefId{1086});
+ playThroughEngine(gravity,nullptr,LocationId{BattlefieldLocation{state.battlefields[0].id}});
+ auto victim=addUnit(P1,kInvalidId,3,-1);
+ auto hunting=addToHand(P2,CardDefId{1080});
+ auto& hand=state.player(P2).hand;
+ hand.erase(std::remove(hand.begin(),hand.end(),hunting),hand.end());
+ state.getObject(hunting).zone=ZoneType::BattlefieldZone;
+ state.getObject(hunting).location=BattlefieldLocation{state.battlefields[0].id};
+ state.player(P2).rune_pool.energy=0;
+ state.player(P2).rune_pool.universal_power=1;
+ EnginePathAgent chosen(EnginePathAgent::choosing(victim,EnginePathAgent::May::Yes));
+ fireTriggerThroughEngine(hunting,TriggerType::WhenYouPlayThis,
+                          nullptr,kInvalidId,&chosen);
+ EXPECT_TRUE(state.getObject(victim).isAtBase());
+ EXPECT_EQ(state.player(P2).rune_pool.universal_power,1);
+}
+
 TEST_F(RadianceFinal64Test, SixtyFourUniqueCardDefinitionsHaveCanonicalMetadata){
  ASSERT_EQ(expected.size(),64u);
  std::set<int> ids,numbers;std::set<std::string> public_codes;

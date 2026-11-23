@@ -318,4 +318,86 @@ tm=tm.replace(spell_anchor,
     +trash_hook+"    }\n\n"+spell_anchor,1)
 tm_path.write_text(tm)
 
+
+# RAD-062 Gravity Field: location-specific 1E + 1 any Power per movement
+# action. Ordinary multi-unit standard moves pay ONCE before choosing joins;
+# effect-based moves pay according to the controller of the effect.
+battlefield_state_path=engine/"src/core/game_state.h"
+bfsource=battlefield_state_path.read_text()
+bfanchor="    int multi_move_tax[2] = {0, 0};"
+assert bfsource.count(bfanchor)==1,"Gravity BF field anchor changed"
+bfsource=bfsource.replace(bfanchor,bfanchor+"""
+    int gravity_move_tax_energy[2] = {0, 0};
+    int gravity_move_tax_power[2] = {0, 0};""",1)
+battlefield_state_path.write_text(bfsource)
+
+gamepath=engine/"src/engine/game_engine.cpp"
+g=gamepath.read_text()
+bf_reset="        bf.multi_move_tax[0] = bf.multi_move_tax[1] = 0;   // Mageseeker Investigator"
+assert g.count(bf_reset)==1,"Gravity reset anchor changed"
+g=g.replace(bf_reset,bf_reset+"""
+        bf.gravity_move_tax_energy[0] = bf.gravity_move_tax_energy[1] = 0;
+        bf.gravity_move_tax_power[0] = bf.gravity_move_tax_power[1] = 0;""",1)
+
+move_start="    std::vector<GameObjectId> moving = intent.units_to_move;"
+assert g.count(move_start)==1,"Gravity standard movement anchor changed"
+g=g.replace(move_start,move_start+"""
+    if(auto* to_bf=std::get_if<BattlefieldLocation>(&dest)){
+        const auto& bf=getBattlefield(to_bf->id);
+        const int index=playerIndex(intent.player);
+        const int energy=bf.gravity_move_tax_energy[index];
+        const int power=bf.gravity_move_tax_power[index];
+        if((energy>0||power>0) &&
+           !resource::payIn(state_,events_,intent.player,energy,power,
+                            resource::kAnyDomain))return;
+    }""",1)
+action_anchor="""        for (const auto& dest : standardMoveDestinations(state_.getObject(unit_id), player))
+            actions.push_back(Intent::standardMove(player, {unit_id}, dest));"""
+assert g.count(action_anchor)==1,"Gravity generated move anchor changed"
+action_replacement="""        for (const auto& dest : standardMoveDestinations(state_.getObject(unit_id), player)) {
+            if (auto* to_bf=std::get_if<BattlefieldLocation>(&dest)) {
+                const auto& bf=getBattlefield(to_bf->id);
+                const int idx=playerIndex(player);
+                if(!resource::canPayIn(state_,player,bf.gravity_move_tax_energy[idx],
+                                       bf.gravity_move_tax_power[idx],
+                                       resource::kAnyDomain))continue;
+            }
+            actions.push_back(Intent::standardMove(player, {unit_id}, dest));
+        }"""
+g=g.replace(action_anchor,action_replacement,1)
+gamepath.write_text(g)
+
+expath=engine/"src/engine/effect_executor.cpp"
+ex=expath.read_text()
+ex_include='#include "engine/deck_ops.h"'
+assert ex.count(ex_include)==1
+ex=ex.replace(ex_include,ex_include+'\n#include "engine/resource_payment.h"',1)
+move_begin="void EffectExecutor::moveToBattlefield(GameObjectId target, BattlefieldId bf) {"
+move_end="void EffectExecutor::stunUnit(GameObjectId target) {"
+assert ex.count(move_begin)==1 and ex.count(move_end)==1
+beg=ex.index(move_begin);end=ex.index(move_end,beg);move=ex[beg:end]
+old_loc="    auto old_loc = obj.location;"
+assert move.count(old_loc)==1
+move=move.replace(old_loc,"""    // The PLAYER performing the movement pays, even if their effect moves
+    // somebody else's unit. Chain owner takes precedence over card owner.
+    PlayerId mover=PlayerId::None;
+    if(state_.chain.resuming.has_value())
+        mover=state_.chain.resuming->controller;
+    else if(acting_!=kInvalidId && state_.objectExists(acting_))
+        mover=state_.getObject(acting_).controller;
+    else mover=obj.controller;
+    if(mover!=PlayerId::None){
+        for(const auto& b:state_.battlefields)if(b.id==bf){
+            const int idx=playerIndex(mover);
+            const int energy=b.gravity_move_tax_energy[idx];
+            const int power=b.gravity_move_tax_power[idx];
+            if((energy>0||power>0) &&
+               !resource::payIn(state_,events_,mover,energy,power,
+                                resource::kAnyDomain))return;
+            break;
+        }
+    }
+"""+old_loc,1);
+ex=ex.slice(0,beg)+move+ex.slice(end);expath.write_text(ex)
+
 print("RADIANCE_FINAL64_OVERLAY_APPLIED: engine IDs 1068..1131 (64 distinct identities)")

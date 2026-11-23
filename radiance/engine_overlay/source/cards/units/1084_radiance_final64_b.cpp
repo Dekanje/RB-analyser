@@ -75,7 +75,22 @@ public:
  void onTrigger(CardContext& c,const std::vector<GameObjectId>&)override{
    c.executor.drawCards(c.controller,1);
  }
- // MECHANICS_INCOMPLETE: surcharge for opponents moving to this battlefield.
+ // Opponents must pay [1][A] for ONE movement action to this battlefield,
+ // irrespective of whether the moved unit belongs to the payer. Multiple
+ // Gravity Fields increase both components of the surcharge.
+ void applyPassiveAura(GameState& s,PlayerId controller) const override{
+   if(controller==PlayerId::None)return;
+   for(const auto& [id,obj]:s.objects.onBoard()){
+     if(obj.card_def_id!=cardDefId()||obj.controller!=controller||
+        !obj.isGear()||!obj.isAtBattlefield())continue;
+     const auto where=obj.battlefieldId();
+     if(!where)continue;
+     for(auto& bf:s.battlefields)if(bf.id==*where){
+       ++bf.gravity_move_tax_energy[playerIndex(opponent(controller))];
+       ++bf.gravity_move_tax_power[playerIndex(opponent(controller))];
+     }
+   }
+ }
 
 private:
  const CardDef d_=[] {
