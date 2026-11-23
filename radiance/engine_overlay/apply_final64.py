@@ -142,6 +142,20 @@ spell_body=spell_body.replace(needle,needle+"""
     effect_executor_->makeAsYouPlayChoices(intent.player, intent.card);""",1)
 gamefile.write_text(gg[:spell_start]+spell_body+gg[spell_end:])
 
+# Pin the measured seed-1 deck fingerprint for the expanded 1,123-definition
+# registry. This value came from the uncompromised full-regression test
+# failure in run 45096185998; previous pool-size fingerprints remain active.
+decktest=engine/"tests/test_deck_fuzz.cpp"
+deck_source=decktest.read_text()
+old_hash="""    constexpr uint64_t kRadiance1059DeckOfSeedOne = 11226295876980254031ull;
+    const uint64_t expected = registry_->size()==1059 ? kRadiance1059DeckOfSeedOne"""
+new_hash="""    constexpr uint64_t kRadiance1059DeckOfSeedOne = 11226295876980254031ull;
+    constexpr uint64_t kRadiance1123DeckOfSeedOne = 2700713930748140182ull;
+    const uint64_t expected = registry_->size()==1123 ? kRadiance1123DeckOfSeedOne
+                             : registry_->size()==1059 ? kRadiance1059DeckOfSeedOne"""
+assert deck_source.count(old_hash)==1, "Final64 seed pin anchor changed"
+decktest.write_text(deck_source.replace(old_hash,new_hash,1))
+
 init=engine/"src/cards/cards_init.cpp"
 s=init.read_text()
 last_decl="void register_card_1067(CardRegistry&);"
