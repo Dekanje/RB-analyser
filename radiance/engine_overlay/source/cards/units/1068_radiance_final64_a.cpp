@@ -378,8 +378,7 @@ public:
    }
    if(mode!=1)return;
    const auto& ri=c.state.chain.resuming;
-   if(!ri.has_value()||ri->resume_point==0)
-     for(auto id:topFive(c))knowledge::shown(c.state,id,knowledge::only(c.controller));
+   for(auto id:topFive(c))knowledge::shown(c.state,id,knowledge::only(c.controller));
    const int yes=confirmOptional(c,"Command: Attack: reveal and draw top-five gear?",[&]{
      return !topGears(c).empty();
    });
