@@ -358,9 +358,14 @@
     },
     "RAD-112/167": {
       "engine_id": 1111,
-      "status": "pending",
-      "engine_scenarios": [],
-      "unverified_rules": ":rb_energy_1:, :rb_exhaust:: Play a Bomb gear token to a battlefield. (It has [Deploy]. When it dies, deal 2 to an enemy there and kill your other Bombs there.)\nWhen I defend, you may kill a friendly gear to give me +2 :rb_might: this turn."
+      "status": "accepted",
+      "engine_scenarios": [
+        "RadianceFinal64Test.ZiggsActivatedAbilityExhaustsAndPlaysBomb",
+        "RadianceFinal64Test.ZiggsDefendCanKillFriendlyGearForTwoMight",
+        "RadianceFinal64Test.ZiggsDefendWithoutFriendlyGearCannotGainMight"
+      ],
+      "verified_rules": ":rb_energy_1:, :rb_exhaust:: Play a Bomb gear token to a battlefield. (It has [Deploy]. When it dies, deal 2 to an enemy there and kill your other Bombs there.)\nWhen I defend, you may kill a friendly gear to give me +2 :rb_might: this turn.",
+      "review_note": "Printed activated pay-1-and-exhaust Bomb ability and defensive optional kill-friendly-gear-as-cost with +2 Might audited in C++ and actual engine scenarios. Both optional paths and missing-gear rejection verified in CI 45128898773. Strict 64-card gate remains fail-closed."
     },
     "RAD-113/167": {
       "engine_id": 1112,
@@ -373,15 +378,24 @@
     },
     "RAD-114/167": {
       "engine_id": 1113,
-      "status": "pending",
-      "engine_scenarios": [],
-      "unverified_rules": "When another friendly unit becomes exhausted, give me +1 :rb_might: this turn.\nExhaust a friendly unit: Ready a unit. Use this ability only once each turn."
+      "status": "accepted",
+      "engine_scenarios": [
+        "RadianceFinal64Test.RivenDeserterGainsMightWhenAnotherFriendlyUnitExhausts",
+        "RadianceFinal64Test.RivenDeserterActivationCanOnlyBeUsedOncePerTurn",
+        "RadianceFinal64Test.RivenDeserterPaysExhaustAndReadiesChosenUnit"
+      ],
+      "verified_rules": "When another friendly unit becomes exhausted, give me +1 :rb_might: this turn.\nExhaust a friendly unit: Ready a unit. Use this ability only once each turn.",
+      "review_note": "Printed friendly-exhaustion Might trigger and once-per-turn activated exhaust-friend-to-ready-unit ability verified with real engine tests checking actual cost, target readiness, and activation lock (CI 45128898773). Strict 64-card gate remains fail-closed."
     },
     "RAD-115/167": {
       "engine_id": 1114,
-      "status": "pending",
-      "engine_scenarios": [],
-      "unverified_rules": ":rb_rune_chaos:, :rb_exhaust:: Return a friendly unit to its owner's hand. You may play a unit with less Might than that unit had, ignoring its cost."
+      "status": "accepted",
+      "engine_scenarios": [
+        "RadianceFinal64Test.TranspositionistReturnsUnitAndPlaysLowerMightUnitFree",
+        "RadianceFinal64Test.TranspositionistCannotPlayEqualOrHigherMightForFree"
+      ],
+      "verified_rules": ":rb_rune_chaos:, :rb_exhaust:: Return a friendly unit to its owner's hand. You may play a unit with less Might than that unit had, ignoring its cost.",
+      "review_note": "Printed Chaos/exhaust ability audited against actual bounce/free-play engine path; positive lower-Might unit can play without cost, while higher-Might unit cannot, with returned unit in hand. Targeted CI 45128898773 passes. Strict 64-card gate remains fail-closed."
     },
     "RAD-120/167": {
       "engine_id": 1115,
