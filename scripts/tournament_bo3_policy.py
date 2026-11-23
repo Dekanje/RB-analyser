@@ -189,9 +189,10 @@ def run_series(
             if max(wins) == 2:
                 break
     return {
-        "status": "COMPLETE_SIDEBORD_AWARE_APPROXIMATION",
+        "status": "COMPLETE_SIDEBOARD_AWARE_APPROXIMATION",
         "winner": 1 if wins[0] == 2 else 2,
-        "score": wins, "games": games, "sideboarding_applied": len(games) > 1,
+        "score": wins, "games": games,
+        "sideboarding_applied": any(any(g["sideboard_swaps"]) or g["chosen_champions"] != [registered1.champion, registered2.champion] for g in games[1:]),
         "exact_tournament_play_first_policy": False,
         "source_decks_return_to_registered_state_next_match": True,
         "agent": agent, "limitations": [
@@ -223,8 +224,8 @@ def main():
     )
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(payload, indent=2), encoding="utf-8")
-    print("TOURNAMENT_SIDEBORD_PROTOTYPE", json.dumps(payload), flush=True)
-    if payload["status"] != "COMPLETE_SIDEBORD_AWARE_APPROXIMATION":
+    print("TOURNAMENT_SIDEBOARD_PROTOTYPE", json.dumps(payload), flush=True)
+    if payload["status"] != "COMPLETE_SIDEBOARD_AWARE_APPROXIMATION":
         raise SystemExit(2)
 
 
