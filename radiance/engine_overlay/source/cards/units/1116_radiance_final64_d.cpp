@@ -81,7 +81,33 @@ private:
 class R64_1118 final : public UnitCard {
 public:
  const CardDef& def() const override { return d_; }
- // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
+ static std::vector<GameObjectId> friendlyUnits(const GameState& s,PlayerId p){
+   std::vector<GameObjectId> out;
+   for(const auto& [id,o]:s.objects.onBoard())
+     if(o.isUnit()&&o.controller==p&&o.location)out.push_back(id);
+   std::sort(out.begin(),out.end());
+   return out;
+ }
+ AdditionalPlayCost additionalPlayCost(const GameState& s,const CardDB&,PlayerId p,GameObjectId)const override{
+   AdditionalPlayCost cost;
+   cost.exists=true;
+   cost.payable=!friendlyUnits(s,p).empty();
+   cost.best.energy_reduction=2;
+   return cost;
+ }
+ PlayCostAdjust payAdditionalPlayCost(CardContext& c,
+   const std::function<bool(const PlayCostAdjust&)>& affordable)override{
+   const auto candidates=friendlyUnits(c.state,c.controller);
+   if(candidates.empty())return {};
+   if(affordable(PlayCostAdjust{})&&
+      !c.executor.confirmNow(c.controller,
+       "Dune Devourer: kill a friendly unit to pay 2 less"))return {};
+   const auto chosen=c.executor.chooseObjectNow(c.controller,candidates,
+     "Dune Devourer: choose a friendly unit to kill as additional play cost");
+   if(chosen==kInvalidId)return {};
+   c.executor.killObject(chosen);
+   return {.energy_reduction=2};
+ }
 private:
  const CardDef d_=[] {
   auto d=mkFinal64_d(1118,125,R"RB(Dune Devourer)RB",CardType::Unit,7,1,7,{Domain::Order},Rarity::Uncommon,R"RB(You may kill a friendly unit as an additional cost to play me. If you do, I cost [2] less.
