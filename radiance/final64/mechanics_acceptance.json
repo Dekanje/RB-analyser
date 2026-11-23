@@ -101,13 +101,14 @@
     },
     "RAD-043/167": {
       "engine_id": 1079,
-      "status": "in_review",
+      "status": "accepted",
       "engine_scenarios": [
         "RadianceFinal64Test.RivenBrokenBladeBuffAndStunAreDistinctModesThisTurn",
-        "RadianceFinal64Test.RivenBrokenBladeSpendsBuffToReadyWhenExhausted"
+        "RadianceFinal64Test.RivenBrokenBladeSpendsBuffToReadyWhenExhausted",
+        "RadianceFinal64Test.RivenBrokenBladeUnusedModesResetAtStartOfNextTurn"
       ],
-      "unverified_rules": "When I become exhausted, choose one that hasn't been chosen this turn —[Buff] me. (Give me a +1 :rb_might: buff if I don't have one.)Spend my buff to [Stun] an enemy unit. (It doesn't deal combat damage this turn.)Spend my buff to ready me.",
-      "review_note": "Engine code and focused scenarios authored; compiled gameplay and remaining interaction/edge-case audit required before acceptance."
+      "verified_rules": "When I become exhausted, choose one that hasn't been chosen this turn —[Buff] me. (Give me a +1 :rb_might: buff if I don't have one.)Spend my buff to [Stun] an enemy unit. (It doesn't deal combat damage this turn.)Spend my buff to ready me.",
+      "review_note": "All three printed choices are verified in engine-trigger tests: Buff, spend to Stun, spend to ready; the once-per-turn option mask resets on the following turn. Ten targeted review tests passed in CI 45128246359. Final64 batch gate remains fail-closed until all 64 cards are accepted."
     },
     "RAD-044/167": {
       "engine_id": 1080,
@@ -415,12 +416,13 @@
     },
     "RAD-129/167": {
       "engine_id": 1120,
-      "status": "in_review",
+      "status": "accepted",
       "engine_scenarios": [
-        "RadianceFinal64Test.TrifarianCaptainRevealsAndDrawsOnlyEligibleFromTopFour"
+        "RadianceFinal64Test.TrifarianCaptainRevealsAndDrawsOnlyEligibleFromTopFour",
+        "RadianceFinal64Test.TrifarianCaptainDrawsNothingWhenTopFourContainNoEligibleCard"
       ],
-      "unverified_rules": "When you play me, look at the top 4 cards of your Main Deck. You may reveal from among them a unit or gear with Energy cost no more than :rb_energy_3: and with Power cost no more than :rb_rune_rainbow: and draw it. Recycle the rest.",
-      "review_note": "Engine code and focused scenarios authored; compiled gameplay and remaining interaction/edge-case audit required before acceptance."
+      "verified_rules": "When you play me, look at the top 4 cards of your Main Deck. You may reveal from among them a unit or gear with Energy cost no more than :rb_energy_3: and with Power cost no more than :rb_rune_rainbow: and draw it. Recycle the rest.",
+      "review_note": "Printed 4-card search, Energy/Power limits, drawing only eligible units/gears and recycling the rest are verified in positive and no-eligible engine-play scenarios (CI 45128246359). Final64 batch gate remains fail-closed until all 64 cards are accepted."
     },
     "RAD-130/167": {
       "engine_id": 1121,
@@ -451,12 +453,13 @@
     },
     "RAD-135/167": {
       "engine_id": 1125,
-      "status": "in_review",
+      "status": "accepted",
       "engine_scenarios": [
-        "RadianceFinal64Test.RememberTheFallenPlaysEligibleTrashCardsButNotExpensiveUnits"
+        "RadianceFinal64Test.RememberTheFallenPlaysEligibleTrashCardsButNotExpensiveUnits",
+        "RadianceFinal64Test.RememberTheFallenPlaysNoMoreThanThreeCheapTrashCards"
       ],
-      "unverified_rules": "Play up to 3 units and/or gear from your trash, each with Energy cost no more than :rb_energy_3: and Power cost no more than :rb_rune_rainbow:, ignoring their costs.",
-      "review_note": "Engine code and focused scenarios authored; compiled gameplay and remaining interaction/edge-case audit required before acceptance."
+      "verified_rules": "Play up to 3 units and/or gear from your trash, each with Energy cost no more than :rb_energy_3: and Power cost no more than :rb_rune_rainbow:, ignoring their costs.",
+      "review_note": "Actual spell resolution plays eligible trash units/gears ignoring costs, rejects cards above printed limits and stops after three plays with a fourth eligible item still in trash (CI 45128246359). Final64 batch gate remains fail-closed until all 64 cards are accepted."
     },
     "RAD-136/167": {
       "engine_id": 1126,
@@ -469,12 +472,14 @@
     },
     "RAD-137/167": {
       "engine_id": 1127,
-      "status": "in_review",
+      "status": "accepted",
       "engine_scenarios": [
-        "RadianceFinal64Test.MordekaiserDiscardsOneToKillTargetOnAttackTrigger"
+        "RadianceFinal64Test.MordekaiserDiscardsOneToKillTargetOnAttackTrigger",
+        "RadianceFinal64Test.MordekaiserPlayTriggerCanDiscardOneToKillAnEnemyUnit",
+        "RadianceFinal64Test.MordekaiserCannotKillWithoutPayingDiscard"
       ],
-      "unverified_rules": "When you play me or when I attack, you may discard 1 to kill a unit or gear.",
-      "review_note": "Engine code and focused scenarios authored; compiled gameplay and remaining interaction/edge-case audit required before acceptance."
+      "verified_rules": "When you play me or when I attack, you may discard 1 to kill a unit or gear.",
+      "review_note": "Both printed triggers, play and attack, have engine-path tests for paying discard and killing a unit, with an adversarial no-discard case preventing a free kill (CI 45128246359). Final64 batch gate remains fail-closed until all 64 cards are accepted."
     },
     "RAD-138/167": {
       "engine_id": 1128,
