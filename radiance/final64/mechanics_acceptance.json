@@ -52,9 +52,12 @@
     },
     "RAD-018/167": {
       "engine_id": 1074,
-      "status": "pending",
-      "engine_scenarios": [],
-      "unverified_rules": "When you play me, reveal the top card of each opponent's Main Deck. Choose one and banish it, then play it, ignoring its cost. Recycle the rest."
+      "status": "accepted",
+      "engine_scenarios": [
+        "RadianceFinal64Test.DrakehoundPackmasterStealsAndPlaysOpponentsTopCardFree"
+      ],
+      "verified_rules": "When you play me, reveal the top card of each opponent's Main Deck. Choose one and banish it, then play it, ignoring its cost. Recycle the rest.",
+      "review_note": "In a two-player game (one opponent), playing Packmaster reveals and banishes the opponent's top card and actually plays it without costs under the controller. Dedicated engine-path ownership and zone test passed in 100-test CI 45129782350. Overall acceptance gate still fail-closed."
     },
     "RAD-019/167": {
       "engine_id": 1075,
@@ -180,9 +183,13 @@
     },
     "RAD-064/167": {
       "engine_id": 1088,
-      "status": "pending",
-      "engine_scenarios": [],
-      "unverified_rules": ":rb_energy_1:, :rb_exhaust:: Choose an opponent. They guess a card type. Reveal the top card of your Main Deck. If it has that type, recycle it. Otherwise, draw it. (Unit, gear, and spell are types.)"
+      "status": "accepted",
+      "engine_scenarios": [
+        "RadianceFinal64Test.ScrutinizingScopeCorrectUnitGuessRecyclesTop",
+        "RadianceFinal64Test.ScrutinizingScopeWrongGuessDrawsTop"
+      ],
+      "verified_rules": ":rb_energy_1:, :rb_exhaust:: Choose an opponent. They guess a card type. Reveal the top card of your Main Deck. If it has that type, recycle it. Otherwise, draw it. (Unit, gear, and spell are types.)",
+      "review_note": "Printed scope activation energy/exhaust, opponent chooses Unit/Gear/Spell, matching guess causes recycling and nonmatching guess draws top. Two engine-path tests verified reciprocal outcomes and zone invariants, CI 45129782350. Overall acceptance gate still fail-closed."
     },
     "RAD-066/167": {
       "engine_id": 1089,
@@ -196,9 +203,13 @@
     },
     "RAD-067/167": {
       "engine_id": 1090,
-      "status": "pending",
-      "engine_scenarios": [],
-      "unverified_rules": "When you play me or when I hold, [Predict 3].\n[Deathknell][>] Banish the top card of your Main Deck. You may play it, ignoring its Energy cost."
+      "status": "accepted",
+      "engine_scenarios": [
+        "RadianceFinal64Test.ClocktowerGuardianDeathknellPlaysBanishmentCardWithoutEnergy",
+        "RadianceFinal64Test.ClocktowerGuardianPlayPredictPreservesAllThreeDeckCards"
+      ],
+      "verified_rules": "When you play me or when I hold, [Predict 3].\n[Deathknell][>] Banish the top card of your Main Deck. You may play it, ignoring its Energy cost.",
+      "review_note": "Printed play/hold Predict 3 and Deathknell exile-then-optional-play ignoring Energy (not Power) audited in source and dedicated engine-path tests. Predict retains all three deck objects, death trigger plays exiled card as controller; CI 45129782350. Overall acceptance gate still fail-closed."
     },
     "RAD-068/167": {
       "engine_id": 1091,
@@ -208,9 +219,13 @@
     },
     "RAD-069/167": {
       "engine_id": 1092,
-      "status": "pending",
-      "engine_scenarios": [],
-      "unverified_rules": "When you play a card, draw 2.\nWhen you draw 1 or more cards with 9 or more other cards in your hand, discard your hand, kill this, and choose an opponent. They score 1 point."
+      "status": "accepted",
+      "engine_scenarios": [
+        "RadianceFinal64Test.ZeroPointInflectionDrawsTwoAfterPlayingAnotherCard",
+        "RadianceFinal64Test.ZeroPointInflectionAtTenCardsDiscardsAndGivesPoint"
+      ],
+      "verified_rules": "When you play a card, draw 2.\nWhen you draw 1 or more cards with 9 or more other cards in your hand, discard your hand, kill this, and choose an opponent. They score 1 point.",
+      "review_note": "Both printed triggers verified: playing card draws two and drawing into at least ten hand cards discards hand, kills gear and awards opponent a point; tested through actual engine draw and play triggers, CI 45129782350. Overall acceptance gate still fail-closed."
     },
     "RAD-074/167": {
       "engine_id": 1093,
@@ -313,9 +328,13 @@
     },
     "RAD-102/167": {
       "engine_id": 1104,
-      "status": "pending",
-      "engine_scenarios": [],
-      "unverified_rules": "[Hidden] (Hide now for :rb_rune_rainbow: to react with later for :rb_energy_0:.)\nChoose a friendly unit, then choose one —Move it to an open battlefield.Give it [Ganking] this turn if there are no open battlefields. (It can move from battlefield to battlefield.)"
+      "status": "accepted",
+      "engine_scenarios": [
+        "RadianceFinal64Test.DemonShadeMovesFriendlyUnitToOpenBattlefield",
+        "RadianceFinal64Test.DemonShadeWithoutOpenBattlefieldGrantsGanking"
+      ],
+      "verified_rules": "[Hidden] (Hide now for :rb_rune_rainbow: to react with later for :rb_energy_0:.)\nChoose a friendly unit, then choose one —Move it to an open battlefield.Give it [Ganking] this turn if there are no open battlefields. (It can move from battlefield to battlefield.)",
+      "review_note": "Printed Hidden keyword and conditional choose-friendly-unit to open battlefield, otherwise temporary Ganking, verified in positive open-field and fully occupied-field real-play scenarios; CI 45129782350. Overall acceptance gate still fail-closed."
     },
     "RAD-103/167": {
       "engine_id": 1105,
@@ -481,9 +500,13 @@
     },
     "RAD-131/167": {
       "engine_id": 1122,
-      "status": "pending",
-      "engine_scenarios": [],
-      "unverified_rules": "When one or more friendly units die, [Buff] a friendly unit. (Give it a +1 :rb_might: buff if it doesn't have one.)"
+      "status": "accepted",
+      "engine_scenarios": [
+        "RadianceFinal64Test.DemacianIlluminatorsBuffsAfterFriendlyUnitDies",
+        "RadianceFinal64Test.DemacianIlluminatorsIgnoresEnemyUnitDeath"
+      ],
+      "verified_rules": "When one or more friendly units die, [Buff] a friendly unit. (Give it a +1 :rb_might: buff if it doesn't have one.)",
+      "review_note": "Printed when-friendly-unit-dies buff effect verified against real engine friendly-unit death and adversarial opponent-unit death; only eligible death grants buff. Shared Buff mechanics are tested in upstream engine; CI 45129782350. Overall acceptance gate still fail-closed."
     },
     "RAD-132/167": {
       "engine_id": 1123,
