@@ -60,7 +60,10 @@ TEST_F(RadianceBatch9Test, GuidebotDepartedBeforeFinalizationStillClosesChoices)
         pending.finalizing=true;
         pending.triggering_subject=kInvalidId;
         s.chain.resuming=pending;
-        auto* printed=card_registry.get(CardDefId{1025});
+        // The registry's read-only lookup exposes a const Card*, but this
+        // isolated trigger regression must invoke the mutable virtual callback.
+        // Registered card instances are allocated as mutable concrete Cards.
+        auto* printed=const_cast<Card*>(card_registry.get(CardDefId{1025}));
         ASSERT_NE(printed,nullptr);
         CardContext ctx{s,events,engine.testHook_executor(),P1,bot};
         ctx.registry=&card_registry;
@@ -85,7 +88,7 @@ TEST_F(RadianceBatch9Test, GuidebotWithNoSourceObjectFinalizesWithoutPrompt) {
         pending.finalizing=true;
         pending.triggering_subject=kInvalidId;
         s.chain.resuming=pending;
-        const Card* printed=card_registry.get(CardDefId{1025});
+        auto* printed=const_cast<Card*>(card_registry.get(CardDefId{1025}));
         ASSERT_NE(printed,nullptr);
         CardContext ctx{s,events,engine.testHook_executor(),P1,kInvalidId};
         printed->onTrigger(ctx,{});
