@@ -182,8 +182,14 @@ def benchmark(exe,deck1,deck2,seed,agent,timeout,env):
         return dict(status='timeout',winner=None,seconds=round(time.monotonic()-start,3))
     hit=re.search(r'Game over:\s*winner\s*=\s*([012])',p.stdout)
     status='complete' if p.returncode==0 and hit and int(hit.group(1)) in (1,2) else 'error'
+    detail = p.stderr[-1000:] if status=='error' else ''
+    if status=='error' and not detail.strip():
+        reason = (f'signal {-p.returncode}' if p.returncode<0
+                  else f'exit {p.returncode}')
+        detail = f'Engine exited with {reason}; no stderr; stdout_tail={p.stdout[-200:]}'
     return dict(status=status,winner=int(hit.group(1)) if hit else None,
-                seconds=round(time.monotonic()-start,3),error=p.stderr[-250:] if status=='error' else '')
+                seconds=round(time.monotonic()-start,3),
+                returncode=p.returncode,error=detail)
 
 def benchmark_bo3(exe,deck1,deck2,seed,agent,timeout,env):
     """Actual 2-of-3 fixed-deck series with alternating seats; no sideboard changes."""
