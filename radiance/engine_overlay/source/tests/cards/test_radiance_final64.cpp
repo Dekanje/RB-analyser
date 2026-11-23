@@ -240,6 +240,28 @@ TEST_F(RadianceFinal64Test, EvelynnConsumingReadiesAndStrengthensOnFacedownPlayT
  EXPECT_FALSE(state.getObject(eve).is_exhausted);
  EXPECT_EQ(state.getObject(eve).temp_might_bonus,1);
 }
+
+TEST_F(RadianceFinal64Test, ResplendentRostrumExhaustDrawChannelAndBuff){
+ auto rostrum=addToHand(P1,CardDefId{1082});
+ playThroughEngine(rostrum);
+ auto ally=addUnit(P1,kInvalidId,3,-1);
+ auto drawn=addToDeck(P1,CardDefId{1084});
+ auto rune=addRune(P1,Domain::Calm);
+ auto& r=state.getObject(rune);
+ r.zone=ZoneType::RuneDeck;
+ r.location=std::nullopt;
+ state.player(P1).rune_deck.push_back(rune);
+ Intent act;act.type=IntentType::ActivateAbility;act.player=P1;act.ability_source=rostrum;
+ EnginePathAgent choose(EnginePathAgent::choosing(ally));
+ withEngineDefaultTurn([&](GameEngine& e){
+   e.testHook_executeIntent(act);settleLikeTheEngine(e);
+ },&choose,nullptr,P1);
+ EXPECT_TRUE(state.getObject(rostrum).is_exhausted);
+ EXPECT_TRUE(inHand(P1,drawn));
+ EXPECT_EQ(state.getObject(rune).zone,ZoneType::Base);
+ EXPECT_TRUE(state.getObject(rune).is_exhausted);
+ EXPECT_EQ(state.getObject(ally).temp_might_bonus,3);
+}
 TEST_F(RadianceFinal64Test, StrigianOraclePredictsWhenExhausted){
  auto oracle=addUnit(P1,CardDefId{1083},2,0);
  addToDeck(P1,CardDefId{1084});
@@ -338,6 +360,22 @@ TEST_F(RadianceFinal64Test, IncorrigibleConstructAcceptsFriendlyBoardMech){
  playThroughEngine(construct,&accept);
  EXPECT_FALSE(state.getObject(construct).is_exhausted);
 }
+
+TEST_F(RadianceFinal64Test, GutterGuardianAddsUniversalPowerOnlyAfterValidHiddenShowOff){
+ addToHand(P1,CardDefId{1104}); // Demon Shade has printed Hidden.
+ auto guardian=addToHand(P1,CardDefId{1105});
+ EnginePathAgent accept(EnginePathAgent::accepting());
+ playThroughEngine(guardian,&accept);
+ EXPECT_EQ(state.player(P1).rune_pool.universal_power,1)
+   << "Show Off of a Hidden card must add exactly one universal Power";
+}
+TEST_F(RadianceFinal64Test, GutterGuardianWithoutHiddenCandidateAddsNoPower){
+ addToHand(P1,CardDefId{1084}); // Non-Hidden unit.
+ auto guardian=addToHand(P1,CardDefId{1105});
+ playThroughEngine(guardian);
+ EXPECT_EQ(state.player(P1).rune_pool.universal_power,0)
+   << "Hidden on the Guardian itself is not a separate card eligible to Show Off";
+}
 TEST_F(RadianceFinal64Test, TheEmpyreanShowsOffAndDrawsTwo){
  addToHand(P1,CardDefId{1090});
  for(int i=0;i<4;i++)addToDeck(P1,CardDefId{1070});
@@ -346,6 +384,14 @@ TEST_F(RadianceFinal64Test, TheEmpyreanShowsOffAndDrawsTwo){
  EnginePathAgent accept(EnginePathAgent::accepting());
  playThroughEngine(dragon,&accept);
  EXPECT_GE(state.player(P1).hand.size(),prior+2u);
+}
+
+TEST_F(RadianceFinal64Test, TheEmpyreanWithoutShowOffDoesNotDrawTwo){
+ auto top=addToDeck(P1,CardDefId{1084});
+ auto dragon=addToHand(P1,CardDefId{1085});
+ playThroughEngine(dragon);
+ EXPECT_FALSE(inHand(P1,top));
+ EXPECT_EQ(state.player(P1).main_deck.size(),1u);
 }
 TEST_F(RadianceFinal64Test, PrimordialRoarUsesShownUnitMightForDamage){
  addToHand(P1,CardDefId{1090}); // 8 Might
@@ -402,6 +448,25 @@ TEST_F(RadianceFinal64Test, PrimordialRoarWithoutShowOffDoesNotDamageUnit){
  playThroughEngine(spell);
  EXPECT_EQ(state.getObject(enemy).damage_marked,0)
   << "Without a shown friendly or hand unit the spell must not deal damage";
+}
+
+TEST_F(RadianceFinal64Test, SpiritOfForgeGearReturnCostReadiesAndBuffs){
+ auto gear=addToHand(P1,CardDefId{1088}); // Scrutinizing Scope, 2 Energy.
+ playThroughEngine(gear);
+ auto spirit=addToHand(P1,CardDefId{1089});
+ EnginePathAgent accept(EnginePathAgent::accepting());
+ playThroughEngine(spirit,&accept);
+ EXPECT_TRUE(inHand(P1,gear));
+ EXPECT_FALSE(state.getObject(spirit).is_exhausted);
+ EXPECT_EQ(state.getObject(spirit).temp_might_bonus,2);
+}
+TEST_F(RadianceFinal64Test, SpiritOfForgeWithoutOptionalCostGetsNoBuff){
+ auto spirit=addToHand(P1,CardDefId{1089});
+ playThroughEngine(spirit);
+ EXPECT_TRUE(state.getObject(spirit).location.has_value())
+    << "Returning gear is an optional additional play cost";
+ EXPECT_TRUE(state.getObject(spirit).is_exhausted);
+ EXPECT_EQ(state.getObject(spirit).temp_might_bonus,0);
 }
 TEST_F(RadianceFinal64Test, TrinketPeddlerSharedDisarmReducesEnemyMight){
  auto peddler=addUnit(P1,CardDefId{1084},3,0);
@@ -586,6 +651,21 @@ TEST_F(RadianceFinal64Test, TranspositionistCannotPlayEqualOrHigherMightForFree)
  EXPECT_TRUE(inHand(P1,returned));
  EXPECT_TRUE(inHand(P1,tooLarge))
    << "The optional free-play candidate must have strictly less Might";
+}
+
+TEST_F(RadianceFinal64Test, JarvanDeployGearGetsActionAndConquestChannelsExhausted){
+ auto jarvan=addUnit(P1,CardDefId{1100},4,0);
+ auto gear=addToHand(P1,CardDefId{1080}); // Friendly gear with Deploy.
+ playThroughEngine(gear,nullptr,LocationId{BattlefieldLocation{state.battlefields[0].id}});
+ withEngine([&](GameEngine& e){e.testHook_recalculateAuras();});
+ EXPECT_TRUE(state.getObject(gear).hasKeyword(Keyword::Action));
+ auto rune=addRune(P1,Domain::Body);
+ state.getObject(rune).zone=ZoneType::RuneDeck;
+ state.getObject(rune).location=std::nullopt;
+ state.player(P1).rune_deck.push_back(rune);
+ fireTriggerThroughEngine(jarvan,TriggerType::WhenIConquer);
+ EXPECT_EQ(state.getObject(rune).zone,ZoneType::Base);
+ EXPECT_TRUE(state.getObject(rune).is_exhausted);
 }
 TEST_F(RadianceFinal64Test, SeraphicWyvernAddsOneExhaustedRuneToReadyChannel){
  addUnit(P1,CardDefId{1101},8,0);
