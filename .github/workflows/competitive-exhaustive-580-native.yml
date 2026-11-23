@@ -1,0 +1,135 @@
+name: Worlds exhaustive 580 registered-structure native C++ compatibility
+on:
+  push:
+    branches: ['research/competitive-agent-benchmark-v1-2026-11-23']
+    paths:
+      - '.github/workflows/competitive-exhaustive-580-native.yml'
+permissions:
+  contents: read
+  actions: read
+jobs:
+  validate-partition-and-coverage:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prove 177 representative / 403 remaining partition invariants
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/full_structural_native.py scripts/test_full_structural_native.py
+          python3 -m unittest discover -s scripts -p 'test_full_structural_native.py' -v
+  real-native-games-for-all-remaining:
+    needs: validate-partition-and-coverage
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45259246337
+          github-token: ${{ github.token }}
+          name: worlds-all58-registered-structure-legal-unvalidated-variants
+          path: results/registered_structure
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45181493632
+          github-token: ${{ github.token }}
+          name: expanded-optimized-58-independent-radiance-bo3
+          path: results/selected
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45244227502
+          github-token: ${{ github.token }}
+          name: competitive-rule407-verified-engine-binary
+          path: engine_build
+      - name: Install exact compiled 407 engine dynamic libraries
+        timeout-minutes: 12
+        run: |
+          set -euo pipefail
+          if ! sudo env DEBIAN_FRONTEND=noninteractive timeout -k 10s 55s apt-get -o Acquire::Retries=0 update -qq; then
+            echo '::warning::cached apt indexes'
+          fi
+          sudo env DEBIAN_FRONTEND=noninteractive timeout 360s apt-get -o Acquire::Retries=2 install -y -qq --no-install-recommends libboost-program-options1.83.0 libboost-filesystem1.83.0 libboost-system1.83.0 libboost-context1.83.0
+          chmod +x engine_build/riftbound
+          if ldd engine_build/riftbound | grep -q 'not found'; then exit 1; fi
+      - name: Play every previously untested rune, battlefield or sideboard registration
+        timeout-minutes: 39
+        run: |
+          python3 -u scripts/full_structural_native.py \
+            --variants results/registered_structure \
+            --selected results/selected \
+            --registry engine_build/registry.json \
+            --engine engine_build/riftbound \
+            --shards 29 --shard ${{ matrix.shard }} \
+            --seed 202611252130 --timeout 120 \
+            --output results/remaining/${{ matrix.shard }}/remaining.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: remaining-structural-${{ matrix.shard }}
+          path: results/remaining/${{ matrix.shard }}/
+          if-no-files-found: warn
+          retention-days: 30
+  accept-exact-all-580:
+    needs: real-native-games-for-all-remaining
+    runs-on: ubuntu-24.04
+    timeout-minutes: 17
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: remaining-structural-*
+          path: results/shards
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45264030878
+          github-token: ${{ github.token }}
+          name: competitive-all58-registered-structure-native-qa
+          path: results/first_accepted
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45259246337
+          github-token: ${{ github.token }}
+          name: worlds-all58-registered-structure-legal-unvalidated-variants
+          path: results/registered_structure
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45181493632
+          github-token: ${{ github.token }}
+          name: expanded-optimized-58-independent-radiance-bo3
+          path: results/selected
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45244227502
+          github-token: ${{ github.token }}
+          name: competitive-rule407-verified-engine-binary
+          path: engine_build
+      - name: Require complete prior 177 and new 403 native C++ receipt coverage
+        run: |
+          python3 scripts/full_structural_native.py --aggregate \
+            --variants results/registered_structure \
+            --selected results/selected \
+            --registry engine_build/registry.json \
+            --first results/first_accepted/acceptance.json \
+            --input results/shards --shards 29 \
+            --output results/all580/acceptance.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          x=json.loads(Path('results/all580/acceptance.json').read_text())
+          assert x['status']=='ALL_580_REGISTERED_STRUCTURAL_NATIVE_GAMES_PASS'
+          assert x['all_native_games_completed']==580
+          assert x['new_native_games_completed']==403
+          assert x['native_game_failures']==0 and not x['strength_assessed']
+          assert not x['original_decks_modified']
+          print('STRUCTURAL_NATIVE_580_PASS',x['families'])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: competitive-all580-registered-structure-native-evidence
+          path: results/all580/
+          retention-days: 30
