@@ -75,7 +75,7 @@ def patch(start: pathlib.Path) -> None:
     replace_once(main,
         '''            auto result = engine.runGame(deck1, deck2, *seat1, *seat2, game_seed);
             std::cout << "\\nGame over: winner="''',
-        """            auto result = engine.runGame(deck1, deck2, *seat1, *seat2, game_seed);
+        '''            auto result = engine.runGame(deck1, deck2, *seat1, *seat2, game_seed);
             // Deliberately report the engine's actual start state, not an
             // echoed environment variable. Python rejects mismatches.
             const char* forced = std::getenv("RIFTBOUND_FORCE_STARTING_PLAYER");
