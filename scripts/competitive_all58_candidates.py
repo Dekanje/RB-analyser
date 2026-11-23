@@ -98,19 +98,46 @@ def screen(args):
             for index in ids:
                 c=candidates[index]
                 deck=args.proposals/c["path"]
-                results=list(pool.map(lambda row:play(deck,row),pairs))
-                if any(x["status"]!="complete" for x in results):
-                    raise RuntimeError("Candidate engine error: "+legend+" "+str(index))
-                paired=[
-                    {**case,"baseline_win":left["win"],"candidate_win":right["win"],
-                     "baseline_complete":True,"candidate_complete":True}
-                    for case,left,right in zip(pairs,baseline,results)
-                ]
-                candidate_results.append({
+                base_receipt={
                     "candidate_index":index,
                     "candidate_path":c["path"],
                     "candidate_sha256":c["sha256"],
                     "changed_main_slots":c["changed_main_slots"],
+                }
+                # Neeko requires three additional registered Legends (401.2.a).
+                # These archived proposals do not carry that registration.
+                if any(step.get("add")=="Neeko, Blending In"
+                       for step in c["mutation_steps"]):
+                    candidate_results.append({
+                        **base_receipt,
+                        "status":"BLOCKED_SPECIAL_DECKBUILDING",
+                        "reason":"Neeko requires three registered additional Legends",
+                        "paired_completed":0,"paired_scenarios":[],
+                        "score":None,
+                    })
+                    print("ALL58_BLOCKED_NEKO",legend,index,flush=True)
+                    continue
+                results=list(pool.map(lambda row:play(deck,row),pairs))
+                paired=[
+                    {**case,"baseline_win":left["win"],"candidate_win":right["win"],
+                     "baseline_complete":True,
+                     "candidate_complete":right["status"]=="complete",
+                     "candidate_error":right.get("error","")}
+                    for case,left,right in zip(pairs,baseline,results)
+                ]
+                if any(x["status"]!="complete" for x in results):
+                    candidate_results.append({
+                        **base_receipt,"status":"ENGINE_INCOMPLETE_UNRANKED",
+                        "reason":"At least one actual engine game failed; zero imputed wins",
+                        "paired_completed":0,
+                        "paired_scenarios":paired,
+                        "score":None,
+                    })
+                    print("ALL58_ENGINE_INCOMPLETE",legend,index,
+                          [x for x in paired if not x["candidate_complete"]],flush=True)
+                    continue
+                candidate_results.append({
+                    **base_receipt,"status":"COMPLETED_SCREENING_ONLY",
                     "paired_completed":len(paired),
                     "paired_scenarios":paired,
                     "score":score(paired),
@@ -188,51 +215,92 @@ def aggregate(args):
                 entry=records[name]["candidates"][x["candidate_index"]]
                 if (x["candidate_sha256"]!=entry["sha256"] or
                     x["candidate_path"]!=entry["path"] or
-                    x["changed_main_slots"]!=entry["changed_main_slots"] or
-                    x["paired_completed"]!=len(cases)):
-                    raise RuntimeError("Candidate identity or completed game count mismatch")
+                    x["changed_main_slots"]!=entry["changed_main_slots"]):
+                    raise RuntimeError("Candidate identity mismatch")
                 validate_candidate_text(
                     originals[name],args.proposals/entry["path"],entry["sha256"]
                 )
+                state=x.get("status")
                 paired=x["paired_scenarios"]
+                is_neeko=any(step.get("add")=="Neeko, Blending In"
+                             for step in entry["mutation_steps"])
+                if state=="BLOCKED_SPECIAL_DECKBUILDING":
+                    if (not is_neeko or paired or x["paired_completed"]!=0
+                        or x["score"] is not None or
+                        x.get("reason")!="Neeko requires three registered additional Legends"):
+                        raise RuntimeError("Invalid special deckbuilding exclusion")
+                    continue
+                if is_neeko:
+                    raise RuntimeError("Neeko candidate was simulated without additional Legends")
                 if len(paired)!=len(cases):
-                    raise RuntimeError("Incomplete paired scenarios")
+                    raise RuntimeError("Missing candidate scenario receipts")
+                all_complete=True
                 for test,expected in zip(paired,cases):
                     if (any(test[k]!=expected[k] for k in ("opponent","seat","seed")) or
                         test["baseline_complete"] is not True or
-                        test["candidate_complete"] is not True or
                         test["baseline_win"] not in (0,1) or
-                        test["candidate_win"] not in (0,1)):
-                        raise RuntimeError("Untrusted paired engine result")
-                if x["score"]!=score(paired):
-                    raise RuntimeError("Inconsistent McNemar or win counts")
+                        test["candidate_complete"] not in (True,False)):
+                        raise RuntimeError("Untrusted baseline or seed")
+                    if test["candidate_complete"]:
+                        if test["candidate_win"] not in (0,1):
+                            raise RuntimeError("Completed candidate has invalid score")
+                    else:
+                        all_complete=False
+                        if test["candidate_win"] is not None or not test.get("candidate_error"):
+                            raise RuntimeError("Failed candidate was assigned a win or lost its diagnostic")
+                if state=="ENGINE_INCOMPLETE_UNRANKED":
+                    if (all_complete or x["paired_completed"]!=0 or
+                        x["score"] is not None or
+                        x.get("reason")!="At least one actual engine game failed; zero imputed wins"):
+                        raise RuntimeError("Untrusted failed candidate status")
+                elif state=="COMPLETED_SCREENING_ONLY":
+                    if (not all_complete or x["paired_completed"]!=len(cases) or
+                        x["score"]!=score(paired)):
+                        raise RuntimeError("Inconsistent completed engine evidence")
+                else:
+                    raise RuntimeError("Unknown candidate status")
             processed[name]=rec
     if len(binary_hashes)!=1 or set(processed)!=set(originals):
         raise RuntimeError("Complete unchanged 58-Legend field required")
     ranking=[]
+    all_candidates=[c for r in processed.values() for c in r["candidate_results"]]
+    completed_candidates=[c for c in all_candidates
+                          if c["status"]=="COMPLETED_SCREENING_ONLY"]
+    blocked_candidates=[c for c in all_candidates
+                        if c["status"]=="BLOCKED_SPECIAL_DECKBUILDING"]
+    engine_incomplete=[c for c in all_candidates
+                       if c["status"]=="ENGINE_INCOMPLETE_UNRANKED"]
     for name in sorted(originals):
-        candidates=processed[name]["candidate_results"]
-        best=sorted(candidates,key=lambda c:(
+        candidates=[c for c in processed[name]["candidate_results"]
+                    if c["status"]=="COMPLETED_SCREENING_ONLY"]
+        best=(sorted(candidates,key=lambda c:(
             -c["score"]["delta"],-c["score"]["candidate_wins"],
-            c["candidate_index"]))[0]
+            c["candidate_index"]))[0] if candidates else None)
         ranking.append({
             "legend":name, "baseline_sha256":processed[name]["source_sha256"],
-            "exploratory_candidate_index":best["candidate_index"],
-            "exploratory_candidate_sha256":best["candidate_sha256"],
-            "paired_games_per_candidate":best["paired_completed"],
-            "candidate_delta":best["score"]["delta"],
-            "candidate_wins":best["score"]["candidate_wins"],
-            "baseline_wins":best["score"]["baseline_wins"],
-            "mcnemar_p_unadjusted":best["score"]["mcnemar_p_unadjusted"],
+            "exploratory_candidate_index":best["candidate_index"] if best else None,
+            "exploratory_candidate_sha256":best["candidate_sha256"] if best else None,
+            "paired_games_per_candidate":best["paired_completed"] if best else 0,
+            "candidate_delta":best["score"]["delta"] if best else None,
+            "candidate_wins":best["score"]["candidate_wins"] if best else None,
+            "baseline_wins":best["score"]["baseline_wins"] if best else None,
+            "mcnemar_p_unadjusted":best["score"]["mcnemar_p_unadjusted"] if best else None,
             "independently_confirmed":False,
         })
     payload={
-        "status":"ALL58_232_CANDIDATE_DISCOVERY_COMPLETE_NO_ADOPTION",
+        "status":("ALL58_CANDIDATE_DISCOVERY_COMPLETE_NO_ADOPTION"
+                  if not blocked_candidates and not engine_incomplete
+                  else "ALL58_CANDIDATE_DISCOVERY_PARTIAL_NO_ADOPTION"),
         "agent":args.agent,
         "legends":58,
         "candidates_per_legend":args.candidates,
-        "total_candidate_comparisons":58*args.candidates,
-        "paired_samples_per_candidate":args.opponents*2,
+        "total_candidate_slots":58*args.candidates,
+        "completed_candidate_comparisons":len(completed_candidates),
+        "blocked_special_deckbuilding":len(blocked_candidates),
+        "engine_incomplete_excluded":len(engine_incomplete),
+        "every_candidate_attempt_accounted_for":(
+            len(all_candidates)==58*args.candidates),
+        "paired_samples_per_completed_candidate":args.opponents*2,
         "extra_baseline_simulations_reused":True,
         "engine_sha256":next(iter(binary_hashes)),
         "sideboarding":False,"all_58_baselines_retained":True,
