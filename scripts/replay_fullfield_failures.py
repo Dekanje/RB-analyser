@@ -52,6 +52,12 @@ CASES = [
      "Seraphine, Starry-Eyed Songstress", "Miss Fortune, Bounty Hunter", 1, 633416337, 1),
     ("burn_away_seraphine_mf_g3", "baseline",
      "Seraphine, Starry-Eyed Songstress", "Miss Fortune, Bounty Hunter", 1, 633416337, 2),
+    ("lost_to_sands_kaisa_orianna_g1", "baseline",
+     "Kai'Sa, Daughter of the Void", "Orianna, Lady of Clockwork", 1, 1738060168, 0),
+    ("lost_to_sands_kaisa_orianna_g2", "baseline",
+     "Kai'Sa, Daughter of the Void", "Orianna, Lady of Clockwork", 1, 1738060168, 1),
+    ("lost_to_sands_kaisa_orianna_g3", "baseline",
+     "Kai'Sa, Daughter of the Void", "Orianna, Lady of Clockwork", 1, 1738060168, 2),
 ]
 
 def enumerate_roster(selected_folder, baseline_folder):
