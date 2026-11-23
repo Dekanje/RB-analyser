@@ -4,6 +4,8 @@ on:
     branches: ['research/competitive-agent-benchmark-v1-2026-11-23']
     paths:
       - '.github/workflows/competitive-guidebot-native-qa.yml'
+      - 'radiance/engine_overlay/source/tests/cards/test_radiance_batch9.cpp'
+      - 'radiance/engine_overlay/source/cards/units/1025_radiance_batch9_tranche1.cpp'
       - 'radiance/engine_overlay/tournament_starting_player.py'
       - 'scripts/tournament_bo3_policy.py'
       - 'scripts/test_tournament_bo3_policy.py'
