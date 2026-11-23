@@ -1,0 +1,122 @@
+name: Repaired engine 58 optimized legends all-pairs mirrored BO3
+on:
+  push:
+    branches: ['repair/bo3-fullfield-card-legality-2026-11-23']
+    paths:
+      - '.github/workflows/repaired-58-round-robin.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: repaired-optimized-58-round-robin-45203903480
+  cancel-in-progress: false
+jobs:
+  round-robin-qa:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate unique 58x57 pairing schedule, 29 sharded splits and ranking logic
+        run: |
+          python3 -m py_compile scripts/round_robin_58.py scripts/test_round_robin_58.py
+          python3 scripts/test_round_robin_58.py
+  wait-for-all58-optimizer:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 95
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Use only successful immutable run 45181493632
+        run: |
+          set -euo pipefail
+          run_id=45203903480
+          for i in $(seq 1 180); do
+            state=$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}" --jq '.status+" "+(.conclusion // "pending")')
+            echo "OPTIMIZED_SEARCH_SOURCE ${run_id}: ${state}"
+            if [[ "${state}" == "completed success" ]]; then exit 0; fi
+            if [[ "${state}" == completed* ]]; then
+              echo "::error::Corrected engine exact-seed gate failed: ${state}"
+              exit 1
+            fi
+            sleep 30
+          done
+          echo "::error::Corrected engine did not complete before maximum bounded wait"
+          exit 1
+  each-unordered-pair-both-seats:
+    needs: [round-robin-qa,wait-for-all58-optimizer]
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 85
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch exactly the 58 independently optimized decks
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 45181493632
+          github-token: ${{ github.token }}
+          name: expanded-optimized-58-independent-radiance-bo3
+          path: results/selected
+      - name: Fetch the same-run full-Radiance engine
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 45203903480
+          github-token: ${{ github.token }}
+          name: repaired-fullfield-engine-1123
+          path: .
+      - name: Install compiled engine runtime dependencies
+        timeout-minutes: 12
+        run: |
+          set -euo pipefail
+          if ! sudo env DEBIAN_FRONTEND=noninteractive timeout -k 10s 55s apt-get -o Acquire::Retries=0 update -qq; then
+            echo "::warning::using cached package indexes"
+          fi
+          sudo env DEBIAN_FRONTEND=noninteractive timeout 360s apt-get -o Acquire::Retries=2 install -y -qq --no-install-recommends libboost-program-options1.83.0 libboost-filesystem1.83.0 libboost-system1.83.0 libboost-context1.83.0
+          chmod +x engine_build/riftbound
+          if ldd engine_build/riftbound | grep -q "not found"; then exit 1; fi
+      - name: Run every assigned optimized pair in both seating orders with actual ISMCTS BO3
+        timeout-minutes: 70
+        run: |
+          python3 -u scripts/round_robin_58.py \
+            --selected results/selected --engine engine_build/riftbound \
+            --output results/round-robin/shard-${{ matrix.shard }} \
+            --shards 29 --shard ${{ matrix.shard }} \
+            --agent ismcts:sims=24 --repetitions 1 \
+            --workers 4 --timeout 65 --seed 2026112399193
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: optimized-round-robin-shard-${{ matrix.shard }}
+          path: results/round-robin/shard-${{ matrix.shard }}/
+          retention-days: 30
+          if-no-files-found: ignore
+  rank-all-58-and-publish-evidence:
+    needs: each-unordered-pair-both-seats
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: optimized-round-robin-shard-*
+          path: results/shards
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45181493632
+          github-token: ${{ github.token }}
+          name: expanded-optimized-58-independent-radiance-bo3
+          path: results/selected
+      - name: Fail closed unless all 1,653 pairings and 3,306 mirrored BO3 series complete
+        run: |
+          python3 scripts/round_robin_58.py --aggregate \
+            --selected results/selected --input results/shards \
+            --output results/optimized_58_head_to_head \
+            --shards 29 --repetitions 1 --seed 2026112399193
+      - uses: actions/upload-artifact@v4
+        with:
+          name: all-58-optimized-head-to-head-rankings-and-matchups
+          path: results/optimized_58_head_to_head/
+          retention-days: 30
