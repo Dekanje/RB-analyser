@@ -100,3 +100,7 @@ regression failures remain open and the final64 mechanics ledger is pending.
   Shield doubling also have development implementations and tests.
 - The 64-entry per-card mechanics ledger is still *pending*; none of these
   fixes silently changes acceptance flags or removes regression tests.
+
+## Whirling Twirligig gear-cost regression retest
+
+The Recruit activation now chooses its sacrifice as a *cost object* during finalization (no Deflect), pays exactly one kill-as-cost, and creates the Recruit only after a successful cost. Targeted engine-path test must pass before integration.
