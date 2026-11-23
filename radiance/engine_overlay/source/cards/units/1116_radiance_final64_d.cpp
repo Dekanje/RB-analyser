@@ -111,7 +111,10 @@ public:
    const auto chosen=c.executor.chooseObjectNow(c.controller,candidates,
      "Dune Devourer: choose a friendly unit to kill as additional play cost");
    if(chosen==kInvalidId)return {};
-   c.executor.killObject(chosen);
+   // Killing is part of the additional COST, not merely an instruction.
+   // Soraka, Zhonya's and other death replacements can prevent a death:
+   // if no death occurred the discount is not earned.
+   if(!killAsCost(c,chosen))return {};
    return {.energy_reduction=2};
  }
 private:
