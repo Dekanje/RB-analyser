@@ -1,0 +1,92 @@
+name: Competitive repaired-engine complete rules regression (one-shot)
+on:
+  push:
+    branches: ['research/competitive-agent-benchmark-v1-2026-11-23']
+    paths: ['.github/workflows/competitive-repaired-engine-qa.yml']
+permissions:
+  contents: read
+  actions: read
+jobs:
+  full-cpp-mechanics-regression:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 85
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate overlay source before engine build
+        run: |
+          python3 -m compileall -q radiance/engine_overlay radiance/verify_final64_registry.py
+          python3 -m unittest discover -s scripts -p 'test_benchmark_agent_strength.py' -v
+      - name: Install pinned compilation toolchain and clone engine
+        timeout-minutes: 14
+        run: |
+          set -euo pipefail
+          if ! sudo env DEBIAN_FRONTEND=noninteractive timeout -k 10s 65s apt-get -o Acquire::Retries=0 -o Acquire::http::Timeout=12 -o Acquire::https::Timeout=12 update -qq; then
+            echo '::warning::using cached package indexes'
+          fi
+          sudo env DEBIAN_FRONTEND=noninteractive timeout 420s apt-get -o DPkg::Lock::Timeout=30 -o Acquire::Retries=2 install -y -qq --no-install-recommends ccache libboost-program-options-dev libboost-filesystem-dev libboost-system-dev libboost-context-dev nlohmann-json3-dev
+          timeout 120s git -c http.lowSpeedLimit=1024 -c http.lowSpeedTime=30 clone --quiet https://github.com/chorlick/alpharune.git alpharune
+          git -C alpharune checkout --quiet --detach ec90f0fed002aed374d06249fa95e83e3cfbd386
+      - name: Apply complete Radiance plus repaired gameplay semantics
+        run: |
+          set -euo pipefail
+          python3 radiance/engine_overlay/apply.py
+          python3 radiance/engine_overlay/wave1_regression_fix.py
+          python3 radiance/engine_overlay/apply_wave2.py
+          python3 radiance/engine_overlay/apply_wave3.py
+          python3 radiance/engine_overlay/apply_wave4.py
+          python3 radiance/engine_overlay/apply_batch6.py
+          python3 radiance/engine_overlay/apply_batch7.py
+          python3 radiance/engine_overlay/apply_batch8.py
+          python3 radiance/engine_overlay/apply_batch9.py
+          python3 radiance/engine_overlay/apply_batch9_battlefields.py
+          python3 radiance/engine_overlay/apply_batch9_disarm_chain.py
+          python3 radiance/engine_overlay/apply_batch10.py
+          python3 radiance/engine_overlay/apply_final64.py
+          python3 radiance/engine_overlay/stability_patch.py
+          python3 radiance/engine_overlay/fullfield_repair.py
+      - uses: actions/cache/restore@v4
+        with:
+          path: ~/.cache/ccache
+          key: competitive-repaired-1123-${{ github.sha }}
+          restore-keys: |
+            rad64-pch-safe-linux-gcc13-
+      - name: Compile complete pinned C++ game and test suite
+        timeout-minutes: 50
+        run: |
+          set -euo pipefail
+          ccache -M 3G
+          cmake -S alpharune -B alpharune/build -G Ninja -DCMAKE_BUILD_TYPE=Release -DRIFTBOUND_BUILD_JOBS=3 "-DCMAKE_CXX_COMPILER_LAUNCHER=env;CCACHE_SLOPPINESS=pch_defines,time_macros;$PWD/alpharune/scripts/ccache_pch_safe.sh"
+          cmake --build alpharune/build --target riftbound riftbound_tests -j 3
+      - name: Verify full repaired card registry
+        run: |
+          set -euo pipefail
+          mkdir -p results/competitive_engine_qa
+          alpharune/build/riftbound --dump-registry results/competitive_engine_qa/registry.json
+          python3 radiance/verify_final64_registry.py results/competitive_engine_qa/registry.json --output results/competitive_engine_qa/coverage.json
+      - name: Execute all upstream plus overlay C++ tests
+        timeout-minutes: 15
+        run: |
+          set -euo pipefail
+          RIFTBOUND_ROOT=alpharune alpharune/build/riftbound_tests --gtest_brief=1 --gtest_output=xml:results/competitive_engine_qa/all_tests.xml
+          python3 - <<'PY'
+          import json,xml.etree.ElementTree as E
+          from pathlib import Path
+          doc=E.parse('results/competitive_engine_qa/all_tests.xml').getroot()
+          d={k:int(doc.attrib.get(k,0)) for k in ('tests','failures','errors','disabled')}
+          d['source']='complete patched engine, not merely a registry check'
+          Path('results/competitive_engine_qa/test_counts.json').write_text(json.dumps(d,indent=2))
+          print('FULL_CXX_REGRESSION',json.dumps(d))
+          assert d['tests']>=3900, 'Unexpectedly small compiled test suite'
+          assert d['failures']==0 and d['errors']==0, 'C++ regression failures'
+          PY
+      - name: Gate printed-mechanics scenarios for all 64 Final64 cards
+        run: |
+          python3 radiance/verify_final64_registry.py results/competitive_engine_qa/registry.json --mechanics-xml results/competitive_engine_qa/all_tests.xml
+      - name: Upload complete test evidence even after failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: competitive-repaired-engine-full-qa
+          path: results/competitive_engine_qa/
+          retention-days: 30
+          if-no-files-found: warn
