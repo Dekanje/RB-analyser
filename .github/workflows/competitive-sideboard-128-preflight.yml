@@ -1,0 +1,21 @@
+name: Worlds 174-sideboard independent 128-ISMCTS holdout preflight
+on:
+  push:
+    branches: ['research/competitive-agent-benchmark-v1-2026-11-23']
+    paths:
+      - '.github/workflows/competitive-sideboard-128-preflight.yml'
+      - 'scripts/sideboard_128_holdout.py'
+      - 'scripts/test_sideboard_128_holdout.py'
+permissions:
+  contents: read
+jobs:
+  verify-frozen-research-plan:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate strict complete-174 source gates, frozen hypotheses, and actual native 407 records
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/sideboard_128_holdout.py scripts/test_sideboard_128_holdout.py
+          python3 -m unittest discover -s scripts -p 'test_sideboard_128_holdout.py' -v
