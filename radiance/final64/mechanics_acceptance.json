@@ -52,9 +52,13 @@
     },
     "RAD-022/167": {
       "engine_id": 1076,
-      "status": "pending",
-      "engine_scenarios": [],
-      "unverified_rules": ":rb_exhaust:: Play a Gold gear token exhausted. (It has \"[Reaction][>] Kill this, :rb_exhaust:: [Add] :rb_rune_rainbow:.\")\nKill a friendly gear, :rb_exhaust:: Play a 1 :rb_might: Recruit unit token.\nKill a friendly unit, :rb_exhaust:: Play a 3 :rb_might: Mech unit token."
+      "status": "in_review",
+      "engine_scenarios": [
+        "RadianceFinal64Test.WhirlingTwirligigExhaustsToPlayAnExhaustedGold",
+        "RadianceFinal64Test.WhirlingTwirligigSacrificesUnitAsCostToCreateMech"
+      ],
+      "unverified_rules": ":rb_exhaust:: Play a Gold gear token exhausted. (It has \"[Reaction][>] Kill this, :rb_exhaust:: [Add] :rb_rune_rainbow:.\")\nKill a friendly gear, :rb_exhaust:: Play a 1 :rb_might: Recruit unit token.\nKill a friendly unit, :rb_exhaust:: Play a 3 :rb_might: Mech unit token.",
+      "review_note": "Engine code and focused scenarios authored; compiled gameplay and remaining interaction/edge-case audit required before acceptance."
     },
     "RAD-031/167": {
       "engine_id": 1077,
@@ -64,15 +68,22 @@
     },
     "RAD-033/167": {
       "engine_id": 1078,
-      "status": "pending",
-      "engine_scenarios": [],
-      "unverified_rules": "Choose one —Move a friendly gear with [Deploy] to a battlefield.Look at the top 5 cards of your Main Deck. You may reveal a gear from among them and draw it. Recycle the rest."
+      "status": "in_review",
+      "engine_scenarios": [
+        "RadianceFinal64Test.CommandAttackLooksAtTopFiveAndDrawsOnlyRevealedGear"
+      ],
+      "unverified_rules": "Choose one —Move a friendly gear with [Deploy] to a battlefield.Look at the top 5 cards of your Main Deck. You may reveal a gear from among them and draw it. Recycle the rest.",
+      "review_note": "Engine code and focused scenarios authored; compiled gameplay and remaining interaction/edge-case audit required before acceptance."
     },
     "RAD-043/167": {
       "engine_id": 1079,
-      "status": "pending",
-      "engine_scenarios": [],
-      "unverified_rules": "When I become exhausted, choose one that hasn't been chosen this turn —[Buff] me. (Give me a +1 :rb_might: buff if I don't have one.)Spend my buff to [Stun] an enemy unit. (It doesn't deal combat damage this turn.)Spend my buff to ready me."
+      "status": "in_review",
+      "engine_scenarios": [
+        "RadianceFinal64Test.RivenBrokenBladeBuffAndStunAreDistinctModesThisTurn",
+        "RadianceFinal64Test.RivenBrokenBladeSpendsBuffToReadyWhenExhausted"
+      ],
+      "unverified_rules": "When I become exhausted, choose one that hasn't been chosen this turn —[Buff] me. (Give me a +1 :rb_might: buff if I don't have one.)Spend my buff to [Stun] an enemy unit. (It doesn't deal combat damage this turn.)Spend my buff to ready me.",
+      "review_note": "Engine code and focused scenarios authored; compiled gameplay and remaining interaction/edge-case audit required before acceptance."
     },
     "RAD-044/167": {
       "engine_id": 1080,
@@ -82,9 +93,12 @@
     },
     "RAD-045/167": {
       "engine_id": 1081,
-      "status": "pending",
-      "engine_scenarios": [],
-      "unverified_rules": "[Shield] (+1 :rb_might: while I'm a defender.)\nWhen I attack or defend, double the [Shield] of a unit you control here this turn."
+      "status": "in_review",
+      "engine_scenarios": [
+        "RadianceFinal64Test.KSanteDauntlessDoublesFriendlyShieldAtItsBattlefield"
+      ],
+      "unverified_rules": "[Shield] (+1 :rb_might: while I'm a defender.)\nWhen I attack or defend, double the [Shield] of a unit you control here this turn.",
+      "review_note": "Engine code and focused scenarios authored; compiled gameplay and remaining interaction/edge-case audit required before acceptance."
     },
     "RAD-046/167": {
       "engine_id": 1082,
@@ -292,9 +306,14 @@
     },
     "RAD-123/167": {
       "engine_id": 1116,
-      "status": "pending",
-      "engine_scenarios": [],
-      "unverified_rules": "[Quick-Draw] (This has [Reaction]. When you play it, attach it to a unit you control.)\n[Equip] :rb_energy_1: (:rb_energy_1:: Attach this to a unit you control.)"
+      "status": "in_review",
+      "engine_scenarios": [
+        "RadianceFinal64Test.ProtectorsShieldQuickDrawAttachesAndGivesMight",
+        "RadianceFinal64Test.ProtectorsShieldEquipCostsOneEnergyNoPower",
+        "RadianceFinal64Test.ProtectorsShieldCanBeReequippedForOneEnergy"
+      ],
+      "unverified_rules": "[Quick-Draw] (This has [Reaction]. When you play it, attach it to a unit you control.)\n[Equip] :rb_energy_1: (:rb_energy_1:: Attach this to a unit you control.)",
+      "review_note": "Engine code and focused scenarios authored; compiled gameplay and remaining interaction/edge-case audit required before acceptance."
     },
     "RAD-124/167": {
       "engine_id": 1117,
@@ -304,9 +323,14 @@
     },
     "RAD-125/167": {
       "engine_id": 1118,
-      "status": "pending",
-      "engine_scenarios": [],
-      "unverified_rules": "You may kill a friendly unit as an additional cost to play me. If you do, I cost :rb_energy_2: less.\n[Deflect] (Opponents must pay :rb_rune_rainbow: to choose me with a spell or ability.)"
+      "status": "in_review",
+      "engine_scenarios": [
+        "RadianceFinal64Test.DuneDevourerKillsFriendlyUnitAsAdditionalPlayCostForEnergyDiscount",
+        "RadianceFinal64Test.DuneDevourerHasCorrectOptionalAdditionalCostAndDeflect",
+        "RadianceFinal64Test.DuneDevourerCanPayPrintedCostWithoutSacrificing"
+      ],
+      "unverified_rules": "You may kill a friendly unit as an additional cost to play me. If you do, I cost :rb_energy_2: less.\n[Deflect] (Opponents must pay :rb_rune_rainbow: to choose me with a spell or ability.)",
+      "review_note": "Engine code and focused scenarios authored; compiled gameplay and remaining interaction/edge-case audit required before acceptance."
     },
     "RAD-127/167": {
       "engine_id": 1119,
@@ -316,9 +340,12 @@
     },
     "RAD-129/167": {
       "engine_id": 1120,
-      "status": "pending",
-      "engine_scenarios": [],
-      "unverified_rules": "When you play me, look at the top 4 cards of your Main Deck. You may reveal from among them a unit or gear with Energy cost no more than :rb_energy_3: and with Power cost no more than :rb_rune_rainbow: and draw it. Recycle the rest."
+      "status": "in_review",
+      "engine_scenarios": [
+        "RadianceFinal64Test.TrifarianCaptainRevealsAndDrawsOnlyEligibleFromTopFour"
+      ],
+      "unverified_rules": "When you play me, look at the top 4 cards of your Main Deck. You may reveal from among them a unit or gear with Energy cost no more than :rb_energy_3: and with Power cost no more than :rb_rune_rainbow: and draw it. Recycle the rest.",
+      "review_note": "Engine code and focused scenarios authored; compiled gameplay and remaining interaction/edge-case audit required before acceptance."
     },
     "RAD-130/167": {
       "engine_id": 1121,
@@ -346,21 +373,30 @@
     },
     "RAD-135/167": {
       "engine_id": 1125,
-      "status": "pending",
-      "engine_scenarios": [],
-      "unverified_rules": "Play up to 3 units and/or gear from your trash, each with Energy cost no more than :rb_energy_3: and Power cost no more than :rb_rune_rainbow:, ignoring their costs."
+      "status": "in_review",
+      "engine_scenarios": [
+        "RadianceFinal64Test.RememberTheFallenPlaysEligibleTrashCardsButNotExpensiveUnits"
+      ],
+      "unverified_rules": "Play up to 3 units and/or gear from your trash, each with Energy cost no more than :rb_energy_3: and Power cost no more than :rb_rune_rainbow:, ignoring their costs.",
+      "review_note": "Engine code and focused scenarios authored; compiled gameplay and remaining interaction/edge-case audit required before acceptance."
     },
     "RAD-136/167": {
       "engine_id": 1126,
-      "status": "pending",
-      "engine_scenarios": [],
-      "unverified_rules": "[Deploy] (Play this only to a battlefield. When an opponent holds here, kill this.)\nWhen you play this, banish a unit here.\nWhen you hold here, kill this to play the banished card, ignoring its cost. (Tokens aren't cards.)"
+      "status": "in_review",
+      "engine_scenarios": [
+        "RadianceFinal64Test.DocksideLockUpBanishesNontokenUnitAndReplaysOnHold"
+      ],
+      "unverified_rules": "[Deploy] (Play this only to a battlefield. When an opponent holds here, kill this.)\nWhen you play this, banish a unit here.\nWhen you hold here, kill this to play the banished card, ignoring its cost. (Tokens aren't cards.)",
+      "review_note": "Engine code and focused scenarios authored; compiled gameplay and remaining interaction/edge-case audit required before acceptance."
     },
     "RAD-137/167": {
       "engine_id": 1127,
-      "status": "pending",
-      "engine_scenarios": [],
-      "unverified_rules": "When you play me or when I attack, you may discard 1 to kill a unit or gear."
+      "status": "in_review",
+      "engine_scenarios": [
+        "RadianceFinal64Test.MordekaiserDiscardsOneToKillTargetOnAttackTrigger"
+      ],
+      "unverified_rules": "When you play me or when I attack, you may discard 1 to kill a unit or gear.",
+      "review_note": "Engine code and focused scenarios authored; compiled gameplay and remaining interaction/edge-case audit required before acceptance."
     },
     "RAD-138/167": {
       "engine_id": 1128,
