@@ -9,7 +9,7 @@ permissions:
   contents: read
   actions: read
 concurrency:
-  group: repaired-optimized-58-round-robin-45203903480
+  group: repaired-optimized-58-round-robin-45205260187
   cancel-in-progress: false
 jobs:
   round-robin-qa:
@@ -30,7 +30,7 @@ jobs:
       - name: Use only successful immutable run 45181493632
         run: |
           set -euo pipefail
-          run_id=45203903480
+          run_id=45205260187
           for i in $(seq 1 180); do
             state=$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}" --jq '.status+" "+(.conclusion // "pending")')
             echo "OPTIMIZED_SEARCH_SOURCE ${run_id}: ${state}"
@@ -63,7 +63,7 @@ jobs:
       - name: Fetch the same-run full-Radiance engine
         uses: actions/download-artifact@v4
         with:
-          run-id: 45203903480
+          run-id: 45205260187
           github-token: ${{ github.token }}
           name: repaired-fullfield-engine-1123
           path: .
