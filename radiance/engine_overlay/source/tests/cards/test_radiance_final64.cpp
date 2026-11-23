@@ -102,6 +102,18 @@ TEST_F(RadianceFinal64Test, BurnAwayBanishesSmallEnemyAndBurnsExactlyTwo){
  EXPECT_EQ(state.player(P1).main_deck.size(),0u);
  EXPECT_EQ(state.player(P1).trash.size(),3u);
 }
+
+TEST_F(RadianceFinal64Test, DemacianIlluminatorsIgnoresEnemyUnitDeath){
+ auto illuminators=addUnit(P1,CardDefId{1122},3,0);
+ auto ally=addUnit(P1,kInvalidId,3,0);
+ auto enemy=addUnit(P2,kInvalidId,3,1);
+ withEngine([&](GameEngine& e){
+   e.testHook_executor().killObject(enemy);
+   settleLikeTheEngine(e);
+ });
+ EXPECT_EQ(state.getObject(illuminators).buff_count,0);
+ EXPECT_EQ(state.getObject(ally).buff_count,0);
+}
 TEST_F(RadianceFinal64Test, DemacianIlluminatorsBuffsAfterFriendlyUnitDies){
  addUnit(P1,CardDefId{1122},3,0);
  auto ally=addUnit(P1,kInvalidId,2,0);
@@ -120,6 +132,29 @@ TEST_F(RadianceFinal64Test, ExplosimianHoldCreatesThreeBombsAtOneBattlefield){
    }
  EXPECT_EQ(bombs,3);
  EXPECT_EQ(battlefields.size(),1u);
+}
+
+TEST_F(RadianceFinal64Test, ExplosimianBombDeathChainsAndDamagesEnemy){
+ auto monkey=addUnit(P1,CardDefId{1102},6,0);
+ auto enemy=addUnit(P2,kInvalidId,12,0);
+ EnginePathAgent chooseBattlefield(EnginePathAgent::script({0}));
+ fireTriggerThroughEngine(monkey,TriggerType::WhenIHold,&chooseBattlefield);
+ std::vector<GameObjectId> bombs;
+ for(const auto& [id,o]:state.objects.onBoard())
+   if(o.controller==P1&&o.isGear()&&o.name=="Bomb"&&o.isAtBattlefield())
+     bombs.push_back(id);
+ ASSERT_EQ(bombs.size(),3u);
+ EnginePathAgent chooseEnemy(EnginePathAgent::choosing(enemy));
+ withEngine([&](GameEngine& e){
+   e.testHook_executor().killObject(bombs.front());
+   settleLikeTheEngine(e);
+ },&chooseEnemy);
+ EXPECT_GE(state.getObject(enemy).damage_marked,2)
+   << "Bomb death must trigger its printed damage";
+ int surviving=0;
+ for(const auto& [id,o]:state.objects.onBoard())
+   if(o.controller==P1&&o.isGear()&&o.name=="Bomb"&&o.isAtBattlefield())++surviving;
+ EXPECT_EQ(surviving,0) << "Bomb death must kill friendly Bombs at the same battlefield";
 }
 TEST_F(RadianceFinal64Test, EvelynnScoresOnHoldOnlyWithFriendlyFacedownHere){
  state.battlefields[0].controller=P1;
@@ -149,6 +184,17 @@ TEST_F(RadianceFinal64Test, PitilessStalkerExhaustsToStunEnemy){
  },&choose,nullptr,P1);
  EXPECT_TRUE(state.getObject(stalker).is_exhausted);
  EXPECT_TRUE(state.getObject(enemy).is_stunned);
+}
+
+TEST_F(RadianceFinal64Test, DrakehoundPackmasterStealsAndPlaysOpponentsTopCardFree){
+ auto stolen=addToDeck(P2,CardDefId{1084}); // Opponent's 3-Energy unit.
+ auto packmaster=addToHand(P1,CardDefId{1074});
+ EnginePathAgent accept(EnginePathAgent::accepting());
+ playThroughEngine(packmaster,&accept);
+ EXPECT_EQ(state.player(P2).main_deck.size(),0u);
+ EXPECT_TRUE(state.getObject(stolen).location.has_value());
+ EXPECT_EQ(state.getObject(stolen).controller,P1)
+    << "The card must be played by Packmaster's controller, not by its owner";
 }
 TEST_F(RadianceFinal64Test, FirebrandRaiderEntersReadyAndReadiesEnemiesOnPlay){
  auto enemy=addUnit(P2,kInvalidId,2,0);
@@ -261,6 +307,35 @@ TEST_F(RadianceFinal64Test, ResplendentRostrumExhaustDrawChannelAndBuff){
  EXPECT_EQ(state.getObject(rune).zone,ZoneType::Base);
  EXPECT_TRUE(state.getObject(rune).is_exhausted);
  EXPECT_EQ(state.getObject(ally).temp_might_bonus,3);
+}
+
+TEST_F(RadianceFinal64Test, ScrutinizingScopeCorrectUnitGuessRecyclesTop){
+ auto scope=addToHand(P1,CardDefId{1088});
+ playThroughEngine(scope);
+ auto top=addToDeck(P1,CardDefId{1084}); // Unit.
+ state.player(P1).rune_pool.energy=1;
+ Intent act;act.type=IntentType::ActivateAbility;act.player=P1;act.ability_source=scope;
+ EnginePathAgent unitGuess(EnginePathAgent::script({0})); // Opponent guesses Unit.
+ withEngineDefaultTurn([&](GameEngine& e){
+   e.testHook_executeIntent(act);settleLikeTheEngine(e);
+ },nullptr,&unitGuess,P1);
+ EXPECT_TRUE(state.getObject(scope).is_exhausted);
+ EXPECT_FALSE(inHand(P1,top));
+ EXPECT_EQ(state.player(P1).main_deck.size(),1u);
+ EXPECT_EQ(state.getObject(top).zone,ZoneType::MainDeck);
+}
+TEST_F(RadianceFinal64Test, ScrutinizingScopeWrongGuessDrawsTop){
+ auto scope=addToHand(P1,CardDefId{1088});
+ playThroughEngine(scope);
+ auto top=addToDeck(P1,CardDefId{1084}); // Unit.
+ state.player(P1).rune_pool.energy=1;
+ Intent act;act.type=IntentType::ActivateAbility;act.player=P1;act.ability_source=scope;
+ EnginePathAgent gearGuess(EnginePathAgent::script({1})); // Opponent guesses Gear.
+ withEngineDefaultTurn([&](GameEngine& e){
+   e.testHook_executeIntent(act);settleLikeTheEngine(e);
+ },nullptr,&gearGuess,P1);
+ EXPECT_TRUE(inHand(P1,top));
+ EXPECT_EQ(state.player(P1).main_deck.size(),0u);
 }
 TEST_F(RadianceFinal64Test, StrigianOraclePredictsWhenExhausted){
  auto oracle=addUnit(P1,CardDefId{1083},2,0);
@@ -497,6 +572,22 @@ TEST_F(RadianceFinal64Test, SpiritOfForgeReturnsGearAsCostAndGainsItsEnergyAsMig
  EXPECT_FALSE(state.getObject(spirit).is_exhausted);
  EXPECT_EQ(state.getObject(spirit).temp_might_bonus,2);
 }
+
+TEST_F(RadianceFinal64Test, ZeroPointInflectionAtTenCardsDiscardsAndGivesPoint){
+ auto gear=addToHand(P1,CardDefId{1092});
+ playThroughEngine(gear);
+ for(int i=0;i<9;++i)addToHand(P1,CardDefId{1084});
+ auto incoming=addToDeck(P1,CardDefId{1070});
+ const auto before=state.player(P2).score;
+ withEngine([&](GameEngine& e){
+   e.testHook_executor().drawCards(P1,1);
+   settleLikeTheEngine(e);
+ });
+ EXPECT_FALSE(state.getObject(gear).location.has_value());
+ EXPECT_TRUE(state.player(P1).hand.empty());
+ EXPECT_EQ(state.player(P2).score,before+1);
+ EXPECT_FALSE(inHand(P1,incoming));
+}
 TEST_F(RadianceFinal64Test, ZeroPointInflectionDrawsTwoAfterPlayingAnotherCard){
  for(int i=0;i<3;i++)addToDeck(P1,CardDefId{1084});
  auto inflection=addToHand(P1,CardDefId{1092});
@@ -546,6 +637,18 @@ TEST_F(RadianceFinal64Test, DemonShadeMovesFriendlyUnitToOpenBattlefield){
  auto shade=addToHand(P1,CardDefId{1104});
  playThroughEngine(shade);
  EXPECT_TRUE(state.getObject(friendUnit).isAtBattlefield());
+}
+
+TEST_F(RadianceFinal64Test, DemonShadeWithoutOpenBattlefieldGrantsGanking){
+ auto friendly=addUnit(P1,kInvalidId,3,0);
+ addUnit(P2,kInvalidId,3,1);
+ state.battlefields[0].controller=P1;
+ state.battlefields[1].controller=P2;
+ auto spell=addToHand(P1,CardDefId{1104});
+ EnginePathAgent choose(EnginePathAgent::choosing(friendly));
+ playThroughEngine(spell,&choose);
+ EXPECT_TRUE(state.getObject(friendly).hasKeyword(Keyword::Ganking))
+   << "When no battlefield is open, chosen friendly unit gets Ganking";
 }
 TEST_F(RadianceFinal64Test, LuluCanChangeAnotherUnitsBaseMightAfterMove){
  auto lulu=addUnit(P1,CardDefId{1109},2,-1);
@@ -703,6 +806,18 @@ TEST_F(RadianceFinal64Test, DocksideLockUpBanishesNontokenUnitAndReplaysOnHold){
  EXPECT_FALSE(state.getObject(lock).location.has_value());
  EXPECT_TRUE(state.getObject(target).location.has_value());
 }
+
+TEST_F(RadianceFinal64Test, DocksideLockUpWithoutBanishedCardCannotSacrificeForFreePlay){
+ auto lock=addToHand(P1,CardDefId{1126});
+ auto& hand=state.player(P1).hand;
+ hand.erase(std::remove(hand.begin(),hand.end(),lock),hand.end());
+ state.getObject(lock).zone=ZoneType::BattlefieldZone;
+ state.getObject(lock).location=BattlefieldLocation{state.battlefields[0].id};
+ fireTriggerThroughEngine(lock,TriggerType::WhenYouHoldHere);
+ EXPECT_TRUE(state.getObject(lock).isAtBattlefield())
+   << "A hold trigger without a banished card must not sacrifice the Lock-Up";
+ EXPECT_EQ(state.getObject(lock).card_counters.count("__dockside_banished_card"),0u);
+}
 TEST_F(RadianceFinal64Test, MordekaiserDiscardsOneToKillTargetOnAttackTrigger){
  auto victim=addUnit(P2,kInvalidId,2,0);
  auto morde=addUnit(P1,CardDefId{1127},8,0);
@@ -816,6 +931,28 @@ TEST_F(RadianceFinal64Test, WhirlingTwirligigExhaustsToPlayAnExhaustedGold){
    }
  }
  EXPECT_EQ(gold,1);
+}
+
+TEST_F(RadianceFinal64Test, ClocktowerGuardianDeathknellPlaysBanishmentCardWithoutEnergy){
+ auto guardian=addUnit(P1,CardDefId{1090},8,0);
+ auto freeUnit=addToDeck(P1,CardDefId{1084});
+ EnginePathAgent accept(EnginePathAgent::accepting());
+ fireTriggerThroughEngine(guardian,TriggerType::WhenIDie,&accept);
+ EXPECT_TRUE(state.getObject(freeUnit).location.has_value())
+   << "Deathknell must offer the banished top card as an Energy-free play";
+ EXPECT_EQ(state.player(P1).main_deck.size(),0u);
+}
+TEST_F(RadianceFinal64Test, ClocktowerGuardianPlayPredictPreservesAllThreeDeckCards){
+ auto a=addToDeck(P1,CardDefId{1084});
+ auto b=addToDeck(P1,CardDefId{1070});
+ auto c=addToDeck(P1,CardDefId{1090});
+ auto guardian=addToHand(P1,CardDefId{1090});
+ playThroughEngine(guardian);
+ const auto& deck=state.player(P1).main_deck;
+ EXPECT_EQ(deck.size(),3u);
+ EXPECT_EQ(std::count(deck.begin(),deck.end(),a),1);
+ EXPECT_EQ(std::count(deck.begin(),deck.end(),b),1);
+ EXPECT_EQ(std::count(deck.begin(),deck.end(),c),1);
 }
 TEST_F(RadianceFinal64Test, RavingWitnessRecyclingTopCardDoesNotDuplicateDeckObject){
  auto revealed=addToDeck(P1,CardDefId{1116}); // Gear, not a Mighty unit
