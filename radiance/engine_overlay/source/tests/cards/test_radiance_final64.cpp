@@ -158,6 +158,24 @@ TEST_F(RadianceFinal64Test, FirebrandRaiderEntersReadyAndReadiesEnemiesOnPlay){
  EXPECT_FALSE(state.getObject(raider).is_exhausted);
  EXPECT_FALSE(state.getObject(enemy).is_exhausted);
 }
+TEST_F(RadianceFinal64Test, FirebrandRaiderMakesOpponentsNewUnitEnterReady){
+ auto raider=addUnit(P1,CardDefId{1075},6,-1);
+ ASSERT_TRUE(state.getObject(raider).location.has_value());
+ withEngine([&](GameEngine& e){e.testHook_recalculateAuras();});
+ auto opponentUnit=addToHand(P2,CardDefId{1120});
+ playThroughEngine(opponentUnit);
+ EXPECT_FALSE(state.getObject(opponentUnit).is_exhausted)
+   << "RAD-019 affects opposing units, not only the controller's";
+}
+TEST_F(RadianceFinal64Test, FirebrandRaiderPreventsUnitAwakenEvenForOpponent){
+ auto raider=addUnit(P2,CardDefId{1075},6,-1);
+ auto yours=addUnit(P1,kInvalidId,3,-1);
+ state.getObject(yours).is_exhausted=true;
+ ASSERT_TRUE(state.getObject(raider).location.has_value());
+ withEngine([&](GameEngine& e){e.testHook_awakenPhase();},nullptr,nullptr,P1);
+ EXPECT_TRUE(state.getObject(yours).is_exhausted)
+   << "RAD-019 stops every unit's ready in the Awaken Phase";
+}
 TEST_F(RadianceFinal64Test, FerrymanMovesAnotherUnitFromItsBattlefieldToBase){
  auto ally=addUnit(P1,kInvalidId,2,0);
  auto ferryman=addToHand(P1,CardDefId{1077});
