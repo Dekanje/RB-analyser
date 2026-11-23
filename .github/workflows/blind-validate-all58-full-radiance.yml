@@ -1,0 +1,142 @@
+name: Independent blind all-57-opponent validation of 58 Radiance deck upgrades
+on:
+  push:
+    branches: ['radiance/final64-zone-consistency-fix-2026-11-23']
+    paths:
+      - '.github/workflows/blind-validate-all58-full-radiance.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  independent-blind-all-opponents:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 85
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download completed 58-deck search (frozen SHA provenance)
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 45172429368
+          github-token: ${{ github.token }}
+          name: optimized-58-independent-radiance-bo3
+          path: results/selected
+      - name: Download actual full-Radiance game engine
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 45172429368
+          github-token: ${{ github.token }}
+          name: independent-58-compiled-engine
+          path: .
+      - name: Build exact legal baselines and verify all 58 source/selected SHA receipts
+        run: |
+          python3 - <<'PY'
+          import json,pathlib,sys,hashlib
+          sys.path.insert(0,'scripts')
+          from run_actual_games import decode,header
+          from legal_candidate import make_legal_candidate
+          src=decode()
+          bases=make_legal_candidate(src,pathlib.Path('results/baselines/baselines'))
+          chosen=json.loads(pathlib.Path('results/selected/all_58_trials.json').read_text())
+          selected={header(p):p for p in pathlib.Path('results/selected/selected_decks').glob('*.txt')}
+          assert len(chosen)==len(bases)==len(selected)==58
+          records=[]
+          for entry in chosen:
+              legend=entry['legend']
+              base=bases[legend];final=selected[legend]
+              sha=lambda f:hashlib.sha256(f.read_bytes()).hexdigest()
+              assert sha(base)==entry['original_sha256'],legend+' baseline drift'
+              assert sha(final)==entry['effective_sha256'],legend+' selected drift'
+              records.append({'legend':legend,'changed':entry['selected'],
+                              'original_sha256':entry['original_sha256'],
+                              'selected_sha256':entry['effective_sha256']})
+          assert len([x for x in records if x['changed']])==9
+          pathlib.Path('results/selected/full_trials.json').write_text(json.dumps(records,indent=2))
+          print('BLIND_PREFLIGHT_58_VALIDATED 9_PROVISIONAL_UPGRADES',flush=True)
+          PY
+      - name: Install compiled engine runtime libraries
+        timeout-minutes: 12
+        run: |
+          set -euo pipefail
+          if ! sudo env DEBIAN_FRONTEND=noninteractive timeout -k 10s 55s apt-get -o Acquire::Retries=0 update -qq; then
+            echo "::warning::using cached package indexes"
+          fi
+          sudo env DEBIAN_FRONTEND=noninteractive timeout 360s apt-get -o Acquire::Retries=2 install -y -qq --no-install-recommends libboost-program-options1.83.0 libboost-filesystem1.83.0 libboost-system1.83.0 libboost-context1.83.0
+          chmod +x engine_build/riftbound
+          if ldd engine_build/riftbound | grep -q "not found"; then exit 1; fi
+      - name: Blind independent ISMCTS BO3 across all other 57 legends, both seats
+        timeout-minutes: 69
+        run: |
+          python3 -u scripts/blind_validate_radiance.py \
+            --selected results/selected --baselines results/baselines \
+            --engine engine_build/riftbound --output results/blind-validation \
+            --all-opponents --repetitions 2 --workers 8 --timeout 75 \
+            --agent ismcts:sims=24 --seed 2026112399191
+      - name: Holm-adjust decisions and produce no-regret 58-deck final roster
+        run: |
+          python3 - <<'PY'
+          import json,pathlib,shutil,hashlib,csv
+          root=pathlib.Path('results')
+          summary=json.loads((root/'blind-validation/blind_summary.json').read_text())
+          rows=summary['decisions']
+          assert len(rows)==9,'Missing changed candidate or blind outcome'
+          m=len(rows);order=sorted(range(m),key=lambda k:rows[k]['mcnemar_exact_two_sided_p'])
+          previous=0.0
+          for rank,i in enumerate(order):
+              previous=max(previous,(m-rank)*rows[i]['mcnemar_exact_two_sided_p'])
+              rows[i]['holm_adjusted_p']=min(1.0,round(previous,6))
+              rows[i]['confirmed']=bool(
+                  rows[i]['incomplete_paired_scenarios']==0
+                  and rows[i]['candidate_wins']>rows[i]['baseline_wins']
+                  and rows[i]['holm_adjusted_p']<0.05)
+          lookup={r['legend']:r for r in rows}
+          expected=json.loads((root/'selected/all_58_trials.json').read_text())
+          source=root/'baselines/baselines';draft=root/'selected/selected_decks'
+          out=root/'validated_58_full_radiance';deck_out=out/'selected_decks'
+          deck_out.mkdir(parents=True,exist_ok=True)
+          validated=[]
+          for rec in expected:
+              fname=rec['selected_file'] if 'selected_file' in rec else None
+              if fname is None:
+                  # Existing optimizer uses legend source filename, not chosen slug.
+                  from pathlib import Path
+                  import re
+                  fname=next(p.name for p in source.glob('*.txt')
+                             if re.search(r'^Legend:\s*\n1 '+re.escape(rec['legend'])+r'$',p.read_text(),re.M))
+              base=source/fname;candidate=draft/fname
+              accept=bool(lookup.get(rec['legend'],{}).get('confirmed',False))
+              src=candidate if accept else base
+              assert src.is_file()
+              shutil.copy2(src,deck_out/fname)
+              validated.append({'legend':rec['legend'],'first_pass_proposal':rec['selected'],
+                                'independently_confirmed':accept,'file':fname,
+                                'final_sha256':hashlib.sha256(src.read_bytes()).hexdigest(),
+                                'decision':lookup.get(rec['legend'])})
+          assert len(validated)==len(list(deck_out.glob('*.txt')))==58
+          meta={'legends':58,'provisionally_changed':9,
+                'confirmed_holm_5pct':sum(r['independently_confirmed'] for r in validated),
+                'no_unverified_substitution_adopted':True,
+                'full_radiance_compiled':True,
+                'field':'57 other independently frozen legal baselines',
+                'fixed_deck_bo3':True,'sideboards_optimized':False,
+                'optimality_proven':False}
+          (out/'summary.json').write_text(json.dumps(meta,indent=2))
+          (out/'all_58_decisions.json').write_text(json.dumps(validated,indent=2))
+          with (out/'all_58_decisions.csv').open('w',newline='') as f:
+              w=csv.writer(f)
+              w.writerow(['legend','accepted','file','final_sha256','blind_delta_pp','holm_p'])
+              for r in validated:
+                  d=r['decision'] or {}
+                  w.writerow([r['legend'],r['independently_confirmed'],r['file'],
+                              r['final_sha256'],d.get('difference_pp'),d.get('holm_adjusted_p')])
+          print('BLIND_VALIDATION_58_FINAL',json.dumps(meta),flush=True)
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: final-58-blind-validated-decklists
+          path: |
+            results/validated_58_full_radiance/
+            results/blind-validation/
+          retention-days: 30
+          if-no-files-found: ignore
