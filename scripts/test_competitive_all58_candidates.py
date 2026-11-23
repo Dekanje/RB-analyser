@@ -25,13 +25,13 @@ class All58EvolutionTests(unittest.TestCase):
                 "neeko_additional_legends":[
                     "Loose Cannon","Blind Monk","Nine-Tailed Fox"],
             }
-            path.write_text("MainDeck:\\n1 Neeko, Blending In\\n")
+            path.write_text("MainDeck:\n1 Neeko, Blending In\n")
             self.assertFalse(has_valid_neeko_registration(record,path))
             path.write_text(
-                "MainDeck:\\n1 Neeko, Blending In\\n"
-                "Battlefields:\\n1 A\\n\\nSideboard:\\n"
-                "\\nNeekoLegends:\\n1 Loose Cannon\\n1 Blind Monk\\n"
-                "1 Nine-Tailed Fox\\n")
+                "MainDeck:\n1 Neeko, Blending In\n"
+                "Battlefields:\n1 A\n\nSideboard:\n"
+                "\nNeekoLegends:\n1 Loose Cannon\n1 Blind Monk\n"
+                "1 Nine-Tailed Fox\n")
             self.assertTrue(has_valid_neeko_registration(record,path))
             record["neeko_additional_legends"]=["Loose Cannon","Loose Cannon","Blind Monk"]
             self.assertFalse(has_valid_neeko_registration(record,path))
