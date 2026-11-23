@@ -313,9 +313,13 @@
     },
     "RAD-094/167": {
       "engine_id": 1102,
-      "status": "pending",
-      "engine_scenarios": [],
-      "unverified_rules": "When I hold, play three Bomb gear tokens to a single battlefield. (They have [Deploy]. When each dies, deal 2 to an enemy there and kill your other Bombs there.)"
+      "status": "accepted",
+      "engine_scenarios": [
+        "RadianceFinal64Test.ExplosimianHoldCreatesThreeBombsAtOneBattlefield",
+        "RadianceFinal64Test.ExplosimianBombDeathChainsAndDamagesEnemy"
+      ],
+      "verified_rules": "When I hold, play three Bomb gear tokens to a single battlefield. (They have [Deploy]. When each dies, deal 2 to an enemy there and kill your other Bombs there.)",
+      "review_note": "Printed hold-triggered creation of exactly three Deploy Bombs at one battlefield; killing any one triggers all three bombs' deaths, precisely six damage to enemy and zero surviving Bombs at that battlefield. Source audited and five targeted tests passed CI 45130151465. Final64 gate remains fail-closed."
     },
     "RAD-098/167": {
       "engine_id": 1103,
@@ -535,12 +539,14 @@
     },
     "RAD-136/167": {
       "engine_id": 1126,
-      "status": "in_review",
+      "status": "accepted",
       "engine_scenarios": [
-        "RadianceFinal64Test.DocksideLockUpBanishesNontokenUnitAndReplaysOnHold"
+        "RadianceFinal64Test.DocksideLockUpBanishesNontokenUnitAndReplaysOnHold",
+        "RadianceFinal64Test.DocksideLockUpWithoutBanishedCardCannotSacrificeForFreePlay",
+        "RadianceFinal64Test.DocksideLockUpCannotBanishTokenUnit"
       ],
-      "unverified_rules": "[Deploy] (Play this only to a battlefield. When an opponent holds here, kill this.)\nWhen you play this, banish a unit here.\nWhen you hold here, kill this to play the banished card, ignoring its cost. (Tokens aren't cards.)",
-      "review_note": "Engine code and focused scenarios authored; compiled gameplay and remaining interaction/edge-case audit required before acceptance."
+      "verified_rules": "[Deploy] (Play this only to a battlefield. When an opponent holds here, kill this.)\nWhen you play this, banish a unit here.\nWhen you hold here, kill this to play the banished card, ignoring its cost. (Tokens aren't cards.)",
+      "review_note": "Printed on-play banishment of a nontoken unit and hold-triggered kill-as-cost to play that card for free validated by actual chain engine; missing-banish-record cannot spend cost, token is invalid target. Strict three-case CI 45130151465 passed. Final64 gate remains fail-closed."
     },
     "RAD-137/167": {
       "engine_id": 1127,
