@@ -455,6 +455,25 @@ TEST_F(RadianceFinal64Test, SeraphicWyvernAddsOneExhaustedRuneToReadyChannel){
  EXPECT_EQ(exhausted,1);
  EXPECT_EQ(state.player(P1).rune_deck.size(),1u);
 }
+TEST_F(RadianceFinal64Test, DuneDevourerCanPayPrintedCostWithoutSacrificing){
+ auto devourer=addToHand(P1,CardDefId{1118});
+ state.player(P1).rune_pool.energy=7;
+ state.player(P1).rune_pool.universal_power=1;
+ playThroughEngine(devourer,nullptr,std::nullopt,nullptr,false);
+ EXPECT_TRUE(state.getObject(devourer).location.has_value());
+ EXPECT_EQ(state.getObject(devourer).zone,ZoneType::Base);
+ EXPECT_EQ(state.player(P1).rune_pool.energy,0);
+}
+TEST_F(RadianceFinal64Test, ProtectorsShieldCanBeReequippedForOneEnergy){
+ auto first=addUnit(P1,kInvalidId,2,-1);
+ auto second=addUnit(P1,kInvalidId,3,-1);
+ auto gear=addToHand(P1,CardDefId{1116});
+ playThroughEngine(gear);
+ ASSERT_EQ(state.getObject(gear).attached_to,std::optional<GameObjectId>{first});
+ state.player(P1).rune_pool.energy+=1;
+ EXPECT_TRUE(equipThroughEngine(gear,second));
+ EXPECT_EQ(state.getObject(gear).attached_to,std::optional<GameObjectId>{second});
+}
 TEST_F(RadianceFinal64Test, KSanteDauntlessDoublesFriendlyShieldAtItsBattlefield){
  auto ksante=addUnit(P1,CardDefId{1081},4,0);
  ASSERT_EQ(state.getObject(ksante).shield_value,1);
