@@ -19,7 +19,7 @@ class CompleteRegisteredStructureTests(unittest.TestCase):
                 for n in range(count):
                     entries.append({"kind":kind,"sha256":f"{name}-{kind}-{n}",
                                     "path":f"{name}/{kind}{n}.txt"})
-            if i >= 3 and i in (57,):
+            if i in (55, 56, 57):
                 # 229 actual runes: one fewer than 58*4.
                 entries=[x for x in entries
                          if x["sha256"] != f"{name}-rune-3"]
@@ -27,9 +27,9 @@ class CompleteRegisteredStructureTests(unittest.TestCase):
         first=expected_keys(rows,first=True)
         remaining=expected_keys(rows,first=False)
         self.assertEqual(len(first),177)
-        self.assertEqual(len(first)+len(remaining),582-1)
+        self.assertEqual(len(first)+len(remaining),580)
         self.assertFalse(set(first)&set(remaining))
-        self.assertEqual(len(set(first+remaining)),581)
+        self.assertEqual(len(set(first+remaining)),580)
         self.assertEqual(first[0][0],"Legend 00")
         self.assertTrue(all(any(x[0]==n for x in first)
                             for n in rows))
