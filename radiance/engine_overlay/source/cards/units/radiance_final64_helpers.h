@@ -100,6 +100,21 @@ inline GameObjectId f64RevealTop(CardContext& c,PlayerId owner){
  return top;
 }
 
+// A reveal only exposes the top card. The card remains in Main Deck until
+// we explicitly take it. EffectExecutor::recycleCards does NOT remove cards
+// already present in a Main Deck, so passing the revealed top directly would
+// duplicate its object in the deck and eventually leak its hidden identity
+// when one copy is drawn. Take it first; the public reveal has already
+// granted both players knowledge of its identity.
+inline void f64RecycleRevealedTop(CardContext& c,PlayerId owner,GameObjectId top){
+ if(top==kInvalidId || !c.state.objectExists(top))return;
+ if(c.state.getObject(top).zone!=ZoneType::MainDeck)return;
+ auto& current=c.state.player(owner).main_deck;
+ if(std::find(current.begin(),current.end(),top)==current.end())return;
+ if(!deck::take(c.state,top,deck::Place::Held,knowledge::everyone()))return;
+ c.executor.recycleCards(owner,{top},knowledge::everyone());
+}
+
 inline int f64TotalFriendlyExhausted(const GameState& s,PlayerId p,GameObjectId exclude=kInvalidId){
  int n=0;
  for(const auto& [id,o]:s.objects.onBoard())
