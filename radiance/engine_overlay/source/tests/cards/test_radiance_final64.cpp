@@ -207,9 +207,14 @@ TEST_F(RadianceFinal64Test, CoalescedEnergyRecyclesRunesAndChannelsThemExhausted
  auto champion=addUnit(P1,CardDefId{1073},4,-1);
  fireTriggerThroughEngine(champion,TriggerType::AtEndOfTurn);
  int exhausted=0;
+ int totalRunes=0;
  for(const auto& [id,o]:state.objects.onBoard())
-   if(o.isRune()&&o.controller==P1&&o.is_exhausted)++exhausted;
+   if(o.isRune()&&o.controller==P1){
+     ++totalRunes;
+     if(o.is_exhausted)++exhausted;
+   }
  EXPECT_EQ(exhausted,4);
+ EXPECT_EQ(totalRunes,4) << "The four previous runes must have been recycled, not duplicated";
 }
 TEST_F(RadianceFinal64Test, CataclysmBlocksOpponentSpellsAndMovesIntoOccupiedEnemyBattlefield){
  const auto own=addUnit(P1,kInvalidId,3,-1);
