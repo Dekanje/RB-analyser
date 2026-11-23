@@ -8,6 +8,7 @@ import unittest
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from evolutionary_candidates import (
     generate_candidate, playable_pool, validate_main,
+    registered_neeko_deck,
 )
 
 def card(name, kind="unit", cost=2, supertype=None, domains=None,
@@ -37,15 +38,18 @@ class EvolutionaryCandidateTests(unittest.TestCase):
         self.byname["Signature New"] = card("Signature New",supertype="Signature")
         self.byname["Neeko, Blending In"] = card(
             "Neeko, Blending In",supertype="champion",domains=[])
+        for name in ("Loose Cannon","Nine-Tailed Fox","Blind Monk",
+                     "Relentless Storm"):
+            self.byname[name]=card(name,kind="legend",domains=[])
         self.domains = {"fury"}
         self.pop = collections.Counter(self.main)
         self.pool = playable_pool(self.byname,self.domains)
 
     def test_legal_pool_filters_prohibited_entries(self):
         names = {c["name"] for c in self.pool}
-        for disallowed in ("Banned New","Off Domain","Signature New",
-                           "Neeko, Blending In"):
+        for disallowed in ("Banned New","Off Domain","Signature New"):
             self.assertNotIn(disallowed,names)
+        self.assertIn("Neeko, Blending In",names)
         self.assertIn("Unique New", names)
         self.assertIn("New Card 01", names)
 
@@ -86,6 +90,27 @@ class EvolutionaryCandidateTests(unittest.TestCase):
         self.assertNotIn("Banned New",main)
         self.assertNotIn("Off Domain",main)
         validate_main(self.main,main,self.side,self.byname,self.domains)
+
+    def test_neeko_registration_always_supplies_three_different_legends(self):
+        original = ("Legend:\n1 Jinx, Loose Cannon\n\n"
+                    "Champion:\n1 Jinx, Supercharged\n\n"
+                    "MainDeck:\n39 Base\n\nBattlefields:\n1 A\n1 B\n1 C\n\n"
+                    "Runes:\n12 Rune\n\nSideboard:\n")
+        counts = collections.Counter({"Base":38,"Neeko, Blending In":1})
+        output, chosen = registered_neeko_deck(
+            original,counts,"Jinx, Loose Cannon",self.byname
+        )
+        self.assertEqual(chosen,["Nine-Tailed Fox","Blind Monk",
+                                 "Relentless Storm"])
+        self.assertIn("NeekoLegends:\n1 Nine-Tailed Fox\n1 Blind Monk\n"
+                      "1 Relentless Storm\n",output)
+        self.assertNotIn("1 Loose Cannon\n",output.split("NeekoLegends:")[1])
+        output2, chosen2=registered_neeko_deck(
+            original,collections.Counter({"Base":39}),
+            "Jinx, Loose Cannon",self.byname
+        )
+        self.assertEqual(chosen2,[])
+        self.assertNotIn("NeekoLegends",output2)
 
     def test_different_random_seeds_generate_diversity(self):
         seen = set()
