@@ -455,6 +455,39 @@ TEST_F(RadianceFinal64Test, SeraphicWyvernAddsOneExhaustedRuneToReadyChannel){
  EXPECT_EQ(exhausted,1);
  EXPECT_EQ(state.player(P1).rune_deck.size(),1u);
 }
+TEST_F(RadianceFinal64Test, WhirlingTwirligigExhaustsToPlayAnExhaustedGold){
+ auto source=addToHand(P1,CardDefId{1076});
+ playThroughEngine(source);
+ Intent act;act.type=IntentType::ActivateAbility;act.player=P1;
+ act.ability_source=source;act.ability_index=0;
+ withEngineDefaultTurn([&](GameEngine& e){
+   e.testHook_executeIntent(act);settleLikeTheEngine(e);
+ },nullptr,nullptr,P1);
+ EXPECT_TRUE(state.getObject(source).is_exhausted);
+ int gold=0;
+ for(const auto& [id,o]:state.objects.onBoard()){
+   if(o.controller==P1&&o.card_def_id==CardDefId{326}&&o.isGear()){
+     ++gold;EXPECT_TRUE(o.is_exhausted);
+   }
+ }
+ EXPECT_EQ(gold,1);
+}
+TEST_F(RadianceFinal64Test, WhirlingTwirligigSacrificesUnitAsCostToCreateMech){
+ auto sacrifice=addUnit(P1,kInvalidId,2,-1);
+ auto source=addToHand(P1,CardDefId{1076});
+ playThroughEngine(source);
+ Intent act;act.type=IntentType::ActivateAbility;act.player=P1;
+ act.ability_source=source;act.ability_index=2;
+ withEngineDefaultTurn([&](GameEngine& e){
+   e.testHook_executeIntent(act);settleLikeTheEngine(e);
+ },nullptr,nullptr,P1);
+ EXPECT_TRUE(state.getObject(source).is_exhausted);
+ EXPECT_FALSE(state.getObject(sacrifice).location.has_value());
+ int mechs=0;
+ for(const auto& [id,o]:state.objects.onBoard())
+   if(o.controller==P1&&o.name=="Mech"&&o.isUnit()&&o.current_might==3)++mechs;
+ EXPECT_EQ(mechs,1);
+}
 TEST_F(RadianceFinal64Test, RivenBrokenBladeBuffAndStunAreDistinctModesThisTurn){
  auto riven=addUnit(P1,CardDefId{1079},4,0);
  auto enemy=addUnit(P2,kInvalidId,4,0);
