@@ -1827,6 +1827,36 @@ TEST_F(RadianceFinal64Test, AkaliThirdMoveDoesNotBanishOrAdd){
  EXPECT_EQ(state.player(P1).main_deck.size(),deck);
 }
 
+
+TEST_F(RadianceFinal64Test, OriannaBattlefieldAuraDiscountsGearEnergyAndPower){
+ auto orianna=addUnit(P1,CardDefId{1091},5,0);
+ auto gear=addToHand(P1,CardDefId{1080});
+ state.player(P1).rune_pool.energy=3; // printed 4
+ state.player(P1).rune_pool.universal_power=1; // printed 2
+ withEngine([&](GameEngine& e){
+   e.testHook_recalculateAuras();
+   const auto& mods=e.mutableState().player(P1).cost_modifiers;
+   EXPECT_TRUE(std::any_of(mods.begin(),mods.end(),[&](const auto& m){
+     return m.source==orianna&&m.gear_only&&m.energy_reduction==1&&m.power_reduction==1;
+   }));
+   EXPECT_TRUE(e.testHook_payCardCost(P1,gear));
+ });
+ EXPECT_EQ(state.player(P1).rune_pool.energy,0);
+ EXPECT_EQ(state.player(P1).rune_pool.universal_power,0);
+}
+TEST_F(RadianceFinal64Test, OriannaAuraNotGrantedFromBaseOrToOpponent){
+ addUnit(P1,CardDefId{1091},5,-1);
+ auto gear=addToHand(P2,CardDefId{1080});
+ state.player(P2).rune_pool.energy=3;
+ state.player(P2).rune_pool.universal_power=1;
+ withEngine([&](GameEngine& e){
+   e.testHook_recalculateAuras();
+   EXPECT_FALSE(e.testHook_payCardCost(P2,gear));
+ });
+ EXPECT_EQ(state.player(P2).rune_pool.energy,3);
+ EXPECT_EQ(state.player(P2).rune_pool.universal_power,1);
+}
+
 TEST_F(RadianceFinal64Test, SixtyFourUniqueCardDefinitionsHaveCanonicalMetadata){
  ASSERT_EQ(expected.size(),64u);
  std::set<int> ids,numbers;std::set<std::string> public_codes;
