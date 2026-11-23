@@ -987,4 +987,33 @@ payment_block=payment_block.replace(payment_anchor,payment_patch);
 og=og[:payment_start]+payment_block+og[payment_end:]
 orianna_engine.write_text(og)
 
+# Deterministic rune payment (the 60-pair hidden-information regression).
+# The pinned resource::payIn default used lowest GameObjectId as the tie
+# breaker even between DIFFERENT rune cards. Salting object IDs can then
+# exhaust/recycle a different rune for Gravity Field's [1][A] movement tax.
+# Sort by observable rune identity first, by ID only for equal copies.
+resource_path=engine/"src/engine/resource_payment.h"
+resources=resource_path.read_text()
+rune_begin=resources.index("inline std::vector<GameObjectId> runesInBase(")
+rune_end=resources.index("/// Energy `player` could pay",rune_begin)
+rune_block=resources[rune_begin:rune_end]
+old_sort="    std::sort(out.begin(), out.end());"
+assert rune_block.count(old_sort)==1,"Canonical rune payment sort anchor changed"
+new_sort="""    // Different rune types must not be selected based on object IDs:
+    // under hidden-order ID relabelling they are the same public game.
+    // The final ID tie-break matters only for indistinguishable copies.
+    std::sort(out.begin(), out.end(), [&](GameObjectId a, GameObjectId b) {
+        const auto& ra=state.getObject(a);
+        const auto& rb=state.getObject(b);
+        if(ra.card_def_id!=rb.card_def_id)return ra.card_def_id<rb.card_def_id;
+        if(ra.domains.get()!=rb.domains.get())
+            return ra.domains.get()<rb.domains.get();
+        if(ra.is_exhausted!=rb.is_exhausted)
+            return !ra.is_exhausted;
+        return a<b;
+    });"""
+rune_block=rune_block.replace(old_sort,new_sort,1)
+resources=resources[:rune_begin]+rune_block+resources[rune_end:]
+resource_path.write_text(resources)
+
 print("RADIANCE_FINAL64_OVERLAY_APPLIED: engine IDs 1068..1131 (64 distinct identities)")
