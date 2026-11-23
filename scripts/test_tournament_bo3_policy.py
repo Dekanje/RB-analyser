@@ -120,13 +120,19 @@ class SideboardBo3Tests(unittest.TestCase):
                 "copies":1}],"chosen_champion":"Draven Alternate"}},
                 "game3":{"p2":{"chosen_champion":"LeBlanc Alternate"}}}
             recorded=[]
+            starts=[]
             def fake_engine(exe,deck1,deck2,seed,agent,timeout,env):
                 recorded.append((deck1.read_text(),deck2.read_text()))
-                return {"status":"complete","winner":1,"seconds":0}
+                starts.append(env.get("RIFTBOUND_FORCE_STARTING_PLAYER"))
+                return {"status":"complete","winner":1,"seconds":0,
+                        "forced_start_verified":True,
+                        "forced_starting_player":int(starts[-1]) if starts[-1] else None}
             with patch("tournament_bo3_policy.benchmark",side_effect=fake_engine):
                 r=run_series(p/"fakeengine",a,b,self.db,policy,
                              "ismcts:sims=24",21,2)
-            self.assertEqual(r["status"],"COMPLETE_SIDEBOARD_AWARE_APPROXIMATION")
+            self.assertEqual(r["status"],"COMPLETE_RULE407_START_POLICY_BO3")
+            self.assertTrue(r["rule_407_4_start_choice_verified"])
+            self.assertEqual(starts,[None,"1","1"])
             self.assertEqual(r["winner"],1)
             self.assertEqual(r["score"],[2,1])
             self.assertEqual(len(recorded),3)
@@ -137,6 +143,49 @@ class SideboardBo3Tests(unittest.TestCase):
             self.assertEqual(r["games"][2]["chosen_champions"][1],"LeBlanc Alternate")
             self.assertEqual(a.read_text(),render_deck(self.draven))
             self.assertEqual(b.read_text(),render_deck(self.leblanc))
+
+    def test_loser_can_choose_opponent_and_receipt_is_mandatory(self):
+        with tempfile.TemporaryDirectory() as td:
+            folder=pathlib.Path(td)
+            d=folder/"draven.txt"; l=folder/"leblanc.txt"
+            d.write_text(render_deck(self.draven))
+            l.write_text(render_deck(self.leblanc))
+            seen=[]
+            def fake_engine(exe,first,second,seed,agent,timeout,env):
+                forced=env.get("RIFTBOUND_FORCE_STARTING_PLAYER")
+                seen.append(forced)
+                return {"status":"complete","winner":1,"seconds":0,
+                        "forced_start_verified":True,
+                        "forced_starting_player":int(forced) if forced else None}
+            config={"game2":{"loser_chooses_start":"opponent"},
+                    "game3":{"loser_chooses_start":"opponent"}}
+            with patch("tournament_bo3_policy.benchmark",side_effect=fake_engine):
+                result=run_series(folder/"fake",d,l,self.db,config,"random",44,3)
+            self.assertEqual(result["status"],"COMPLETE_RULE407_START_POLICY_BO3")
+            self.assertEqual(seen,[None,"2","2"])
+            self.assertEqual(result["games"][1]["previous_game_loser_identity"],2)
+            self.assertEqual(result["games"][1]["first_player_identity"],1)
+            self.assertEqual(result["games"][2]["previous_game_loser_identity"],1)
+            self.assertEqual(result["games"][2]["first_player_identity"],2)
+            self.assertTrue(result["rule_407_4_start_choice_verified"])
+
+            # Legacy binaries must fail even if game result looks complete.
+            def missing_engine_receipt(exe,a,b,seed,agent,timeout,env):
+                return {"status":"complete","winner":1}
+            with patch("tournament_bo3_policy.benchmark",side_effect=missing_engine_receipt):
+                r=run_series(folder/"fake",d,l,self.db,config,"random",44,3)
+            self.assertEqual(r["status"],"INCOMPLETE")
+            self.assertIsNone(r["winner"])
+            self.assertEqual(r["games"][-1]["engine_status"],"error")
+
+    def test_policy_schema_rejects_invalid_loser_start(self):
+        with tempfile.TemporaryDirectory() as td:
+            f=pathlib.Path(td)/"policy.json"
+            f.write_text('{"game2":{"loser_chooses_start":"random"}}')
+            with self.assertRaises(ValueError):
+                read_policy(f)
+            f.write_text('{"game2":{"loser_chooses_start":"self"}}')
+            self.assertEqual(read_policy(f)["game2"]["loser_chooses_start"],"self")
 
     def test_engine_error_is_never_counted_as_loss(self):
         with tempfile.TemporaryDirectory() as td:
