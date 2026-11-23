@@ -71,6 +71,23 @@ class BundleProposalTests(unittest.TestCase):
         self.assertTrue(all(len(x["swap_sequence"])==1 for x in results))
         self.assertFalse(any("Zhonya's Hourglass" in x["add"] for x in results))
 
+    def test_candidate_selection_retains_full_swap_audit_trail(self):
+        # Selection passes through the screening/training records. This was
+        # omitted in the initial expanded run, causing a KeyError on acceptance.
+        import inspect
+        source=inspect.getsource(opt.main)
+        self.assertIn("'swap_sequence':cand['swap_sequence']",source)
+        self.assertIn("for step in r['selected']['swap_sequence']",source)
+        generated=self.proposals()
+        for candidate in generated:
+            trial={'remove':candidate['remove'],'add':candidate['add'],
+                   'swap_sequence':candidate['swap_sequence']}
+            accepted=[{'round':1,'selected':trial}]
+            swaps=[{'round':r['round'],**step}
+                   for r in accepted if r['selected']
+                   for step in r['selected']['swap_sequence']]
+            self.assertEqual(swaps,[{'round':1,**step} for step in candidate['swap_sequence']])
+
     def test_unique_sideboard_card_cannot_be_added_again(self):
         self.cards[self.new[0]]["ability_text"]="[Unique]"
         self.write_source(side="1 "+self.new[0])
