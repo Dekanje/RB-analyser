@@ -122,3 +122,13 @@ These two fixes are now submitted for the exact full AlphaRune regression
 without disabling or skipping tests. The separate 64-card printed-effect
 mechanics gate remains fail-closed, with 54 pending and 10 in review. A clean
 engine-wide result is NOT equivalent to mechanics acceptance.
+
+## RAD-019 Firebrand Raider engine-wide rules
+
+Added both missing continuous effects: all *other* units (regardless of
+controller) enter ready while Raider remains in play, and units (but not
+runes, gear, or legends) do not ready during any Awaken Phase. Implemented
+using AlphaRune's existing cross-player units_enter_ready_by aura index and
+a pinned AwakenPhase guard. Two new engine-path tests cover an opponent's
+unit entering and the opponent's unit remaining exhausted in Awaken. The
+focused execution and full regressions must pass before accepting RAD-019.
