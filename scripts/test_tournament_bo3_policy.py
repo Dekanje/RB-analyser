@@ -126,7 +126,7 @@ class SideboardBo3Tests(unittest.TestCase):
             with patch("tournament_bo3_policy.benchmark",side_effect=fake_engine):
                 r=run_series(p/"fakeengine",a,b,self.db,policy,
                              "ismcts:sims=24",21,2)
-            self.assertEqual(r["status"],"COMPLETE_SIDEBORD_AWARE_APPROXIMATION")
+            self.assertEqual(r["status"],"COMPLETE_SIDEBOARD_AWARE_APPROXIMATION")
             self.assertEqual(r["winner"],1)
             self.assertEqual(r["score"],[2,1])
             self.assertEqual(len(recorded),3)
