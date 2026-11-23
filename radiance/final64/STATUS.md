@@ -132,3 +132,5 @@ using AlphaRune's existing cross-player units_enter_ready_by aura index and
 a pinned AwakenPhase guard. Two new engine-path tests cover an opponent's
 unit entering and the opponent's unit remaining exhausted in Awaken. The
 focused execution and full regressions must pass before accepting RAD-019.
+
+Raider overlay preflight repair: the upstream `game_engine.cpp` contains multiple similar turn-player batches. The patch now anchors strictly within `GameEngine::awakenPhase()` before replacing the global-ready loop. No gameplay acceptance was inferred from the earlier failed installation.
