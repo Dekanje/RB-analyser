@@ -1,0 +1,22 @@
+name: Competitive matchup sideboard policy legal generator preflight
+on:
+  push:
+    branches: ['research/competitive-agent-benchmark-v1-2026-11-23']
+    paths:
+      - '.github/workflows/competitive-sideboard-policy-preflight.yml'
+      - 'scripts/sideboard_policy_search.py'
+      - 'scripts/test_sideboard_policy_search.py'
+permissions:
+  contents: read
+jobs:
+  sideboard-strategy-preflight:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test generated sideboard interventions and real engine receipt requirements
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/sideboard_policy_search.py scripts/test_sideboard_policy_search.py
+          python3 -m unittest discover -s scripts -p 'test_sideboard_policy_search.py' -v
+          python3 -m unittest discover -s scripts -p 'test_tournament_bo3_policy.py' -v
