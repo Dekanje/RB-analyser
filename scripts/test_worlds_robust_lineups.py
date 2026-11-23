@@ -34,6 +34,9 @@ class WorldsRobustnessTest(unittest.TestCase):
                                  row["swiss_expected_wins_p90"])
             self.assertGreaterEqual(row["swiss_expected_wins_mean"],0)
             self.assertLessEqual(row["swiss_expected_wins_mean"],9)
+            self.assertIn(row["predesignated_playoff_legend"],row["lineup"])
+            self.assertLessEqual(row["predesignated_playoff_deck_rate_p10"],
+                                 row["predesignated_playoff_deck_rate_mean"]+0.2)
         self.assertEqual(rows[0]["robust_swiss_rank"],1)
 
     def test_invalid_observed_matchup_or_world_configuration_fails(self):
