@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Sideboard-aware BO3 prototype using the real pinned AlphaRune executable.
+"""BO3 with legal between-game swaps, Champion changes and loser-chooses-first.
 
-Follows Constructed 403.4 for between-game 1-for-1 swaps, including permitted
-Chosen Champion replacement from Main Deck/sideboard, and 403.8 restoration
-for each NEW match. The engine still approximates the tournament's 407.4
-loser-chooses-first rule by alternating input seats. This script DOES NOT
-claim a fully tournament-equivalent match, expert sideboard policy or ranks.
+Implements Constructed 403.4/403.8, plus 407.4 first-player selection for
+Games 2/3 using the explicitly modified actual C++ AlphaRune turn order.
+A mismatched engine receipt is an ERROR, never counted as a win.
+Chosen sideboard strategies are still externally supplied, not learned.
+Not yet a complete tournament model (clock and matchup-sideboard policy).
 """
 from __future__ import annotations
 
@@ -123,8 +123,12 @@ def read_policy(path: pathlib.Path | None) -> dict:
     if not isinstance(raw, dict) or set(raw) - {"game2", "game3"}:
         raise ValueError("Sideboard policy must contain only game2 and game3")
     for game, pair in raw.items():
-        if not isinstance(pair, dict) or set(pair) - {"p1", "p2"}:
-            raise ValueError("Each game plan must map p1/p2 to sideboard plans")
+        if not isinstance(pair, dict) or set(pair) - {
+            "p1", "p2", "loser_chooses_start"
+        }:
+            raise ValueError("Each game plan must map p1/p2 and optional loser_chooses_start")
+        if pair.get("loser_chooses_start", "self") not in ("self", "opponent"):
+            raise ValueError("Loser must choose self or opponent to start")
     return raw
 
 
@@ -139,7 +143,10 @@ def run_series(
     check_final_legality(registered2, registered2, byname)
     wins = [0, 0]
     games = []
-    env = env or os.environ.copy()
+    previous_winner_identity = None
+    env = dict(os.environ.copy() if env is None else env)
+    # Game 1 must not inherit a user shell's experimental turn override.
+    env.pop("RIFTBOUND_FORCE_STARTING_PLAYER", None)
     with tempfile.TemporaryDirectory(prefix="rb_bo3_sb_") as location:
         root = pathlib.Path(location)
         for index in range(1, 4):
@@ -154,10 +161,38 @@ def run_series(
                 f2.write_text(render_deck(two), encoding="utf-8")
             flipped = index == 2
             a,b = (f2,f1) if flipped else (f1,f2)
+            per_game_env = env.copy()
+            start_choice = None
+            prev_loser = None
+            first_player_identity = None
+            expected_engine_seat = None
+            if index > 1:
+                if previous_winner_identity not in (1,2):
+                    raise RuntimeError("Missing the previous game's verified winner")
+                prev_loser = 3 - previous_winner_identity
+                # Tournament 407.4: the loser chooses to play first themselves
+                # or nominates their opponent. Default strategic policy = self.
+                start_choice = game_policy.get("loser_chooses_start", "self")
+                if start_choice not in ("self","opponent"):
+                    raise ValueError("Invalid loser-chooses-start policy")
+                first_player_identity = (
+                    prev_loser if start_choice == "self" else previous_winner_identity
+                )
+                expected_engine_seat = (3 - first_player_identity
+                                        if flipped else first_player_identity)
+                per_game_env["RIFTBOUND_FORCE_STARTING_PLAYER"] = str(expected_engine_seat)
             result = benchmark(
                 engine, a, b, stable_seed(seed,"sideboard_bo3",index),
-                agent, timeout, env
+                agent, timeout, per_game_env
             )
+            # Receipt parsed from the engine's actual GameState turn.starting_player.
+            # Its absence means an old engine was used: fail closed.
+            if index > 1 and (
+                result.get("forced_start_verified") is not True or
+                result.get("forced_starting_player") != expected_engine_seat
+            ):
+                result = {**result, "status":"error",
+                          "error":"C++ forced first-player receipt absent or incorrect"}
             rec = {
                 "game": index,
                 "registered_deck_sha256": [
@@ -175,6 +210,12 @@ def run_series(
                 ],
                 "engine_status": result["status"],
                 "winner_seat": result["winner"],
+                "previous_game_loser_identity": prev_loser,
+                "loser_chose": start_choice,
+                "first_player_identity": first_player_identity,
+                "expected_engine_starting_seat": expected_engine_seat,
+                "verified_engine_starting_seat": result.get("forced_starting_player"),
+                "forced_start_verified": result.get("forced_start_verified", False),
                 "error": result.get("error", ""),
             }
             games.append(rec)
@@ -182,23 +223,28 @@ def run_series(
                 return {
                     "status": "INCOMPLETE", "winner": None,
                     "games": games, "sideboarding_applied": index > 1,
-                    "no_tournament_start_player_equivalence": True
+                    "rule_407_4_start_choice_verified": False
                 }
             winner_p1 = (result["winner"] == 2 if flipped else result["winner"] == 1)
+            previous_winner_identity = 1 if winner_p1 else 2
             wins[0 if winner_p1 else 1] += 1
             if max(wins) == 2:
                 break
     return {
-        "status": "COMPLETE_SIDEBOARD_AWARE_APPROXIMATION",
+        "status": "COMPLETE_RULE407_START_POLICY_BO3",
         "winner": 1 if wins[0] == 2 else 2,
         "score": wins, "games": games,
         "sideboarding_applied": any(any(g["sideboard_swaps"]) or g["chosen_champions"] != [registered1.champion, registered2.champion] for g in games[1:]),
-        "exact_tournament_play_first_policy": False,
+        "rule_407_4_start_choice_verified": all(
+            g["forced_start_verified"] and
+            g["verified_engine_starting_seat"]==g["expected_engine_starting_seat"]
+            for g in games[1:]
+        ),
         "source_decks_return_to_registered_state_next_match": True,
         "agent": agent, "limitations": [
-            "Alternated engine input seats do not implement 407.4 loser chooses to play first",
+            "A declared loser-start decision is applied; intelligent first-player choice is not learned",
             "Sideboard decisions are externally declared and not learned expert policies",
-            "No round timer or battlefield/start-game selection policy",
+            "No round timer or matchup-optimized battlefield policy",
         ],
     }
 
@@ -225,7 +271,7 @@ def main():
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(payload, indent=2), encoding="utf-8")
     print("TOURNAMENT_SIDEBOARD_PROTOTYPE", json.dumps(payload), flush=True)
-    if payload["status"] != "COMPLETE_SIDEBOARD_AWARE_APPROXIMATION":
+    if payload["status"] != "COMPLETE_RULE407_START_POLICY_BO3":
         raise SystemExit(2)
 
 
