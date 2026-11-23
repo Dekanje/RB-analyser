@@ -34,7 +34,7 @@ def has_valid_neeko_registration(record:dict, deck:pathlib.Path)->bool:
             raise RuntimeError("Unexpected special registration without Neeko mutation")
         return True
     source=deck.read_text(encoding="utf-8")
-    delimiter="\\nNeekoLegends:\\n"
+    delimiter="\nNeekoLegends:\n"
     if len(extra)!=3 or len(set(extra))!=3 or source.count(delimiter)!=1:
         return False
     lines=source.split(delimiter,1)[1].strip().splitlines()
