@@ -1899,6 +1899,20 @@ TEST_F(RadianceFinal64Test,HuntersCircleFirstPlayAtThisBattlefieldDiscountsUnit)
    }));
  },nullptr,nullptr,P1);
 }
+TEST_F(RadianceFinal64Test,HuntersCircleActualPlayPaysDiscountAndConsumesIt) {
+ auto hunter=installHunterBattlefield(state);
+ auto unit=addToHand(P1,CardDefId{1070}); // printed 4 Energy
+ state.player(P1).rune_pool.energy=3;
+ const LocationId destination=BattlefieldLocation{state.battlefields[0].id};
+ playThroughEngine(unit,nullptr,destination,nullptr,false);
+ EXPECT_TRUE(state.getObject(unit).isAtBattlefield());
+ EXPECT_EQ(state.player(P1).rune_pool.energy,0);
+ const auto& counters=state.getObject(hunter).card_counters;
+ const auto it=counters.find("__rad_hc_p1_turn");
+ ASSERT_NE(it,counters.end());
+ EXPECT_EQ(it->second,state.turn.turn_number);
+}
+
 TEST_F(RadianceFinal64Test,HuntersCircleSecondUnitOnSameTurnNotDiscounted) {
  auto bf=installHunterBattlefield(state);
  auto unit=addToHand(P1,CardDefId{1070});
@@ -1992,6 +2006,17 @@ TEST_F(RadianceFinal64Test,NeekoGrantedLegendRemovedWhenNeekoLeavesBoard){
  EXPECT_TRUE(state.player(P1).neeko_granted_legends.empty());
  EXPECT_FALSE(state.objectExists(temporary));
 }
+TEST_F(RadianceFinal64Test,NeekoQueuedPlayTriggerDoesNotGrantAfterLeavingBoard){
+ state.player(P1).neeko_legend_choices={CardDefId{249},CardDefId{252},CardDefId{254}};
+ auto neeko=addUnit(P1,CardDefId{1131},4,0);
+ withEngine([&](GameEngine& e){
+   e.testHook_executor().killObject(neeko);
+   e.testHook_executor().queueTriggeredAbility(neeko,P1,TriggerType::WhenYouPlayMe,kInvalidId);
+   settleLikeTheEngine(e);
+ });
+ EXPECT_TRUE(state.player(P1).neeko_granted_legends.empty());
+}
+
 TEST_F(RadianceFinal64Test,NeekoNoPregameOptionsDoesNotInventLegends){
  auto neeko=addUnit(P1,CardDefId{1131},4,0);
  fireTriggerThroughEngine(neeko,TriggerType::WhenYouPlayMe);

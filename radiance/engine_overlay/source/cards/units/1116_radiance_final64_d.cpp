@@ -569,6 +569,13 @@ public:
  unsigned choicesAtFinalization() const override { return kFinalizeTrigger; }
  TriggerType triggerType() const override { return TriggerType::WhenYouPlayMe; }
  void onTrigger(CardContext& c,const std::vector<GameObjectId>&) override {
+   // A queued play trigger can resolve after this Neeko left the board.
+   // Its "while I'm on the board" legend must not be created then.
+   if(!c.state.objectExists(c.source) ||
+      !c.state.getObject(c.source).location.has_value()){
+     (void)finalizingChoices(c);
+     return;
+   }
    const auto& selected=c.state.player(c.controller).neeko_legend_choices;
    if(selected.size()!=3 || !c.registry){
      // A trigger with a finalization pass must signal its end even when
