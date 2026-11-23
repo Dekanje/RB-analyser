@@ -187,10 +187,14 @@ def run_series(
             )
             # Receipt parsed from the engine's actual GameState turn.starting_player.
             # Its absence means an old engine was used: fail closed.
-            if index > 1 and (
+            if index > 1 and result["status"] == "complete" and (
                 result.get("forced_start_verified") is not True or
                 result.get("forced_starting_player") != expected_engine_seat
             ):
+                # A missing turn receipt is itself an error. However, do
+                # NOT overwrite a genuine native engine failure/timeout with
+                # this secondary symptom: retain the original stderr and
+                # process-exit reason so the exact failed seed can be fixed.
                 result = {**result, "status":"error",
                           "error":"C++ forced first-player receipt absent or incorrect"}
             rec = {
