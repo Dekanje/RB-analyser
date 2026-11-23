@@ -504,6 +504,12 @@ TEST_F(RadianceFinal64Test, ZiggsActivatedAbilityExhaustsAndPlaysBomb){
  EXPECT_TRUE(state.getObject(ziggs).is_exhausted);
  EXPECT_EQ(bombs,1);
 }
+
+TEST_F(RadianceFinal64Test, ZiggsDefendWithoutFriendlyGearCannotGainMight){
+ auto ziggs=addUnit(P1,CardDefId{1111},4,0);
+ fireTriggerThroughEngine(ziggs,TriggerType::WhenIDefend);
+ EXPECT_EQ(state.getObject(ziggs).temp_might_bonus,0);
+}
 TEST_F(RadianceFinal64Test, ZiggsDefendCanKillFriendlyGearForTwoMight){
  auto gear=addToHand(P1,CardDefId{1088});
  playThroughEngine(gear);
@@ -536,6 +542,23 @@ TEST_F(RadianceFinal64Test, RivenDeserterActivationCanOnlyBeUsedOncePerTurn){
  },nullptr,nullptr,P1);
  EXPECT_FALSE(card->canActivateAbilityAt(state,P1,riven,0));
 }
+
+TEST_F(RadianceFinal64Test, RivenDeserterPaysExhaustAndReadiesChosenUnit){
+ auto cost=addUnit(P1,kInvalidId,2,0);
+ auto target=addUnit(P2,kInvalidId,2,0);
+ state.getObject(target).is_exhausted=true;
+ auto riven=addUnit(P1,CardDefId{1113},5,0);
+ Intent act;act.type=IntentType::ActivateAbility;act.player=P1;act.ability_source=riven;
+ EnginePathAgent choose(EnginePathAgent::script({static_cast<int>(cost.raw()),
+                                                static_cast<int>(target.raw())}));
+ withEngineDefaultTurn([&](GameEngine& e){
+   e.testHook_executeIntent(act);settleLikeTheEngine(e);
+ },&choose,nullptr,P1);
+ EXPECT_TRUE(state.getObject(cost).is_exhausted)
+   << "Riven must exhaust a friendly unit as the activation cost";
+ EXPECT_FALSE(state.getObject(target).is_exhausted)
+   << "The target unit must be readied after the cost is paid";
+}
 TEST_F(RadianceFinal64Test, TranspositionistReturnsUnitAndPlaysLowerMightUnitFree){
  auto target=addUnit(P1,kInvalidId,6,-1);
  auto replacement=addToHand(P1,CardDefId{1084});
@@ -548,6 +571,21 @@ TEST_F(RadianceFinal64Test, TranspositionistReturnsUnitAndPlaysLowerMightUnitFre
  },&accept,nullptr,P1);
  EXPECT_TRUE(inHand(P1,target));
  EXPECT_TRUE(state.getObject(replacement).location.has_value());
+}
+
+TEST_F(RadianceFinal64Test, TranspositionistCannotPlayEqualOrHigherMightForFree){
+ auto returned=addUnit(P1,kInvalidId,3,-1);
+ auto tooLarge=addToHand(P1,CardDefId{1090}); // 8 printed Might
+ auto caster=addUnit(P1,CardDefId{1114},4,-1);
+ addRune(P1,Domain::Chaos);
+ Intent act;act.type=IntentType::ActivateAbility;act.player=P1;act.ability_source=caster;
+ EnginePathAgent choose(EnginePathAgent::choosing(returned));
+ withEngineDefaultTurn([&](GameEngine& e){
+   e.testHook_executeIntent(act);settleLikeTheEngine(e);
+ },&choose,nullptr,P1);
+ EXPECT_TRUE(inHand(P1,returned));
+ EXPECT_TRUE(inHand(P1,tooLarge))
+   << "The optional free-play candidate must have strictly less Might";
 }
 TEST_F(RadianceFinal64Test, SeraphicWyvernAddsOneExhaustedRuneToReadyChannel){
  addUnit(P1,CardDefId{1101},8,0);
