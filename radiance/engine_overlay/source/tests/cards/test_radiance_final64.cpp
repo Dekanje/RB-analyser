@@ -455,6 +455,29 @@ TEST_F(RadianceFinal64Test, SeraphicWyvernAddsOneExhaustedRuneToReadyChannel){
  EXPECT_EQ(exhausted,1);
  EXPECT_EQ(state.player(P1).rune_deck.size(),1u);
 }
+TEST_F(RadianceFinal64Test, RivenBrokenBladeBuffAndStunAreDistinctModesThisTurn){
+ auto riven=addUnit(P1,CardDefId{1079},4,0);
+ auto enemy=addUnit(P2,kInvalidId,4,0);
+ EnginePathAgent buffMode(EnginePathAgent::script({0}));
+ fireTriggerThroughEngine(riven,TriggerType::WhenIBecomeExhausted,&buffMode);
+ EXPECT_EQ(state.getObject(riven).buff_count,1);
+ EXPECT_EQ(state.getObject(riven).card_counters.at("__riven43_mask"),1);
+ EnginePathAgent stunMode(EnginePathAgent::script({1,static_cast<int>(enemy.raw())}));
+ fireTriggerThroughEngine(riven,TriggerType::WhenIBecomeExhausted,&stunMode);
+ EXPECT_TRUE(state.getObject(enemy).is_stunned);
+ EXPECT_EQ(state.getObject(riven).buff_count,0);
+ EXPECT_EQ(state.getObject(riven).card_counters.at("__riven43_mask"),3);
+}
+TEST_F(RadianceFinal64Test, RivenBrokenBladeSpendsBuffToReadyWhenExhausted){
+ auto riven=addUnit(P1,CardDefId{1079},4,0);
+ state.getObject(riven).buff_count=1;
+ state.getObject(riven).is_exhausted=true;
+ EnginePathAgent readyMode(EnginePathAgent::script({2}));
+ fireTriggerThroughEngine(riven,TriggerType::WhenIBecomeExhausted,&readyMode);
+ EXPECT_FALSE(state.getObject(riven).is_exhausted);
+ EXPECT_EQ(state.getObject(riven).buff_count,0);
+ EXPECT_EQ(state.getObject(riven).card_counters.at("__riven43_mask"),4);
+}
 TEST_F(RadianceFinal64Test, TrifarianCaptainRevealsAndDrawsOnlyEligibleFromTopFour){
  const auto cheapGear=addToDeck(P1,CardDefId{1116});
  const auto expensiveUnit=addToDeck(P1,CardDefId{1118});
