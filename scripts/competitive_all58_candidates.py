@@ -24,6 +24,23 @@ from optimize_58 import stable_seed
 from round_robin_58 import sha
 
 
+def has_valid_neeko_registration(record:dict, deck:pathlib.Path)->bool:
+    """Require exact 3-Legend metadata and matching candidate source section."""
+    adds_neeko=any(step.get("add")=="Neeko, Blending In"
+                   for step in record["mutation_steps"])
+    extra=record.get("neeko_additional_legends",[])
+    if not adds_neeko:
+        if extra:
+            raise RuntimeError("Unexpected special registration without Neeko mutation")
+        return True
+    source=deck.read_text(encoding="utf-8")
+    delimiter="\\nNeekoLegends:\\n"
+    if len(extra)!=3 or len(set(extra))!=3 or source.count(delimiter)!=1:
+        return False
+    lines=source.split(delimiter,1)[1].strip().splitlines()
+    return lines==["1 "+name for name in extra]
+
+
 def select_indices(records:list, count:int)->list[int]:
     if not 1<=count<=len(records):
         raise ValueError("Invalid deterministic candidate budget")
@@ -104,10 +121,10 @@ def screen(args):
                     "candidate_sha256":c["sha256"],
                     "changed_main_slots":c["changed_main_slots"],
                 }
-                # Neeko requires three additional registered Legends (401.2.a).
-                # These archived proposals do not carry that registration.
-                if any(step.get("add")=="Neeko, Blending In"
-                       for step in c["mutation_steps"]):
+                # Earlier archived Neeko proposals omitted mandatory extra
+                # Legends; new generations append three actual registered
+                # Legends. Validate the source and manifest together.
+                if not has_valid_neeko_registration(c,deck):
                     candidate_results.append({
                         **base_receipt,
                         "status":"BLOCKED_SPECIAL_DECKBUILDING",
@@ -224,14 +241,17 @@ def aggregate(args):
                 paired=x["paired_scenarios"]
                 is_neeko=any(step.get("add")=="Neeko, Blending In"
                              for step in entry["mutation_steps"])
+                registered=has_valid_neeko_registration(
+                    entry,args.proposals/entry["path"]
+                )
                 if state=="BLOCKED_SPECIAL_DECKBUILDING":
-                    if (not is_neeko or paired or x["paired_completed"]!=0
-                        or x["score"] is not None or
+                    if (not is_neeko or registered or paired or
+                        x["paired_completed"]!=0 or x["score"] is not None or
                         x.get("reason")!="Neeko requires three registered additional Legends"):
                         raise RuntimeError("Invalid special deckbuilding exclusion")
                     continue
-                if is_neeko:
-                    raise RuntimeError("Neeko candidate was simulated without additional Legends")
+                if not registered:
+                    raise RuntimeError("Unregistered Neeko candidate used in simulated outcomes")
                 if len(paired)!=len(cases):
                     raise RuntimeError("Missing candidate scenario receipts")
                 all_complete=True
