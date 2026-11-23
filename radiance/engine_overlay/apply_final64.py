@@ -450,7 +450,7 @@ replacements=[
  ("obj.current_might = might;","obj.current_might = played_might;"),
  ("obj.tags = tags;","obj.tags = played_tags;"),
  ("obj.keywords = keywords;","obj.keywords = played_keywords;"),
- ('"TOKEN: created " + name + (','"TOKEN: created " + played_name + ('),
+ ('"TOKEN: created " + name + " ("','"TOKEN: created " + played_name + " ("'),
  ("std::to_string(might) +","std::to_string(played_might) +"),
  ("TokenCreatedEvent{id, controller, type, name, location}","TokenCreatedEvent{id, controller, type, played_name, location}"),
  ('"play an additional copy of " + name + "?"','"play an additional copy of " + played_name + "?"'),
