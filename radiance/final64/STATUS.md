@@ -59,3 +59,13 @@ must have a friendly unit actually maintaining control through engine cleanup.
 These are scenario/fixture corrections and are **not** claims that the 64
 mechanics have been accepted. Re-run the complete focused suite, strict
 compiled-registry check, and independent mechanics acceptance after that.
+
+## Full-regression baseline after focused registry success
+
+After run 45095743580 passed all 167 focused tests and compiled 167/167
+unique Radiance base identities, the team is running the full upstream
+AlphaRune regression. The separately tracked 64 card-by-card mechanics
+acceptance records are still pending; the final workflow must fail closed
+until comprehensive printed-effect tests exist and pass. Keep full-regression
+failure logs separate from mechanics acceptance. This is a diagnostic run,
+not a declaration of final acceptance.
