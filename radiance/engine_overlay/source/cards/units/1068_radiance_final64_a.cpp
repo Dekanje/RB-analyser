@@ -280,13 +280,17 @@ public:
    if(index==1){
      if(costAlreadyPaid(c)){
        if(finalizingChoices(c))return;
+       if(costUnpaid(c))return;
        f64Recruit(c,atBase,1);
        return;
      }
      auto gears=sacrificialGears(c.state,c.controller,c.source);
      std::sort(gears.begin(),gears.end());
      const auto sacrifice=pickTarget(c,"Whirling Twirligig: kill friendly gear as cost",gears);
-     if(sacrifice!=kInvalidId&&costDueNow(c))c.executor.killObject(sacrifice);
+     if(costDueNow(c)){
+       if(sacrifice==kInvalidId)markCostUnpaid(c);
+       else (void)killAsCost(c,sacrifice); // fail if a replacement prevents the death
+     }
      if(finalizingChoices(c))return;
      return;
    }
