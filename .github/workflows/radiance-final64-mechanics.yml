@@ -128,11 +128,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install required C++ libraries and apply pinned engine overlay
+        timeout-minutes: 8
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq cmake ninja-build g++ ccache libboost-all-dev nlohmann-json3-dev
-          git clone --quiet https://github.com/chorlick/alpharune.git alpharune
+          set -euo pipefail
+          echo "::group::System dependency update (bounded)"
+          sudo env DEBIAN_FRONTEND=noninteractive timeout 120s apt-get -o Acquire::Retries=2 -o Acquire::http::Timeout=25 -o Acquire::https::Timeout=25 update -qq
+          echo "::endgroup::"
+          echo "::group::System dependency install (bounded)"
+          sudo env DEBIAN_FRONTEND=noninteractive timeout 180s apt-get -o DPkg::Lock::Timeout=30 -o Acquire::Retries=2 install -y -qq cmake ninja-build g++ ccache libboost-all-dev nlohmann-json3-dev
+          echo "::endgroup::"
+          echo "::group::AlphaRune checkout (bounded)"
+          timeout 120s git -c http.lowSpeedLimit=1024 -c http.lowSpeedTime=30 clone --quiet https://github.com/chorlick/alpharune.git alpharune
           git -C alpharune checkout --quiet --detach ec90f0fed002aed374d06249fa95e83e3cfbd386
+          echo "::endgroup::"
           python3 radiance/engine_overlay/apply.py
           python3 radiance/engine_overlay/wave1_regression_fix.py
           python3 radiance/engine_overlay/apply_wave2.py
