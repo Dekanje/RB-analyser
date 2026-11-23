@@ -1,0 +1,63 @@
+name: Worlds registered structure population across all 58 Legends (research-only)
+on:
+  push:
+    branches: ['research/competitive-agent-benchmark-v1-2026-11-23']
+    paths: ['.github/workflows/competitive-registered-structure.yml']
+permissions:
+  contents: read
+  actions: read
+jobs:
+  validate-all-structure-legalities:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unit-test rune, battlefield, sideboard, alternate champion structural legality
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/structural_deck_population.py scripts/test_structural_deck_population.py
+          python3 -m unittest discover -s scripts -p 'test_structural_deck_population.py' -v
+  construct-58-new-registered-structure-populations:
+    needs: validate-all-structure-legalities
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45181493632
+          github-token: ${{ github.token }}
+          name: expanded-optimized-58-independent-radiance-bo3
+          path: results/selected
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45244227502
+          github-token: ${{ github.token }}
+          name: competitive-rule407-verified-engine-binary
+          path: engine_build
+      - name: Create and hash structural variants for all 58 Legends
+        run: |
+          set -euo pipefail
+          python3 scripts/structural_deck_population.py \
+            --selected results/selected \
+            --registry engine_build/registry.json \
+            --output results/registered_structure_only \
+            --seed 202611251700
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          x=json.loads(Path('results/registered_structure_only/structural_manifest.json').read_text())
+          assert x['legends']==58
+          assert x['variants_total']>=58*4
+          assert set(x['families'])>=set(['rune','battlefield','sideboard'])
+          assert x['engine_tested'] is False
+          assert x['worlds_winner_certified'] is False
+          assert all(r['status']=='STRUCTURAL_CANDIDATES_ONLY_NOT_NATIVE_TESTED' for r in x['records'])
+          assert all(not o['fitness_evaluated'] for r in x['records'] for o in r['variants'])
+          print('58_REGISTERED_STRUCTURE_SOURCE_VALIDATION_PASS',x['variants_total'],x['families'])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: worlds-all58-registered-structure-legal-unvalidated-variants
+          path: results/registered_structure_only/
+          retention-days: 30
