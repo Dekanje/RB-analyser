@@ -177,9 +177,16 @@
     },
     "RAD-062/167": {
       "engine_id": 1086,
-      "status": "pending",
-      "engine_scenarios": [],
-      "unverified_rules": "[Deploy] (Play this only to a battlefield. When an opponent holds here, kill this.)\nOpponents must pay :rb_energy_1::rb_rune_rainbow: to move one or more units to this battlefield.\n[Deathknell][>] Draw 1. (When I die, get the effect.)"
+      "status": "accepted",
+      "engine_scenarios": [
+        "RadianceFinal64Test.GravityFieldDeathknellDrawsOneCard",
+        "RadianceFinal64Test.GravityFieldStandardMovePaysOneEnergyAndPower",
+        "RadianceFinal64Test.GravityFieldRefusesUnpayableOpponentStandardMove",
+        "RadianceFinal64Test.GravityFieldEffectMoveChargesEffectControllerNotUnitOwner",
+        "RadianceFinal64Test.GravityFieldEffectMoveFailsIfEffectControllerCannotPay"
+      ],
+      "verified_rules": "[Deploy] (Play this only to a battlefield. When an opponent holds here, kill this.)\nOpponents must pay :rb_energy_1::rb_rune_rainbow: to move one or more units to this battlefield.\n[Deathknell][>] Draw 1. (When I die, get the effect.)",
+      "review_note": "Source-audited printed Deploy/Deathknell and per-movement opponent [1][A] battlefield surcharge. Five passing actual AlphaRune engine-path scenarios in targeted CI 45143217902 cover opponent standard moves (paid and insufficient cost), effect moves (pays effect controller, not moved unit owner), failed effect moves, and Deathknell draw. Continuous effect is scoped to card's battlefield and opponent only; other Deploy/Deathknell keyword semantics use tested generic engine. This targeted success is not full 64-card acceptance."
     },
     "RAD-063/167": {
       "engine_id": 1087,
