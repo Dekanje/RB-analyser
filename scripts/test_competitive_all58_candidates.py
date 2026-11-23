@@ -10,12 +10,32 @@ from unittest.mock import patch
 
 sys.path.insert(0,str(pathlib.Path(__file__).resolve().parent))
 from competitive_all58_candidates import (
-    aggregate,anchor_names,schedule,score,select_indices
+    aggregate,anchor_names,schedule,score,select_indices,
+    has_valid_neeko_registration
 )
 from round_robin_58 import sha
 
 
 class All58EvolutionTests(unittest.TestCase):
+    def test_archived_neeko_is_blocked_but_registered_neeko_can_run(self):
+        with tempfile.TemporaryDirectory() as td:
+            path=pathlib.Path(td)/"neeko_candidate.txt"
+            record={
+                "mutation_steps":[{"add":"Neeko, Blending In"}],
+                "neeko_additional_legends":[
+                    "Loose Cannon","Blind Monk","Nine-Tailed Fox"],
+            }
+            path.write_text("MainDeck:\\n1 Neeko, Blending In\\n")
+            self.assertFalse(has_valid_neeko_registration(record,path))
+            path.write_text(
+                "MainDeck:\\n1 Neeko, Blending In\\n"
+                "Battlefields:\\n1 A\\n\\nSideboard:\\n"
+                "\\nNeekoLegends:\\n1 Loose Cannon\\n1 Blind Monk\\n"
+                "1 Nine-Tailed Fox\\n")
+            self.assertTrue(has_valid_neeko_registration(record,path))
+            record["neeko_additional_legends"]=["Loose Cannon","Loose Cannon","Blind Monk"]
+            self.assertFalse(has_valid_neeko_registration(record,path))
+
     def test_stratified_predeclared_indices(self):
         self.assertEqual(select_indices(list(range(40)),4),[0,10,20,30])
         self.assertEqual(select_indices(list(range(40)),1),[0])
