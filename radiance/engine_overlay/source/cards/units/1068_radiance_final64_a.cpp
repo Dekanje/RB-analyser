@@ -258,17 +258,13 @@ public:
  std::vector<ActivatedAbility> activatedAbilities()const override{
    ActivatedAbility gold;gold.cost.exhaust=true;
    ActivatedAbility recruit;recruit.cost.exhaust=true;
-   ActivatedAbility mech;mech.cost.exhaust=true;mech.cost.kill_friendly_unit=true;
-   // The sacrificed friendly unit is a REQUIRED activation target. The
-   // engine kills intent.targets[0] while paying the cost, before resolution.
-   mech.targets=TargetRequirements{.count=1,.must_be_unit=true,.must_be_friendly=true};
+   ActivatedAbility mech;mech.cost.exhaust=true;
+   // The kill is a chosen ADDITIONAL ACTIVATION COST, not an effect target.
+   // Pay it with pickCostObject+killAsCost below so a death replacement
+   // prevents the Mech creation, rather than silently granting a free Mech.
    return {gold,recruit,mech};
  }
  unsigned choicesAtFinalization()const override{return kFinalizeActivate;}
- std::vector<GameObjectId> enumerateLegalTargets(
-   const GameState& s,PlayerId p,int index,GameObjectId)const override{
-   return index==2?f64Units(s,p):std::vector<GameObjectId>{};
- }
  static std::vector<GameObjectId> sacrificialGears(const GameState& s,PlayerId p,GameObjectId self){
    auto gears=f64Gears(s,p);
    gears.erase(std::remove(gears.begin(),gears.end(),self),gears.end());
@@ -307,7 +303,19 @@ public:
      return;
    }
    if(index==2){
+     auto units=f64Units(c.state,c.controller);
+     std::sort(units.begin(),units.end());
+     const auto sacrifice=pickCostObject(c,
+       "Whirling Twirligig: kill friendly unit as activation cost",units);
+     if(sacrifice==kInvalidId && c.state.chain.resuming.has_value() &&
+        c.state.chain.resuming->resume_point==7)return;
+     bool paid=true;
+     if(costDueNow(c)&&!costUnpaid(c)){
+       paid=sacrifice!=kInvalidId && killAsCost(c,sacrifice);
+       if(!paid)markCostUnpaid(c);
+     }
      if(finalizingChoices(c))return;
+     if(!paid||costUnpaid(c))return;
      f64Mech(c,atBase,3);
    }
  }
