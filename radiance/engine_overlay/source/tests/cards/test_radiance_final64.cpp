@@ -1956,6 +1956,26 @@ TEST_F(RadianceFinal64Test,NeekoPlayAddsOneOfTheThreeSelectedLegends){
              legend.card_def_id==CardDefId{252}||
              legend.card_def_id==CardDefId{254});
 }
+TEST_F(RadianceFinal64Test,NeekoGrantedLooseCannonTriggersBeginningPhase){
+ state.player(P1).neeko_legend_choices={CardDefId{249},CardDefId{252},CardDefId{254}};
+ auto neeko=addUnit(P1,CardDefId{1131},4,0);
+ fireTriggerThroughEngine(neeko,TriggerType::WhenYouPlayMe);
+ ASSERT_EQ(state.player(P1).neeko_granted_legends.size(),1u);
+ const auto added=state.player(P1).neeko_granted_legends[0].legend;
+ ASSERT_TRUE(state.objectExists(added));
+ ASSERT_EQ(state.getObject(added).card_def_id,CardDefId{249});
+ // Loose Cannon prints "At the start of your Beginning Phase, draw 1 if
+ // you have one or fewer cards in hand." Secondary legends must trigger.
+ auto top=addToDeck(P1,CardDefId{1084});
+ ASSERT_TRUE(state.player(P1).hand.empty());
+ withEngine([&](GameEngine& e){
+   events.emit(PhaseChangedEvent{TurnPhase::AwakeningStep,TurnPhase::BeginningStep,P1});
+   settleLikeTheEngine(e);
+ });
+ EXPECT_TRUE(inHand(P1,top));
+ EXPECT_EQ(state.player(P1).main_deck.size(),0u);
+}
+
 TEST_F(RadianceFinal64Test,NeekoGrantedLegendRemovedWhenNeekoLeavesBoard){
  state.player(P1).neeko_legend_choices={CardDefId{249},CardDefId{252},CardDefId{254}};
  auto neeko=addUnit(P1,CardDefId{1131},4,0);
