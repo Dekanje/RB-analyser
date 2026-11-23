@@ -543,9 +543,15 @@
     },
     "RAD-132/167": {
       "engine_id": 1123,
-      "status": "pending",
-      "engine_scenarios": [],
-      "unverified_rules": "If you would play a unit token to a location while I'm at a battlefield, you may play a 3 :rb_might: Mech unit token to that same location instead."
+      "status": "accepted",
+      "engine_scenarios": [
+        "RadianceFinal64Test.HeimerdingerReplacesFriendlyUnitTokenWithMech",
+        "RadianceFinal64Test.HeimerdingerMayDeclineAndKeepOriginalToken",
+        "RadianceFinal64Test.HeimerdingerInactiveAtBaseOrForEnemyToken",
+        "RadianceFinal64Test.HeimerdingerLeavesGearTokensUnchanged"
+      ],
+      "verified_rules": "If you would play a unit token to a location while I'm at a battlefield, you may play a 3 :rb_might: Mech unit token to that same location instead.",
+      "review_note": "Optional replacement implemented in EffectExecutor::createToken BEFORE TokenCreatedEvent and EnteredBoardEvent; preserves chosen location and ready/exhaust instructions, changes full token identity to 3-Might Mech, restricts to own unit tokens while Academy Instructor is at a battlefield and offers agent choice. Four actual engine-path tests passed in targeted CI 45153349719. This does not imply the 64-card full regression has passed."
     },
     "RAD-134/167": {
       "engine_id": 1124,
