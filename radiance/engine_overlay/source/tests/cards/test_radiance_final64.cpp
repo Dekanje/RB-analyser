@@ -532,6 +532,21 @@ TEST_F(RadianceFinal64Test, WhirlingTwirligigExhaustsToPlayAnExhaustedGold){
  }
  EXPECT_EQ(gold,1);
 }
+TEST_F(RadianceFinal64Test, WhirlingTwirligigSacrificeOnlyTargetsFriendlyUnit){
+ auto friendly=addUnit(P1,kInvalidId,2,-1);
+ auto enemy=addUnit(P2,kInvalidId,2,-1);
+ auto source=addToHand(P1,CardDefId{1076});
+ playThroughEngine(source);
+ const auto* card=card_registry.get(CardDefId{1076});
+ ASSERT_NE(card,nullptr);
+ const auto& abilities=card->abilities();
+ ASSERT_EQ(abilities.size(),3u);
+ EXPECT_TRUE(abilities[2].cost.kill_friendly_unit);
+ EXPECT_TRUE(abilities[2].targets.must_be_friendly);
+ const auto eligible=card->enumerateLegalTargets(state,P1,2,source);
+ EXPECT_TRUE(std::find(eligible.begin(),eligible.end(),friendly)!=eligible.end());
+ EXPECT_TRUE(std::find(eligible.begin(),eligible.end(),enemy)==eligible.end());
+}
 TEST_F(RadianceFinal64Test, WhirlingTwirligigSacrificesUnitAsCostToCreateMech){
  auto sacrifice=addUnit(P1,kInvalidId,2,-1);
  auto source=addToHand(P1,CardDefId{1076});
