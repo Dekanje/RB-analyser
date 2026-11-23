@@ -14,9 +14,15 @@
     },
     "RAD-010/167": {
       "engine_id": 1069,
-      "status": "pending",
-      "engine_scenarios": [],
-      "unverified_rules": "Ready a unit.\nWhen you play a card with Energy cost :rb_energy_7: or more, you may play this from your trash for :rb_energy_1::rb_rune_fury::rb_rune_fury:. Banish this."
+      "status": "accepted",
+      "engine_scenarios": [
+        "RadianceFinal64Test.ForbiddenTechniqueHighEnergyPlayFromTrashReadiesAndBanishes",
+        "RadianceFinal64Test.ForbiddenTechniqueLowEnergyDoesNotGrantTrashReplay",
+        "RadianceFinal64Test.ForbiddenTechniqueDecliningReplayKeepsCardInTrash",
+        "RadianceFinal64Test.ForbiddenTechniqueInsufficientFuryPreventsReplay"
+      ],
+      "verified_rules": "Ready a unit.\nWhen you play a card with Energy cost :rb_energy_7: or more, you may play this from your trash for :rb_energy_1::rb_rune_fury::rb_rune_fury:. Banish this.",
+      "review_note": "Printed ready-unit effect and high-Energy-play optional trash replay at alternative [1][F][F] cost, then banish spell, audited against actual triggered-play and resource-payment engine paths. Five focused tests passed in GitHub Actions 45142319286 (2026-11-23), including printed Fury-domain cost, no replay on cheap play, declining replay, and insufficient Fury. Full 64-card acceptance gate remains fail-closed for others."
     },
     "RAD-011/167": {
       "engine_id": 1070,
