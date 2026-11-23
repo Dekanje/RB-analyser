@@ -6,6 +6,7 @@
 #include "cards/card_registry.h"
 #include "core/game_state.h"
 #include "engine/effect_executor.h"
+#include "engine/resource_payment.h"
 #include <algorithm>
 #include <memory>
 #include <string>
@@ -97,14 +98,41 @@ public:
    const auto& o=s.getObject(id);
    return o.isUnit()&&o.location?FinalizeChoice::Yes:FinalizeChoice::No;
  }
- unsigned choicesAtFinalization()const override{return kFinalizeResolve;}
+ unsigned choicesAtFinalization()const override{return kFinalizeResolve|kFinalizeTrigger;}
+ TriggerType triggerType()const override{return TriggerType::WhenYouPlayACard;}
  void onResolve(CardContext& c,const std::vector<GameObjectId>&)override{
    const auto units=boardObjects(c.state,[](const GameObject& o){return o.isUnit();});
    const auto chosen=pickTarget(c,"Forbidden Technique: ready a unit",units);
    if(finalizingChoices(c))return;
    if(chosen!=kInvalidId)c.executor.readyObject(chosen);
  }
- // MECHANICS_INCOMPLETE: expensive-play replay from trash and banishment.
+ // The trigger is queued from Trash only when a printed 7+-Energy card
+ // finishes being played. The alternative cost is paid when the new play
+ // starts, not for the triggered ability itself.
+ void onTrigger(CardContext& c,const std::vector<GameObjectId>&)override{
+   auto eligible=[&](){
+     if(!c.state.objectExists(c.source))return false;
+     const auto& o=c.state.getObject(c.source);
+     if(o.zone!=ZoneType::Trash || o.owner!=c.controller)return false;
+     const auto& trash=c.state.player(c.controller).trash;
+     if(std::find(trash.begin(),trash.end(),c.source)==trash.end())return false;
+     if(!canBePlayed(c.state,c.controller))return false;
+     return resource::canPayIn(c.state,c.controller,1,2,
+                              resource::maskOf(Domain::Fury));
+   };
+   const int yes=confirmOptional(c,
+      "Forbidden Technique: play from Trash for [1][F][F]?",eligible);
+   if(finalizingChoices(c))return;
+   if(yes!=1||!eligible())return;
+   if(!resource::payIn(c.state,c.events,c.controller,1,2,
+                       resource::maskOf(Domain::Fury)))return;
+   const auto spell=c.source;
+   // A paid play from Trash goes onto the chain through the normal
+   // EffectExecutor path. The printed "Banish this" applies after resolving.
+   if(c.executor.playIgnoringCost(c.controller,spell) &&
+      c.state.objectExists(spell))
+     c.state.getObject(spell).banish_on_leave_chain=true;
+ }
 
 private:
  const CardDef d_=[] {

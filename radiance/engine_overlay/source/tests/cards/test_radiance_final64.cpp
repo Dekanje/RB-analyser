@@ -1517,6 +1517,71 @@ TEST_F(RadianceFinal64Test, RestorationistHighEnergyDeclineLeavesCardInTrash){
    <<"The optional trash play must be declining, not automatic";
 }
 
+
+TEST_F(RadianceFinal64Test, ForbiddenTechniqueHighEnergyPlayFromTrashReadiesAndBanishes){
+ auto spell=addToHand(P1,CardDefId{1069});
+ auto& hand=state.player(P1).hand;
+ hand.erase(std::remove(hand.begin(),hand.end(),spell),hand.end());
+ state.getObject(spell).zone=ZoneType::Trash;
+ state.player(P1).trash.push_back(spell);
+ auto target=addUnit(P1,kInvalidId,2,0);
+ state.getObject(target).is_exhausted=true;
+ state.player(P1).rune_pool.energy=20;
+ state.player(P1).rune_pool.power[static_cast<int>(Domain::Fury)]=4;
+ auto expensive=addToHand(P1,CardDefId{1095}); // 8 Energy and 2 Fury Power.
+ EnginePathAgent yes(EnginePathAgent::choosing(target,EnginePathAgent::May::Yes));
+ playThroughEngine(expensive,&yes);
+ EXPECT_FALSE(state.getObject(target).is_exhausted);
+ EXPECT_EQ(state.getObject(spell).zone,ZoneType::Banishment)
+   <<"Replay with its own 1E/2F cost must banish this spell after it resolves";
+ EXPECT_EQ(state.player(P1).rune_pool.energy,11);
+ EXPECT_EQ(state.player(P1).rune_pool.power[static_cast<int>(Domain::Fury)],0);
+}
+TEST_F(RadianceFinal64Test, ForbiddenTechniqueLowEnergyDoesNotGrantTrashReplay){
+ auto spell=addToHand(P1,CardDefId{1069});
+ auto& hand=state.player(P1).hand;
+ hand.erase(std::remove(hand.begin(),hand.end(),spell),hand.end());
+ state.getObject(spell).zone=ZoneType::Trash;
+ state.player(P1).trash.push_back(spell);
+ addUnit(P1,kInvalidId,2,0);
+ state.player(P1).rune_pool.energy=20;
+ state.player(P1).rune_pool.power[static_cast<int>(Domain::Fury)]=4;
+ auto cheap=addToHand(P1,CardDefId{1084}); // 3 Energy.
+ EnginePathAgent yes(EnginePathAgent::accepting());
+ playThroughEngine(cheap,&yes);
+ EXPECT_EQ(state.getObject(spell).zone,ZoneType::Trash);
+ EXPECT_EQ(state.player(P1).rune_pool.power[static_cast<int>(Domain::Fury)],4);
+}
+TEST_F(RadianceFinal64Test, ForbiddenTechniqueDecliningReplayKeepsCardInTrash){
+ auto spell=addToHand(P1,CardDefId{1069});
+ auto& hand=state.player(P1).hand;
+ hand.erase(std::remove(hand.begin(),hand.end(),spell),hand.end());
+ state.getObject(spell).zone=ZoneType::Trash;
+ state.player(P1).trash.push_back(spell);
+ addUnit(P1,kInvalidId,2,0);
+ state.player(P1).rune_pool.energy=20;
+ state.player(P1).rune_pool.power[static_cast<int>(Domain::Fury)]=4;
+ auto expensive=addToHand(P1,CardDefId{1095});
+ EnginePathAgent decline;
+ playThroughEngine(expensive,&decline);
+ EXPECT_EQ(state.getObject(spell).zone,ZoneType::Trash)
+   <<"A triggered permission is optional, not an automatic replay";
+}
+TEST_F(RadianceFinal64Test, ForbiddenTechniqueInsufficientFuryPreventsReplay){
+ auto spell=addToHand(P1,CardDefId{1069});
+ auto& hand=state.player(P1).hand;
+ hand.erase(std::remove(hand.begin(),hand.end(),spell),hand.end());
+ state.getObject(spell).zone=ZoneType::Trash;
+ state.player(P1).trash.push_back(spell);
+ addUnit(P1,kInvalidId,2,0);
+ state.player(P1).rune_pool.energy=20;
+ state.player(P1).rune_pool.power[static_cast<int>(Domain::Fury)]=2;
+ auto expensive=addToHand(P1,CardDefId{1095});
+ EnginePathAgent yes(EnginePathAgent::accepting());
+ playThroughEngine(expensive,&yes);
+ EXPECT_EQ(state.getObject(spell).zone,ZoneType::Trash);
+}
+
 TEST_F(RadianceFinal64Test, SixtyFourUniqueCardDefinitionsHaveCanonicalMetadata){
  ASSERT_EQ(expected.size(),64u);
  std::set<int> ids,numbers;std::set<std::string> public_codes;

@@ -283,7 +283,8 @@ game_engine_path.write_text(source)
 # in its owner's Trash; it does not grant permission for the rest of the turn.
 tm_path=engine/"src/engine/trigger_manager.cpp"
 tm=tm_path.read_text()
-trash_hook="""    // Radiance Restorationist: the card itself can trigger from Trash.
+trash_hook="""    // Radiance high-Energy recursion cards (Restorationist and Forbidden Technique)
+    // trigger immediately from Trash when a qualifying play completes.
     // Printed Energy cost, NOT the actual amount spent, is the criterion.
     if (state_.objectExists(played_card)) {
         const auto& played=state_.getObject(played_card);
@@ -293,7 +294,8 @@ trash_hook="""    // Radiance Restorationist: the card itself can trigger from T
             std::vector<GameObjectId> from_trash;
             for(auto id:state_.player(playing_player).trash) {
                 if(state_.objectExists(id) &&
-                   state_.getObject(id).card_def_id==CardDefId{1115} &&
+                   (state_.getObject(id).card_def_id==CardDefId{1115} ||
+                    state_.getObject(id).card_def_id==CardDefId{1069}) &&
                    state_.getObject(id).zone==ZoneType::Trash &&
                    state_.getObject(id).owner==playing_player)
                     from_trash.push_back(id);
