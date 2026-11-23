@@ -44,11 +44,12 @@ jobs:
           set -euo pipefail
           mkdir -p results/diagnostics
           python3 - <<'PY'
-          import hashlib,json
+          import hashlib,json,sys
           from pathlib import Path
-          from scripts.sideboard_deck import parse_deck,render_deck
-          from scripts.tournament_bo3_policy import transition
-          from scripts.optimize_58 import registry
+          sys.path.insert(0,str(Path('scripts').resolve()))
+          from sideboard_deck import parse_deck,render_deck
+          from tournament_bo3_policy import transition
+          from optimize_58 import registry
           original=Path('results/structure/nasus_curator_of_the_sands/structural_008.txt')
           assert hashlib.sha256(original.read_bytes()).hexdigest()=='42faef389e09f80b3a1eb474106da70cab388552cfef2c944e2909471491b163'
           byname=registry(Path('engine_build/registry.json'))
