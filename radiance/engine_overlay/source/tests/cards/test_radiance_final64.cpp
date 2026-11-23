@@ -268,6 +268,36 @@ TEST_F(RadianceFinal64Test, SeraphinePlayCreatesRecruitAndExhaustedFriendsAddMig
  withEngine([&](GameEngine& e){e.testHook_recalculateAuras();});
  EXPECT_GE(state.getObject(sera).current_might,2);
 }
+
+TEST_F(RadianceFinal64Test, SeraphineExhaustionCreatesRecruitAndAuraCountsOnlyFriendlyOthers){
+ auto ally=addUnit(P1,kInvalidId,2,0);
+ auto enemy=addUnit(P2,kInvalidId,2,1);
+ state.getObject(ally).is_exhausted=true;
+ state.getObject(enemy).is_exhausted=true;
+ auto sera=addToHand(P1,CardDefId{1128});
+ playThroughEngine(sera);
+ auto recruitCount=[&](){
+   int n=0;
+   for(const auto& [id,o]:state.objects.onBoard())
+     if(o.controller==P1&&o.isUnit()&&o.name=="Recruit")++n;
+   return n;
+ };
+ const int before=recruitCount();
+ ASSERT_GE(before,1);
+ state.getObject(sera).is_exhausted=false; // Ready as a fixture precondition.
+ withEngine([&](GameEngine& e){
+   e.testHook_executor().exhaustObject(sera);
+   settleLikeTheEngine(e);
+   e.testHook_recalculateAuras();
+ });
+ EXPECT_EQ(recruitCount(),before+1);
+ int exhaustedOthers=0;
+ for(const auto& [id,o]:state.objects.onBoard())
+   if(id!=sera&&o.controller==P1&&o.isUnit()&&o.location&&o.is_exhausted)
+     ++exhaustedOthers;
+ EXPECT_EQ(state.getObject(sera).current_might,1+exhaustedOthers)
+   << "Seraphine's Might bonus must ignore herself and enemy exhausted units";
+}
 TEST_F(RadianceFinal64Test, RivenDeserterGainsMightWhenAnotherFriendlyUnitExhausts){
  auto riven=addUnit(P1,CardDefId{1113},5,0);
  auto other=addUnit(P1,kInvalidId,2,0);
@@ -582,6 +612,17 @@ TEST_F(RadianceFinal64Test, CommandAttackLooksAtTopFiveAndDrawsOnlyRevealedGear)
  playThroughEngine(spell,&accept);
  EXPECT_TRUE(inHand(P1,eligible));
  EXPECT_EQ(state.player(P1).main_deck.size(),3u);
+}
+
+TEST_F(RadianceFinal64Test, CommandAttackMovesFriendlyDeployGearToAnotherBattlefield){
+ auto gear=addToHand(P1,CardDefId{1080}); // Hunting Blind is friendly Deploy gear.
+ playThroughEngine(gear,nullptr,LocationId{BattlefieldLocation{state.battlefields[0].id}});
+ ASSERT_EQ(state.getObject(gear).battlefieldId(),state.battlefields[0].id);
+ auto spell=addToHand(P1,CardDefId{1078});
+ EnginePathAgent select(EnginePathAgent::script({0,static_cast<int>(gear.raw()),0}));
+ playThroughEngine(spell,&select);
+ EXPECT_EQ(state.getObject(gear).battlefieldId(),state.battlefields[1].id)
+   << "Command: Attack's first mode must move the chosen friendly Deploy gear";
 }
 TEST_F(RadianceFinal64Test, WhirlingTwirligigExhaustsToPlayAnExhaustedGold){
  auto source=addToHand(P1,CardDefId{1076});
