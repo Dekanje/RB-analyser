@@ -127,3 +127,176 @@ jobs:
           name: competitive-guidebot-repaired-full580-native-registered-certification
           path: results/new_native_certification/
           retention-days: 30
+
+  prerequisite-for-all174-actual-sideboard-tech:
+    needs: verify-all-580-on-one-fixed-engine
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify card-policy native receipts and game1 RNG divergence handling before screening
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/structural_sideboard_174.py scripts/test_structural_sideboard_174.py
+          python3 -m unittest discover -s scripts -p 'test_structural_sideboard_174.py' -v
+      - uses: actions/download-artifact@v4
+        with:
+          name: competitive-guidebot-repaired-full580-native-registered-certification
+          path: results/native_certified
+      - name: Enforce coherent new-engine certification before G2/G3 sideboard evaluation
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path('results/native_certified/acceptance.json').read_text())
+          assert d['status']=='ALL_580_REGISTERED_STRUCTURAL_NATIVE_GAMES_PASS'
+          assert d['all_native_games_completed']==580 and d['native_game_failures']==0
+          assert d['original_decks_modified'] is False and d['strength_assessed'] is False
+          print('FRESH_580_REPAIRED_ENGINE_CERTIFIED_FOR_SIDEBOARD_SCREEN')
+          PY
+  all-174-new-engine-actual-407-sideboard-BO3:
+    needs: prerequisite-for-all174-actual-sideboard-tech
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 95
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45259246337
+          github-token: ${{ github.token }}
+          name: worlds-all58-registered-structure-legal-unvalidated-variants
+          path: results/structure
+      - uses: actions/download-artifact@v4
+        with:
+          name: competitive-guidebot-repaired-full580-native-registered-certification
+          path: results/native_certified
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45181493632
+          github-token: ${{ github.token }}
+          name: expanded-optimized-58-independent-radiance-bo3
+          path: results/selected
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45208732588
+          github-token: ${{ github.token }}
+          name: all-58-optimized-head-to-head-rankings-and-matchups
+          path: results/ranked
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45282108093
+          github-token: ${{ github.token }}
+          name: competitive-guidebot-rule407-verified-engine-binary
+          path: engine_build
+      - name: Install pinned repaired native C++ engine runtime
+        timeout-minutes: 12
+        run: |
+          set -euo pipefail
+          if ! sudo env DEBIAN_FRONTEND=noninteractive timeout -k 10s 55s apt-get -o Acquire::Retries=0 update -qq; then
+            echo '::warning::using cached apt package indexes'
+          fi
+          sudo env DEBIAN_FRONTEND=noninteractive timeout 360s apt-get -o Acquire::Retries=2 install -y -qq --no-install-recommends libboost-program-options1.83.0 libboost-filesystem1.83.0 libboost-system1.83.0 libboost-context1.83.0
+          chmod +x engine_build/riftbound
+          if ldd engine_build/riftbound | grep -q 'not found'; then exit 1; fi
+      - name: Actual 407 Best-of-3 testing for 174 registered sideboard tech cards on matching binary
+        timeout-minutes: 78
+        run: |
+          set -euo pipefail
+          python3 -u scripts/structural_sideboard_174.py \
+            --selected results/selected \
+            --variants results/structure \
+            --registry engine_build/registry.json \
+            --engine engine_build/riftbound \
+            --certification results/native_certified/acceptance.json \
+            --ranked results/ranked/all_58_ranked.json \
+            --shards 29 --shard ${{ matrix.shard }} \
+            --agent ismcts:sims=24 --seed 202611270101 --timeout 175 \
+            --output results/sideboard174/${{ matrix.shard }}/sideboard_fitness.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: repaired-sideboard174-${{ matrix.shard }}
+          path: results/sideboard174/${{ matrix.shard }}/
+          retention-days: 30
+          if-no-files-found: warn
+  verify-all-174-new-engine-407-after-580:
+    needs: all-174-new-engine-actual-407-sideboard-BO3
+    runs-on: ubuntu-24.04
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: repaired-sideboard174-*
+          path: results/shards_named
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45259246337
+          github-token: ${{ github.token }}
+          name: worlds-all58-registered-structure-legal-unvalidated-variants
+          path: results/structure
+      - uses: actions/download-artifact@v4
+        with:
+          name: competitive-guidebot-repaired-full580-native-registered-certification
+          path: results/native_certified
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45181493632
+          github-token: ${{ github.token }}
+          name: expanded-optimized-58-independent-radiance-bo3
+          path: results/selected
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45208732588
+          github-token: ${{ github.token }}
+          name: all-58-optimized-head-to-head-rankings-and-matchups
+          path: results/ranked
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45282108093
+          github-token: ${{ github.token }}
+          name: competitive-guidebot-rule407-verified-engine-binary
+          path: engine_build
+      - name: Use identical certified repaired C++ engine for 174/174 complete real sideboard policies
+        run: |
+          set -euo pipefail
+          mkdir -p results/shards
+          python3 - <<'PY'
+          from pathlib import Path
+          roots=Path('results/shards_named')
+          for i in range(29):
+              p=roots/f'repaired-sideboard174-{i}'
+              if not (p/'sideboard_fitness.json').is_file():
+                  raise RuntimeError(f'Missing repaired sideboard shard {i}')
+              (Path('results/shards')/f'sideboard174-{i}').symlink_to(p.resolve(),
+                  target_is_directory=True)
+          PY
+          python3 scripts/structural_sideboard_174.py --aggregate \
+            --selected results/selected \
+            --variants results/structure \
+            --registry engine_build/registry.json \
+            --certification results/native_certified/acceptance.json \
+            --ranked results/ranked/all_58_ranked.json \
+            --input results/shards \
+            --output results/sideboard_174_final \
+            --shards 29 --agent ismcts:sims=24 --seed 202611270101
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path('results/sideboard_174_final/summary.json').read_text())
+          assert r['sideboard_variants_actually_played']==174
+          assert r['candidate_bo3_completed']==696
+          assert r['baseline_bo3_completed']==232
+          assert r['confirmed_upgrades']==0 and r['accepted_deck_changes'] is False
+          print('GUIDEBOT_REPAIRED_ALL580_NATIVE_AND_ALL174_G2_G3_BO3_SCREEN_PASS',
+                r['game1_winner_mismatch_count'])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: competitive-worlds-repaired-engine-all174-sideboard-native-407-fitness
+          path: results/sideboard_174_final/
+          retention-days: 30
