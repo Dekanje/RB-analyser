@@ -549,6 +549,18 @@ gp.write_text(g)
 # each player plays to this battlefield on their own turn.
 hunter_path=engine/"src/engine/game_engine.cpp"
 g=hunter_path.read_text()
+# executePlayCard is located BEFORE generateMainPhaseActions in pinned
+# AlphaRune. Forward-declare these helpers so calls compile independently
+# of their later definitions.
+hunter_forward_decl="""static bool radianceHuntersFirstPlayHere(
+    const GameState&, PlayerId, GameObjectId, const std::optional<LocationId>&);
+static void radianceMarkHunterPlay(
+    GameState&, PlayerId, const std::optional<LocationId>&);
+
+"""
+play_def="void GameEngine::executePlayCard(const Intent& intent) {"
+assert g.count(play_def)==1, "Hunter forward-declaration anchor changed"
+g=g.replace(play_def,hunter_forward_decl+play_def,1)
 hunter_helper="""static const char* radianceHunterKey(PlayerId p) {
     return p==PlayerId::Player1?"__rad_hc_p1_turn":"__rad_hc_p2_turn";
 }
