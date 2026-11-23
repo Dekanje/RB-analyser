@@ -156,6 +156,19 @@ new_hash="""    constexpr uint64_t kRadiance1059DeckOfSeedOne = 1122629587698025
 assert deck_source.count(old_hash)==1, "Final64 seed pin anchor changed"
 decktest.write_text(deck_source.replace(old_hash,new_hash,1))
 
+# AlphaRune's strong-ID audit intentionally requires every integer-slot
+# GameObjectId reader to be paired with a writer. Dockside Lock-Up stores
+# __dockside_banished_card = int(unit.raw()) (plain GameObjectId encoding)
+# and reads it through GameObjectId::fromRaw; a missing key means "none".
+# Its hold trigger verifies objectExists and Banishment before using it.
+audit=engine/"tests/test_strong_ids.cpp"
+audited=audit.read_text()
+audit_anchor='        {"src/cards/units/0643_keeper_of_masks.cpp", 1},'
+audit_entry='        {"src/cards/units/1116_radiance_final64_d.cpp", 1},  // Dockside Lock-Up: __dockside_banished_card stores GameObjectId::raw; absence is none'
+assert audited.count(audit_anchor)==1, "StrongIds audit entry anchor changed"
+assert audit_entry not in audited, "StrongIds Dockside reader audited twice"
+audit.write_text(audited.replace(audit_anchor,audit_anchor+"\\n"+audit_entry,1))
+
 init=engine/"src/cards/cards_init.cpp"
 s=init.read_text()
 last_decl="void register_card_1067(CardRegistry&);"
