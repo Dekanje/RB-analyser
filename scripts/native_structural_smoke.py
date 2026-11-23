@@ -37,7 +37,13 @@ def run(args):
         raise RuntimeError("Wrong original structural proposal source")
     if not args.engine.is_file():
         raise RuntimeError("Exact pinned C++ binary missing")
-    targets=tuple(args.legend) if args.legend else WORLD_TRIO
+    if args.all58:
+        targets=tuple(n for i,n in enumerate(sorted(original))
+                      if i%args.shards==args.shard)
+        if args.legend:
+            raise ValueError("Cannot mix --all58 with --legend")
+    else:
+        targets=tuple(args.legend) if args.legend else WORLD_TRIO
     env=os.environ.copy()
     env.pop("RIFTBOUND_FORCE_STARTING_PLAYER",None)
     records=[]
@@ -76,6 +82,9 @@ def run(args):
             print("STRUCTURAL_NATIVE_GAME",legend,kind,completed,flush=True)
     payload={
         "status":"STRUCTURAL_NATIVE_PROBE_NOT_FITNESS",
+        "all58_sharded":args.all58,
+        "shard":args.shard if args.all58 else None,
+        "shards":args.shards if args.all58 else None,
         "source_manifest_sha256":sha(args.variants/"structural_manifest.json"),
         "native_engine_sha256":sha(args.engine),
         "tested_legends":list(targets),
@@ -100,12 +109,16 @@ def main():
     p.add_argument("--registry",type=pathlib.Path,required=True)
     p.add_argument("--engine",type=pathlib.Path,required=True)
     p.add_argument("--legend",action="append",default=[])
+    p.add_argument("--all58",action="store_true")
+    p.add_argument("--shards",type=int,default=29)
+    p.add_argument("--shard",type=int,default=0)
     p.add_argument("--seed",type=int,default=202611251810)
     p.add_argument("--timeout",type=float,default=120)
     p.add_argument("--output",type=pathlib.Path,required=True)
     a=p.parse_args()
-    if a.timeout<=0:
-        p.error("Invalid engine timeout")
+    if (a.timeout<=0 or not 1<=a.shards<=58 or
+        not 0<=a.shard<a.shards):
+        p.error("Invalid engine timeout or shard")
     run(a)
 
 
