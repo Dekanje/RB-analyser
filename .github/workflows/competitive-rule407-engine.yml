@@ -2,7 +2,12 @@ name: Competitive 407 loser-chooses-first patched full C++ engine QA
 on:
   push:
     branches: ['research/competitive-agent-benchmark-v1-2026-11-23']
-    paths: ['.github/workflows/competitive-rule407-engine.yml']
+    paths:
+      - '.github/workflows/competitive-rule407-engine.yml'
+      - 'radiance/engine_overlay/tournament_starting_player.py'
+      - 'scripts/tournament_bo3_policy.py'
+      - 'scripts/test_tournament_bo3_policy.py'
+      - 'scripts/optimize_58.py'
 permissions:
   contents: read
   actions: read
