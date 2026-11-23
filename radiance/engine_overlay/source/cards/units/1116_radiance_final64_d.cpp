@@ -171,9 +171,8 @@ public:
  }
  void onTrigger(CardContext& c,const std::vector<GameObjectId>&)override{
    const auto& ri=c.state.chain.resuming;
-   if(!ri.has_value()||ri->resume_point==0)
-     for(auto id:topFour(c))
-       knowledge::shown(c.state,id,knowledge::only(c.controller));
+   for(auto id:topFour(c))
+     knowledge::shown(c.state,id,knowledge::only(c.controller));
    const int yes=confirmOptional(c,"Trifarian Captain: reveal a cheap unit or gear from top 4 and draw?",[&]{
       return !eligible(c).empty();
    });
