@@ -599,9 +599,10 @@ block=block.replace(needle,"        const bool printed_ok = canAfford(player, ca
 needle="            if (alt == 0 && !printed_ok) continue;"
 assert block.count(needle)==1,"hunter unit alt gate"
 block=block.replace(needle,"            if (alt == 0 && !printed_ok && !hunter_ok) continue;",1)
-needle="            play_intent.play_location = BaseLocation{player};\n            actions.push_back(play_intent);"
-assert block.count(needle)==1,"hunter unit base"
-block=block.replace(needle,"            if(alt==1||printed_ok){\n                play_intent.play_location = BaseLocation{player};\n                actions.push_back(play_intent);\n            }",1)
+# Do not depend on other overlays' exact unit-base formatting.
+# Remove unaffordable ordinary base plays after the complete action list
+# is built; Hunter discounts only exist at the selected battlefield.
+
 needle="                if (can_play_here) {\n                    Intent bf_play = play_intent;"
 assert block.count(needle)==1,"hunter BF slot"
 block=block.replace(needle,"""                const std::optional<LocationId> to=BattlefieldLocation{bf.id};
@@ -641,6 +642,18 @@ block=block.replace(needle,"""        if(card.keywords.has(Keyword::Deploy)){
             play_intent.play_location=BaseLocation{player};
             actions.push_back(play_intent);
         }""",1)
+end_anchor="    return actions;\n}"
+assert block.count(end_anchor)==1,"Hunter main-phase return"
+block=block.replace(end_anchor,"""    actions.erase(std::remove_if(actions.begin(),actions.end(),[&](const Intent& a){
+        if(a.type!=IntentType::PlayCard || a.use_alt_play_cost ||
+           !a.play_location.has_value() ||
+           !std::holds_alternative<BaseLocation>(*a.play_location) ||
+           !state_.objectExists(a.card))return false;
+        const auto& obj=state_.getObject(a.card);
+        return obj.isUnit()&&!canAfford(player,a.card);
+    }),actions.end());
+    return actions;
+}""",1)
 g=g[:start]+block+g[end:]
 start=g.index("void GameEngine::executePlayCard(const Intent& intent) {")
 end=g.index("void GameEngine::executePlaySpell(",start)
