@@ -358,8 +358,11 @@ public:
         c.state.getObject(card).zone!=ZoneType::Banishment){
        (void)finalizingChoices(c);return;
      }
-     if(costDueNow(c))c.executor.killObject(c.source);
+     // "Kill this to play" is a cost, not an effect. A replacement that
+     // prevents the death must also prevent the free play.
+     if(costDueNow(c)&&!costUnpaid(c))(void)killAsCost(c,c.source);
      if(finalizingChoices(c))return;
+     if(costUnpaid(c))return;
      const auto places=playLocationsFor(c,c.controller,card);
      if(places.locations.empty())return;
      const auto where=c.executor.chooseLocationNow(c.controller,places.locations,
