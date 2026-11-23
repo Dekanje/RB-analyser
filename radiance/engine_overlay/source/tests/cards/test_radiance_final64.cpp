@@ -455,6 +455,20 @@ TEST_F(RadianceFinal64Test, SeraphicWyvernAddsOneExhaustedRuneToReadyChannel){
  EXPECT_EQ(exhausted,1);
  EXPECT_EQ(state.player(P1).rune_deck.size(),1u);
 }
+TEST_F(RadianceFinal64Test, MordekaiserDiscardsOneToKillTargetOnAttackTrigger){
+ auto victim=addUnit(P2,kInvalidId,2,0);
+ auto morde=addUnit(P1,CardDefId{1127},8,0);
+ auto discarded=addToHand(P1,CardDefId{1117});
+ const auto* card=card_registry.get(CardDefId{1127});
+ ASSERT_NE(card,nullptr);
+ EXPECT_TRUE(card->firesOn(TriggerType::WhenIAttack));
+ EXPECT_TRUE(card->firesOn(TriggerType::WhenYouPlayMe));
+ EnginePathAgent choices(EnginePathAgent::script({1,static_cast<int>(victim.raw()),
+                                                static_cast<int>(discarded.raw())}));
+ fireTriggerThroughEngine(morde,TriggerType::WhenIAttack,&choices);
+ EXPECT_FALSE(state.getObject(victim).location.has_value());
+ EXPECT_FALSE(inHand(P1,discarded));
+}
 TEST_F(RadianceFinal64Test, RememberTheFallenPlaysEligibleTrashCardsButNotExpensiveUnits){
  auto gear=addToHand(P1,CardDefId{1116});
  auto unit=addToHand(P1,CardDefId{1120});
