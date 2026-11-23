@@ -2,7 +2,10 @@ name: Competitive robust 919 Worlds lineups under meta uncertainty
 on:
   push:
     branches: ['research/competitive-agent-benchmark-v1-2026-11-23']
-    paths: ['.github/workflows/competitive-robust-worlds.yml']
+    paths:
+      - '.github/workflows/competitive-robust-worlds.yml'
+      - 'scripts/worlds_robust_lineups.py'
+      - 'scripts/test_worlds_robust_lineups.py'
 permissions:
   contents: read
   actions: read
