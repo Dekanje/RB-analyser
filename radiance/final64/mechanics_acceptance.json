@@ -571,9 +571,13 @@
     },
     "RAD-158/167": {
       "engine_id": 1129,
-      "status": "pending",
-      "engine_scenarios": [],
-      "unverified_rules": ":rb_rune_rainbow::rb_rune_rainbow:: Draw 1. Each player may use this ability once on their turn (even if they don't control this battlefield)."
+      "status": "accepted",
+      "engine_scenarios": [
+        "RadianceFinal64Test.BlackMarketBothPlayersCanDrawOnOwnTurnsWithoutControllingIt",
+        "RadianceFinal64Test.BlackMarketPendingAbilityCannotBeActivatedTwice"
+      ],
+      "verified_rules": ":rb_rune_rainbow::rb_rune_rainbow:: Draw 1. Each player may use this ability once on their turn (even if they don't control this battlefield).",
+      "review_note": "Black Market grants an independent [A][A] draw activation to both players even when the battlefield is uncontrolled, only on that player's turn and at most once per turn. Tests verify real engine draw, payment, both players and no double activation while queued, passing CI 45131509247. Strict full gate remains fail-closed."
     },
     "RAD-163/167": {
       "engine_id": 1130,
