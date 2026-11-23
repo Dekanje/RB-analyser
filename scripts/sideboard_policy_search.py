@@ -28,8 +28,10 @@ from sideboard_deck import parse_deck
 from tournament_bo3_policy import transition,run_series,check_final_legality
 
 
-def legal_plans(registered, byname, max_options=6):
-    """Predeclare distinct fully constructed, rule-validated interventions."""
+def legal_plans(registered, byname, max_options=6, max_swap_depth=2):
+    """Predeclare diverse 1-to-3-swap strategies with full structural legality."""
+    if not 1 <= max_swap_depth <= 3:
+        raise ValueError("Swap depth must be 1..3")
     check_final_legality(registered,registered,byname)
     main_names=sorted(registered.main)
     side_names=sorted(registered.sideboard)
@@ -58,20 +60,47 @@ def legal_plans(registered, byname, max_options=6):
                    card_score(owncard,collections.Counter(),tag))
             scored.append((score,own,side,plan))
     scored.sort(key=lambda x:(-x[0],x[1],x[2]))
+    # Round-robin different sideboard cards FIRST. The previous heuristic
+    # ranked three swaps all using the same Corrupt Enforcer; that does not
+    # explore enough strategic diversity.
+    selected=[];selected_pairs=set();represented_side=set()
+    for prefer_new_side in (True,False):
+        for score,main_out,side_in,plan in scored:
+            if (prefer_new_side and side_in in represented_side or
+                (main_out,side_in) in selected_pairs):
+                continue
+            selected.append((score,main_out,side_in,plan))
+            represented_side.add(side_in)
+            selected_pairs.add((main_out,side_in))
+            if len(selected)>=max_options:
+                break
+        if len(selected)>=max_options:
+            break
     choices=[]
-    seen=set()
-    for score,main_out,side_in,plan in scored:
-        fingerprint=json.dumps(plan,sort_keys=True)
-        if fingerprint in seen:
-            continue
-        seen.add(fingerprint)
+    for score,main_out,side_in,plan in selected:
         choices.append({
             "plan":plan,"loser_chooses_start":"self",
             "heuristic_tech_swap_delta":round(score,4),
-            "explanation":"Proposed one-card registered sideboard swap",
+            "explanation":"Diversified one-card registered sideboard swap",
         })
-        if len(choices)>=max_options:
-            break
+    # Build wider multi-slot interactions from different Main and Side cards.
+    # A double swap may perform differently from either swap in isolation.
+    for depth in range(2,max_swap_depth+1):
+        for group in itertools.combinations(selected,depth):
+            old_cards=[x[1] for x in group]
+            new_cards=[x[2] for x in group]
+            if len(set(old_cards))!=depth or len(set(new_cards))!=depth:
+                continue
+            plan={"swaps":[x[3]["swaps"][0] for x in group]}
+            try:
+                transition(registered,plan,byname,game_no=2)
+            except ValueError:
+                continue
+            choices.append({
+                "plan":plan,"loser_chooses_start":"self",
+                "heuristic_tech_swap_delta":round(sum(x[0] for x in group),4),
+                "explanation":f"Predeclared legal {depth}-card sideboard combination",
+            })
     # Opposite first-player choice tests the 407.4 strategic decision without
     # simultaneously changing card identities.
     choices.append({
@@ -156,7 +185,8 @@ def evaluate(args):
     byname=registry(args.registry)
     registered=parse_deck(decks[args.legend].read_text(encoding="utf-8"))
     check_final_legality(registered,registered,byname)
-    options=legal_plans(registered,byname,args.max_tech_options)
+    options=legal_plans(registered,byname,args.max_tech_options,
+                        args.max_swap_depth)
     if len(options)<2:
         raise RuntimeError("No independent sideboard/start choices generated")
     cases=schedule(args.legend,args.opponent,args.repetitions,args.seed)
@@ -227,12 +257,15 @@ def main():
     parser.add_argument("--legend",default="Draven, Glorious Executioner")
     parser.add_argument("--opponent",default="LeBlanc, Deceiver")
     parser.add_argument("--max-tech-options",type=int,default=3)
+    parser.add_argument("--max-swap-depth",type=int,default=2)
     parser.add_argument("--agent",default="ismcts:sims=24")
     parser.add_argument("--seed",type=int,default=202611240818)
     parser.add_argument("--repetitions",type=int,default=2)
     parser.add_argument("--timeout",type=float,default=200)
     a=parser.parse_args()
-    if not 1<=a.max_tech_options<=20 or not 1<=a.repetitions<=10 or a.timeout<=0:
+    if (not 1<=a.max_tech_options<=20 or
+        not 1<=a.max_swap_depth<=3 or
+        not 1<=a.repetitions<=10 or a.timeout<=0):
         parser.error("Invalid policy exploration budget")
     evaluate(a)
 
