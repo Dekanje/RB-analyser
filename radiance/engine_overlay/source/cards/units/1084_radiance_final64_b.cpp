@@ -239,7 +239,28 @@ private:
 class R64_1091 final : public UnitCard {
 public:
  const CardDef& def() const override { return d_; }
- // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
+ // Initial aura integration: the engine's unified cost calculation uses both
+ // Energy and Power reductions. Further acceptance requires player choice
+ // and per-source once-per-turn tracking (not just first gear per turn).
+ void applyPassiveAura(GameState& s,PlayerId controller)const override{
+   if(controller==PlayerId::None)return;
+   for(const auto& [id,obj]:s.objects.onBoard()){
+     if(obj.card_def_id!=cardDefId()||obj.controller!=controller||
+        !obj.isUnit()||!obj.isAtBattlefield())continue;
+     auto& mods=s.player(controller).cost_modifiers;
+     if(std::any_of(mods.begin(),mods.end(),[&](const auto& m){
+         return m.source==id&&m.gear_only&&m.from_aura;}))continue;
+     PlayerState::CostModifier m;
+     m.source=id;
+     m.energy_reduction=1;
+     m.power_reduction=1;
+     m.gear_only=true;
+     m.first_gear_per_turn=true;
+     m.affects_friendly_only=true;
+     m.this_turn_only=false;
+     mods.push_back(m);
+   }
+ }
 private:
  const CardDef d_=[] {
   auto d=mkFinal64_b(1091,68,R"RB(Orianna, Mechanical Marvel)RB",CardType::Unit,5,0,5,{Domain::Mind},Rarity::Epic,R"RB(Once each turn, while I'm at a battlefield, you may pay [1][A] less to play a gear.)RB");
