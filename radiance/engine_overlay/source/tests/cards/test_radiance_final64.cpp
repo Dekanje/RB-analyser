@@ -2093,6 +2093,44 @@ TEST_F(RadianceFinal64Test, OriannaMayDeclineFirstAndDiscountSecondGear) {
  EXPECT_EQ(state.getObject(orianna).card_counters["__rad_orianna_used_turn"],state.turn.turn_number);
 }
 
+
+TEST_F(RadianceFinal64Test, QABaronNashorAuraAffectsOtherFriendlyUnits){
+ // Independently cover a disabled upstream regression (UNL-147 Baron Nashor).
+ // The aura crosses battlefields but excludes Baron and enemy units.
+ auto baron=addUnit(P1,CardDefId{709},12,0);
+ auto ally=addUnit(P1,CardDefId{1084},3,1);
+ auto enemy=addUnit(P2,CardDefId{1084},3,1);
+ withEngine([&](GameEngine& e){
+   e.testHook_recalculateAuras();
+   const auto& st=e.mutableState();
+   EXPECT_EQ(st.getObject(baron).aura_might_bonus,0);
+   EXPECT_EQ(st.getObject(ally).aura_might_bonus,2);
+   EXPECT_EQ(st.getObject(enemy).aura_might_bonus,0);
+   EXPECT_EQ(st.getObject(ally).current_might,5);
+ });
+}
+
+TEST_F(RadianceFinal64Test, QABaronNashorAuraStacksWithHeimerMechReplacement){
+ // Cross-set/cross-mechanic: Heimer replacement chooses base Mech 3[M];
+ // Baron's independent continuous aura then gives it +2[M].
+ addUnit(P1,CardDefId{709},12,0);
+ addUnit(P1,CardDefId{1123},5,1);
+ EnginePathAgent yes(EnginePathAgent::accepting());
+ GameObjectId token=kInvalidId;
+ withEngine([&](GameEngine& e){
+   token=e.testHook_executor().createToken(P1,CardType::Unit,"Recruit",1,
+        {},KeywordSet{},BaseLocation{P1},false);
+   e.testHook_recalculateAuras();
+ },&yes);
+ ASSERT_NE(token,kInvalidId);
+ ASSERT_TRUE(state.objectExists(token));
+ const auto& o=state.getObject(token);
+ EXPECT_EQ(o.name,"Mech");
+ EXPECT_EQ(o.base_might,3);
+ EXPECT_EQ(o.aura_might_bonus,2);
+ EXPECT_EQ(o.current_might,5);
+}
+
 TEST_F(RadianceFinal64Test, SixtyFourUniqueCardDefinitionsHaveCanonicalMetadata){
  ASSERT_EQ(expected.size(),64u);
  std::set<int> ids,numbers;std::set<std::string> public_codes;
