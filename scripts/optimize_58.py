@@ -103,7 +103,7 @@ def card_score(card, totals, leader):
     popularity=min(1.5,totals.get(card['name'],0)*0.075)
     return (max(0,might)*0.62+utility+tribal+popularity)/(1+cost*0.19)
 
-def propose(name,path,byname,total_pop,n,seed):
+def propose(name,path,byname,total_pop,n,seed,bundles=0):
     original,main,side=parse_deck(path)
     domains=effective_domains(name,byname)
     chosen=re.search(r'^Champion:\s*\n1 (.+)$',original,re.M)
@@ -127,6 +127,7 @@ def propose(name,path,byname,total_pop,n,seed):
     strong=scored[:min(80,len(scored))]
     rng.shuffle(strong)
     selected=[]; used=set()
+    single_target=n-bundles
     for _,old,new in strong + scored[:min(250,len(scored))]:
         if (old,new) in used or any(p['remove']==old or p['add']==new for p in selected):continue
         used.add((old,new))
@@ -135,8 +136,39 @@ def propose(name,path,byname,total_pop,n,seed):
         if sum(changed.values())!=39:raise AssertionError('Mutation changed total')
         # Apply full main + sideboard Unique and copy-limit checks.
         if any(c+side.get(x,0)>(1 if is_unique(byname[x]) else 3) for x,c in changed.items() if x in byname):continue
-        selected.append({'remove':old,'add':new,'text':render_deck(original,changed)})
-        if len(selected)==n:break
+        selected.append({'remove':old,'add':new,'text':render_deck(original,changed),
+                         'swap_sequence':[{'remove':old,'add':new}]})
+        if len(selected)==single_target:break
+    # Evaluate synergistic *two-card* swaps, including combinations where
+    # neither isolated single swap earns a training/holdout acceptance.
+    # Only valid original main-deck cards, domains, bans and copy limits apply.
+    combinations=[]
+    for a in range(len(selected)):
+        for b in range(a+1,len(selected)):
+            first,second=selected[a],selected[b]
+            removed={first['remove'],second['remove']}
+            added={first['add'],second['add']}
+            if len(removed)!=2 or len(added)!=2 or removed & added: continue
+            changed=main.copy()
+            for step in (first,second):
+                changed[step['remove']]-=1
+                changed[step['add']]+=1
+            changed+=collections.Counter()
+            if sum(changed.values())!=39:raise AssertionError('Bundle changed main deck count')
+            if any(c+side.get(x,0)>(1 if is_unique(byname[x]) else 3)
+                   for x,c in changed.items() if x in byname):continue
+            gain=sum(card_score(byname[s['add']],total_pop,leader_tags)-
+                     card_score(byname[s['remove']],total_pop,leader_tags)
+                     for s in (first,second))
+            combinations.append((gain,first,second,changed))
+    combinations.sort(key=lambda row:(-row[0],row[1]['remove'],row[2]['remove'],
+                                      row[1]['add'],row[2]['add']))
+    for _,first,second,changed in combinations[:bundles]:
+        selected.append({'remove':first['remove']+' + '+second['remove'],
+                         'add':first['add']+' + '+second['add'],
+                         'text':render_deck(original,changed),
+                         'swap_sequence':[first['swap_sequence'][0],
+                                          second['swap_sequence'][0]]})
     return selected
 
 def benchmark(exe,deck1,deck2,seed,agent,timeout,env):
@@ -218,7 +250,7 @@ def main(args):
         rounds=[]
         for round_ix in range(args.rounds):
           proposed=propose(name,baseline_path,byname,total_pop,args.candidates,
-                           args.seed+round_ix*21911)
+                           args.seed+round_ix*21911,args.bundles)
           candidates=[]
           for pidx,p in enumerate(proposed):
               dest=output/'proposals'/f'{ix:02d}_round{round_ix+1}_{pidx:02d}.txt'
@@ -297,8 +329,9 @@ def main(args):
         destination.write_text(baseline_path.read_text(encoding='utf-8'),encoding='utf-8')
         report={'legend':name,'original_sha256':file_sha(sources[name]),
                 'effective_sha256':file_sha(destination),'selected':file_sha(sources[name])!=file_sha(destination),
-                'selected_swaps':[{'round':r['round'],'remove':r['selected']['remove'],'add':r['selected']['add']}
-                                  for r in rounds if r['selected']],
+                'selected_swaps':[{'round':r['round'],**step}
+                                  for r in rounds if r['selected']
+                                  for step in r['selected']['swap_sequence']],
                 'rounds':rounds,'agent':args.agent,'samples':args.samples,
                 'holdout_samples':args.holdout,
                 'rule':'Independent per-legend selection against frozen legal field; heldout BO3 gains are exploratory, not proof of global optimality.'}
@@ -324,6 +357,7 @@ if __name__=='__main__':
     p.add_argument('--preflight-only',action='store_true')
     p.add_argument('--max-legends',type=int,default=0)
     p.add_argument('--candidates',type=int,default=3)
+    p.add_argument('--bundles',type=int,default=0,help='Number of two-card bundles among candidates')
     p.add_argument('--shortlist',type=int,default=2)
     p.add_argument('--prefilter-samples',type=int,default=2)
     p.add_argument('--rounds',type=int,default=2)
@@ -336,5 +370,5 @@ if __name__=='__main__':
     p.add_argument('--seed',type=int,default=20261121)
     p.add_argument('--ld-library-path',type=pathlib.Path)
     a=p.parse_args()
-    if not (0<=a.shard<a.shards<=58 and 1<=a.shortlist<=a.candidates and 1<=a.prefilter_samples<=40 and 1<=a.rounds<=8 and 1<=a.candidates<=30 and 1<=a.opponents<=58 and 1<=a.samples<=50 and 1<=a.holdout<=50 and 1<=a.min_gain and 1<=a.workers<=32):p.error('Invalid search budget')
+    if not (0<=a.shard<a.shards<=58 and 1<=a.shortlist<=a.candidates and 1<=a.prefilter_samples<=40 and 1<=a.rounds<=8 and 1<=a.candidates<=30 and 0<=a.bundles<=a.candidates-2 and 1<=a.opponents<=58 and 1<=a.samples<=50 and 1<=a.holdout<=50 and 1<=a.min_gain and 1<=a.workers<=32):p.error('Invalid search budget')
     main(a)
