@@ -1,0 +1,101 @@
+name: Recover exact 12 structural holdout Holm report without repeating 576 BO3
+on:
+  push:
+    branches: ['research/competitive-agent-benchmark-v1-2026-11-23']
+    paths: ['.github/workflows/competitive-structural-128-aggregate-recovery.yml']
+permissions:
+  contents: read
+  actions: read
+jobs:
+  strict-aggregator-recovery:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate exact holdout arithmetic and source assertions
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/structural_128_holdout.py
+          python3 -m unittest discover -s scripts -p 'test_structural_128_holdout.py' -v
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45273687763
+          github-token: ${{ github.token }}
+          name: structure-holdout-frozen-12-preregistration
+          path: results/selection
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45273687763
+          github-token: ${{ github.token }}
+          pattern: structure-holdout-[0-9]*
+          path: results/all_hypotheses
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45259246337
+          github-token: ${{ github.token }}
+          name: worlds-all58-registered-structure-legal-unvalidated-variants
+          path: results/structure
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45270672340
+          github-token: ${{ github.token }}
+          name: competitive-all580-registered-structure-native-evidence
+          path: results/native_certified
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45271249469
+          github-token: ${{ github.token }}
+          name: competitive-406-structural-fitness-unconfirmed-results
+          path: results/fitness
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45181493632
+          github-token: ${{ github.token }}
+          name: expanded-optimized-58-independent-radiance-bo3
+          path: results/selected
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45208732588
+          github-token: ${{ github.token }}
+          name: all-58-optimized-head-to-head-rankings-and-matchups
+          path: results/ranked
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45244227502
+          github-token: ${{ github.token }}
+          name: competitive-rule407-verified-engine-binary
+          path: engine_build
+      - name: Verify every original 128-search BO3 receipt, freeze seeds and publish corrected Holm family
+        run: |
+          set -euo pipefail
+          python3 scripts/structural_128_holdout.py \
+            --aggregate \
+            --selected results/selected \
+            --variants results/structure \
+            --registry engine_build/registry.json \
+            --screen results/fitness/summary.json \
+            --certification results/native_certified/acceptance.json \
+            --ranked results/ranked/all_58_ranked.json \
+            --selection results/selection/selection.json \
+            --input results/all_hypotheses \
+            --output results/holdout_corrected/summary.json \
+            --agent ismcts:sims=128 --repetitions 2 --seed 202611261230
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('results/holdout_corrected/summary.json')
+          d=json.loads(p.read_text())
+          assert d['status']=='TWELVE_STRUCTURE_128_ISMCTS_407_HOLDOUT_COMPLETE'
+          assert d['hypotheses']==12 and d['completed_paired_BO3']==288
+          assert d['original_58_decks_modified'] is False
+          assert d['no_unconfirmed_deck_adopted'] is True
+          assert len(d['results'])==12
+          print('STRUCTURAL_128_FAMILYWISE_REPORT_PASS',d['confirmed'])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: competitive-worlds-structure-12-independent-407-decisions
+          path: results/holdout_corrected/
+          retention-days: 30
+          if-no-files-found: warn
