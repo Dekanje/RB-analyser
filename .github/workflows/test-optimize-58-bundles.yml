@@ -1,0 +1,20 @@
+name: Expanded optimizer proposal invariants
+on:
+  push:
+    branches: ['optimization/expanded-58-bundles-2026-11-23']
+    paths:
+      - 'scripts/test_optimize_58_bundles.py'
+      - '.github/workflows/test-optimize-58-bundles.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  bundle-proposal-unit-tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile and test constrained single + two-card proposals
+        run: |
+          python3 -m py_compile scripts/optimize_58.py scripts/test_optimize_58_bundles.py
+          python3 scripts/test_optimize_58_bundles.py
