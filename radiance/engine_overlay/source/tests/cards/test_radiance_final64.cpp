@@ -594,13 +594,19 @@ TEST_F(RadianceFinal64Test, DuneDevourerCanPayPrintedCostWithoutSacrificing){
  EXPECT_EQ(state.getObject(devourer).zone,ZoneType::Base);
  EXPECT_EQ(state.player(P1).rune_pool.energy,0);
 }
-TEST_F(RadianceFinal64Test, ProtectorsShieldCanBeReequippedForOneEnergy){
+TEST_F(RadianceFinal64Test, ProtectorsShieldEquipInactiveWhileAttachedButWorksWhenDetached){
  auto first=addUnit(P1,kInvalidId,2,-1);
  auto second=addUnit(P1,kInvalidId,3,-1);
  auto gear=addToHand(P1,CardDefId{1116});
  playThroughEngine(gear);
  ASSERT_EQ(state.getObject(gear).attached_to,std::optional<GameObjectId>{first});
  state.player(P1).rune_pool.energy+=1;
+ // CR 718.2 / 721.2: attached Equipment's own Equip is inactive.
+ EXPECT_FALSE(equipThroughEngine(gear,second));
+ EXPECT_EQ(state.getObject(gear).attached_to,std::optional<GameObjectId>{first});
+ // A detached copy may activate its Equip again, paying the printed [1].
+ withEngine([&](GameEngine& engine){engine.testHook_executor().unattachGear(gear);});
+ ASSERT_FALSE(state.getObject(gear).attached_to.has_value());
  EXPECT_TRUE(equipThroughEngine(gear,second));
  EXPECT_EQ(state.getObject(gear).attached_to,std::optional<GameObjectId>{second});
 }
