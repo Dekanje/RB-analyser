@@ -307,13 +307,13 @@ trash_hook="""    // Radiance Restorationist: the card itself can trigger from T
 first_anchor="    // [Vision] (CR 817):"
 assert tm.count(first_anchor)==1,"Restorationist permanent event anchor moved"
 tm=tm.replace(first_anchor,
-    "    { const auto played_card=e.object; const auto playing_player=e.player;\\n"
-    +trash_hook+"    }\\n\\n"+first_anchor,1)
+    "    { const auto played_card=e.object; const auto playing_player=e.player;\n"
+    +trash_hook+"    }\n\n"+first_anchor,1)
 spell_anchor="    // The same play, completed: if it was not from a hand (finding G12)."
 assert tm.count(spell_anchor)==1,"Restorationist spell resolved event anchor moved"
 tm=tm.replace(spell_anchor,
-    "    { const auto played_card=e.spell; const auto playing_player=e.controller;\\n"
-    +trash_hook+"    }\\n\\n"+spell_anchor,1)
+    "    { const auto played_card=e.spell; const auto playing_player=e.controller;\n"
+    +trash_hook+"    }\n\n"+spell_anchor,1)
 tm_path.write_text(tm)
 
 print("RADIANCE_FINAL64_OVERLAY_APPLIED: engine IDs 1068..1131 (64 distinct identities)")
