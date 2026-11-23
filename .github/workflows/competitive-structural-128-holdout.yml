@@ -3,7 +3,8 @@ on:
   push:
     branches: ['research/competitive-agent-benchmark-v1-2026-11-23']
     paths:
-      - '.github/workflows/competitive-structural-128-holdout.yml'
+      - 'data/launch_structural_128_retest.txt'
+  workflow_dispatch:
 permissions:
   contents: read
   actions: read
@@ -228,7 +229,7 @@ jobs:
             --ranked results/ranked/all_58_ranked.json \
             --selection results/selection/selection.json \
             --input results/all_hypotheses \
-            --output results/holdout_corrected \
+            --output results/holdout_corrected/summary.json \
             --agent ismcts:sims=128 --repetitions 2 --seed 202611261230
           python3 - <<'PY'
           import json
