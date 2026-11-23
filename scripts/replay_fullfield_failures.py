@@ -38,6 +38,20 @@ CASES = [
      "Mordekaiser, Iron Revenant", "Sett, The Boss", 0, 586095766, 2),
     ("mordekaiser_annie_mord", "baseline",
      "Annie, Dark Child", "Mordekaiser, Iron Revenant", 1, 1934929366, 0),
+    # The full-field packet exposes only the series failure, not which
+    # constituent game failed; replay all three deterministic game seeds.
+    ("mesmerize_seraphine_fiora_g1", "baseline",
+     "Seraphine, Starry-Eyed Songstress", "Fiora, Grand Duelist", 0, 1039926342, 0),
+    ("mesmerize_seraphine_fiora_g2", "baseline",
+     "Seraphine, Starry-Eyed Songstress", "Fiora, Grand Duelist", 0, 1039926342, 1),
+    ("mesmerize_seraphine_fiora_g3", "baseline",
+     "Seraphine, Starry-Eyed Songstress", "Fiora, Grand Duelist", 0, 1039926342, 2),
+    ("burn_away_seraphine_mf_g1", "baseline",
+     "Seraphine, Starry-Eyed Songstress", "Miss Fortune, Bounty Hunter", 1, 633416337, 0),
+    ("burn_away_seraphine_mf_g2", "baseline",
+     "Seraphine, Starry-Eyed Songstress", "Miss Fortune, Bounty Hunter", 1, 633416337, 1),
+    ("burn_away_seraphine_mf_g3", "baseline",
+     "Seraphine, Starry-Eyed Songstress", "Miss Fortune, Bounty Hunter", 1, 633416337, 2),
 ]
 
 def enumerate_roster(selected_folder, baseline_folder):
