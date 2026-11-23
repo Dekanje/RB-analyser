@@ -1,0 +1,42 @@
+{
+  "game2": {
+    "p1": {
+      "swaps": [
+        {
+          "main_out": "Brittle Steel",
+          "side_in": "Corrupt Enforcer",
+          "copies": 1
+        }
+      ]
+    },
+    "p2": {
+      "swaps": [
+        {
+          "main_out": "Blood Money",
+          "side_in": "Turn to Dust",
+          "copies": 1
+        }
+      ]
+    }
+  },
+  "game3": {
+    "p1": {
+      "swaps": [
+        {
+          "main_out": "Brittle Steel",
+          "side_in": "Detonate",
+          "copies": 1
+        }
+      ]
+    },
+    "p2": {
+      "swaps": [
+        {
+          "main_out": "Blood Money",
+          "side_in": "Zaun Punk",
+          "copies": 1
+        }
+      ]
+    }
+  }
+}
