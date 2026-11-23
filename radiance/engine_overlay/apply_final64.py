@@ -167,3 +167,36 @@ s=s.replace(last_call,last_call+"\n"+"\n".join(
     f"    register_card_{i}(registry);" for i in range(1068,1132)),1)
 init.write_text(s)
 print("RADIANCE_FINAL64_OVERLAY_APPLIED: engine IDs 1068..1131 (64 distinct identities)")
+
+# DIAGNOSTIC BRANCH ONLY: inspect privacy-test seed 20261043 decision 129.
+# Do not merge this instrumented test into the accepted engine.
+privacy=engine/"tests/test_hidden_order_leak.cpp"
+source=privacy.read_text()
+anchor="""    if (!(a == b)) t.problem(where + ": " + firstDifference(a, b));"""
+diag="""    if (where.find("seed 20261043 decision 129") != std::string::npos) {
+        std::cerr << "RADIANCE_PRIVACY_DIAG decision=" << where
+                  << " decider=" << toString(decider) << std::endl;
+        const auto& own=state.player(decider);
+        const auto& other=state.player(opponent(decider));
+        std::cerr << "OWN_HAND=" << own.hand.size() << " OWN_DECK="
+                  << own.main_deck.size() << " OTHER_HAND=" << other.hand.size()
+                  << " OTHER_DECK=" << other.main_deck.size() << std::endl;
+        for(auto id:own.hand) {
+            if(!state.objectExists(id)) continue;
+            const auto& original=state.getObject(id);
+            const auto& changed=variant.getObject(id);
+            const bool in_own_deck=std::find(own.main_deck.begin(),own.main_deck.end(),id)!=own.main_deck.end();
+            const bool in_other_deck=std::find(other.main_deck.begin(),other.main_deck.end(),id)!=other.main_deck.end();
+            const bool in_other_hand=std::find(other.hand.begin(),other.hand.end(),id)!=other.hand.end();
+            std::cerr << "OWN_HAND_OBJECT " << toString(id)
+                << " original=" << original.card_def_id.raw()
+                << " variant=" << changed.card_def_id.raw()
+                << " ownDeck=" << in_own_deck
+                << " otherDeck=" << in_other_deck
+                << " otherHand=" << in_other_hand << std::endl;
+        }
+    }
+"""
+assert source.count(anchor)==1, "HiddenOrderLeak diagnostics insertion anchor changed"
+privacy.write_text(source.replace(anchor,diag+anchor,1))
+
