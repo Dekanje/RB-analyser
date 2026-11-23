@@ -570,7 +570,12 @@ public:
  TriggerType triggerType() const override { return TriggerType::WhenYouPlayMe; }
  void onTrigger(CardContext& c,const std::vector<GameObjectId>&) override {
    const auto& selected=c.state.player(c.controller).neeko_legend_choices;
-   if(selected.size()!=3 || !c.registry)return;
+   if(selected.size()!=3 || !c.registry){
+     // A trigger with a finalization pass must signal its end even when
+     // there is no legal legend choice; otherwise the engine throws.
+     (void)finalizingChoices(c);
+     return;
+   }
    std::vector<std::string> labels;
    for(auto id:selected){
      const auto* legend=c.registry->get(id);

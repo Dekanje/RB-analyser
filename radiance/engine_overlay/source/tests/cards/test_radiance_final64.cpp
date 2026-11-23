@@ -1878,6 +1878,9 @@ static GameObjectId installHunterBattlefield(GameState& s,int index=0) {
  obj.name="Hunters' Circle";
  obj.location=BattlefieldLocation{s.battlefields[index].id};
  s.battlefields[index].card_object_id=bf;
+ // A unit may only be played to its controller's battlefield by default;
+ // Hunters' Circle changes costs, NOT ordinary play permissions.
+ s.battlefields[index].controller=PlayerId::Player1;
  return bf;
 }
 TEST_F(RadianceFinal64Test,HuntersCircleFirstPlayAtThisBattlefieldDiscountsUnit) {
