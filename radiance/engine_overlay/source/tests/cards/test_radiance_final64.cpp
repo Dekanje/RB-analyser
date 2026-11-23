@@ -455,6 +455,29 @@ TEST_F(RadianceFinal64Test, SeraphicWyvernAddsOneExhaustedRuneToReadyChannel){
  EXPECT_EQ(exhausted,1);
  EXPECT_EQ(state.player(P1).rune_deck.size(),1u);
 }
+TEST_F(RadianceFinal64Test, ProtectorsShieldQuickDrawAttachesAndGivesMight){
+ auto unit=addUnit(P1,kInvalidId,3,-1);
+ auto shield=addToHand(P1,CardDefId{1116});
+ playThroughEngine(shield);
+ ASSERT_TRUE(state.getObject(shield).attached_to.has_value());
+ EXPECT_EQ(*state.getObject(shield).attached_to,unit);
+ EXPECT_EQ(state.getObject(shield).might_bonus,1);
+}
+TEST_F(RadianceFinal64Test, ProtectorsShieldEquipCostsOneEnergyNoPower){
+ const auto* card=card_registry.get(CardDefId{1116});
+ ASSERT_NE(card,nullptr);
+ EXPECT_TRUE(card->hasEquipAbility());
+ const auto cost=card->equipCost(state,P1,kInvalidId,kInvalidId);
+ EXPECT_TRUE(cost.valid);
+ EXPECT_EQ(cost.energy,1);
+ EXPECT_EQ(cost.power,0);
+ const auto& def=card_db.get(CardDefId{1116});
+ EXPECT_TRUE(def.keywords.has(Keyword::QuickDraw));
+ EXPECT_TRUE(def.keywords.has(Keyword::Reaction));
+ EXPECT_TRUE(def.keywords.has(Keyword::Equip));
+ EXPECT_TRUE(std::find(def.tags.begin(),def.tags.end(),"Equipment")!=def.tags.end());
+ EXPECT_EQ(def.might_bonus,1);
+}
 TEST_F(RadianceFinal64Test, DuneDevourerKillsFriendlyUnitAsAdditionalPlayCostForEnergyDiscount){
  auto sacrifice=addUnit(P1,kInvalidId,3,-1);
  addUnit(P1,kInvalidId,2,-1);
