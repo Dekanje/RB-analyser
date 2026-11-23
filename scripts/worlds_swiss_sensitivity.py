@@ -63,8 +63,8 @@ def evaluate(outcomes,domains,anchors,repetitions=500,concentration=1.,
     if not 50<=repetitions<=3000 or concentration<=0 or len(anchors)!=10:
         raise ValueError("Outside documented illustrative sensitivity model")
     triples=compatible_triples(domains)
-    if len(triples)!=919:
-        raise RuntimeError("Expected exact 919 three-domain-disjoint lineups")
+    if not triples:
+        raise RuntimeError("No legal domain-disjoint lineups")
     rng=random.Random(seed)
     names=sorted(domains)
     thresholds=(6,7,8)
@@ -134,6 +134,8 @@ def main():
                                                    args.registry)
     rows=evaluate(outcomes,domains,anchors,args.repetitions,
                   args.concentration,args.seed)
+    if len(rows)!=919:
+        raise RuntimeError("Expected exact 919 legal lineups in frozen full field")
     benchmark=set(["Draven, Glorious Executioner","LeBlanc, Deceiver",
                    "Master Yi, Wuju Bladesman"])
     key=next((r for r in rows if set(r["lineup"])==benchmark),None)
