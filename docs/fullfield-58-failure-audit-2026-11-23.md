@@ -4,27 +4,28 @@
 - Complete 58-legend exploratory optimizer: [run 45181493632](https://github.com/Dekanje/RB-analyser/actions/runs/45181493632), 58/58 selected source lists, 8 provisional changes, 16,704 cached BO3 evaluations. No claim of global optimality.
 - Original full-field validation: [run 45181577579](https://github.com/Dekanje/RB-analyser/actions/runs/45181577579), **failed closed**.
 - Original 58-optimized head-to-head: [run 45181587794](https://github.com/Dekanje/RB-analyser/actions/runs/45181587794), **failed closed**.
-- Audited 22 of their 58 persisted shard artifacts, containing 3,876 BO3 scenarios and 110 incomplete match records. This is a *sample of artifacts*, not the total run-wide failure count.
+- Audited **all 58 persisted shard artifacts**, containing **9,918 scheduled BO3 scenarios** and **298 incomplete match records** across the two failed runs.
 
-## Observed failure categories within those 22 artifacts
+## Observed failure categories across all 58 shard artifacts
 
 | Engine error | Incomplete records |
 |---|---:|
-| Primordial Roar: offered no legal target | 46 |
-| Silent process termination in Mordekaiser matchups | 42 |
-| Convergent Mutation: unpayable choices | 18 |
-| Mesmerize: offered no legal target | 2 |
-| Burn Away: offered no legal target | 1 |
-| One-Two Punch: offered no legal target | 1 |
+| Primordial Roar: offered no legal target | 120 |
+| Silent process termination in Mordekaiser matchups | 139 |
+| Convergent Mutation: unpayable choices | 27 |
+| Mesmerize: offered no legal target | 6 |
+| Burn Away: offered no legal target | 3 |
+| One-Two Punch: offered no legal target | 2 |
+| Lost to the Sands: offered no legal target | 1 |
 
 The silent records all involved Mordekaiser. This pattern is consistent with the previously investigated Boost.Context fiber crash but an empty stderr alone does not prove every crash has the same root cause.
 
 ## Corrective source work
 
-- `radiance/engine_overlay/stability_patch.py`: pinned upstream-only complete payable-choice preflight and exact viable choice search for Convergent Mutation, Mesmerize, One-Two Punch, Primordial Roar, and Burn Away. Preserve the previous stack-headroom and Boost.Context `forced_unwind` changes for Mordekaiser.
+- `radiance/engine_overlay/stability_patch.py`: pinned upstream-only complete payable-choice preflight and exact viable choice search for Convergent Mutation, Mesmerize, One-Two Punch, Primordial Roar, Burn Away, and Lost to the Sands. Preserve the previous stack-headroom and Boost.Context `forced_unwind` changes for Mordekaiser.
 - `radiance/engine_overlay/fullfield_repair.py`: Primordial Roar's optional Show Off must not create a mandatory damage target if no unit is on the board. Clear the optional-effect marker for replayed cards. Abort when a version-pinned source anchor or expected earlier repair is missing.
 - `scripts/optimize_58.py`: preserve nonzero C++ exit codes and Unix termination signals even if the binary prints no stderr.
-- `scripts/replay_fullfield_failures.py`: replay recorded BO3 series/game seeds through the actual engine and ISMCTS policy, including all three component seeds for original Mesmerize/Burn Away series whose artifacts did not retain per-game statuses.
+- `scripts/replay_fullfield_failures.py`: replay recorded BO3 series/game seeds through the actual engine and ISMCTS policy, including all three component seeds for original Mesmerize/Burn Away/Lost to the Sands series whose artifacts did not retain per-game statuses.
 
 ## Fail-closed acceptance process
 
