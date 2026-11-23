@@ -1,0 +1,67 @@
+name: Competitive agent pilot (one-shot research branch)
+on:
+  push:
+    branches:
+      - 'research/competitive-agent-benchmark-v1-2026-11-23'
+    paths:
+      - '.github/workflows/competitive-agent-pilot.yml'
+permissions:
+  contents: read
+  actions: read
+jobs:
+  mirrored-agent-smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run deterministic benchmark tests
+        run: |
+          python3 -m py_compile scripts/benchmark_agent_strength.py scripts/test_benchmark_agent_strength.py
+          python3 -m unittest discover -s scripts -p 'test_benchmark_agent_strength.py' -v
+      - name: Download pinned selected legal decklists
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 45181493632
+          github-token: ${{ github.token }}
+          name: expanded-optimized-58-independent-radiance-bo3
+          path: results/selected
+      - name: Download pinned repaired Radiance engine
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 45205260187
+          github-token: ${{ github.token }}
+          name: repaired-fullfield-engine-1123
+          path: engine_build
+      - name: Install pinned runtime dependencies and validate artifacts
+        timeout-minutes: 12
+        run: |
+          set -euo pipefail
+          test -f engine_build/riftbound
+          test "$(find results/selected/selected_decks -maxdepth 1 -name '*.txt' | wc -l)" -eq 58
+          if ! sudo env DEBIAN_FRONTEND=noninteractive timeout -k 10s 55s apt-get -o Acquire::Retries=0 update -qq; then
+            echo '::warning::using cached package indexes'
+          fi
+          sudo env DEBIAN_FRONTEND=noninteractive timeout 360s apt-get -o Acquire::Retries=2 install -y -qq --no-install-recommends libboost-program-options1.83.0 libboost-filesystem1.83.0 libboost-system1.83.0 libboost-context1.83.0
+          chmod +x engine_build/riftbound
+          ldd engine_build/riftbound
+          if ldd engine_build/riftbound | grep -q 'not found'; then exit 1; fi
+      - name: Compare ISMCTS 24 to 128 with mirrored seats
+        timeout-minutes: 32
+        run: |
+          python3 -u scripts/benchmark_agent_strength.py \
+            --engine engine_build/riftbound \
+            --decks-dir results/selected/selected_decks \
+            --output results/agent-strength/pilot.json \
+            --baseline-agent ismcts:sims=24 \
+            --challenger-agent ismcts:sims=128 \
+            --repetitions 1 \
+            --max-decks 3 \
+            --timeout 300
+      - name: Upload pilot evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: competitive-agent-pilot-results
+          path: results/agent-strength/
+          retention-days: 30
+          if-no-files-found: warn
