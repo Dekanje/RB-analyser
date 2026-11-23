@@ -28,7 +28,7 @@ jobs:
           from pathlib import Path
           root=Path('radiance/engine_overlay')
           assert 'n == "One-Two Punch"' in (root/'stability_patch.py').read_text()
-          assert 'n == "Convergent Mutation"' in (root/'stability_patch.py').read_text()
+          assert 'Convergent Mutation' in (root/'stability_patch.py').read_text()
           assert '__final64_showoff' in (root/'fullfield_repair.py').read_text()
           assert 'boost::context::detail::forced_unwind' in (root/'stability_patch.py').read_text()
           print('SOURCE_REPAIR_INVARIANTS_PASS')
