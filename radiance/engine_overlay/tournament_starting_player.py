@@ -73,8 +73,8 @@ def patch(start: pathlib.Path) -> None:
         "#include <algorithm>\n#include <atomic>",
         "#include <algorithm>\n#include <atomic>\n#include <cstdlib>")
     replace_once(main,
-        """            auto result = engine.runGame(deck1, deck2, *seat1, *seat2, game_seed);
-            std::cout << "\\nGame over: winner="""" ,
+        '''            auto result = engine.runGame(deck1, deck2, *seat1, *seat2, game_seed);
+            std::cout << "\\nGame over: winner="''',
         """            auto result = engine.runGame(deck1, deck2, *seat1, *seat2, game_seed);
             // Deliberately report the engine's actual start state, not an
             // echoed environment variable. Python rejects mismatches.
@@ -84,7 +84,7 @@ def patch(start: pathlib.Path) -> None:
                           << static_cast<int>(engine.state().turn.starting_player)
                           << "\\n";
             }
-            std::cout << "\\nGame over: winner=""""
+            std::cout << "\\nGame over: winner="'''
         )
     print("PINNED_TOURNAMENT_STARTING_PLAYER_OVERRIDE_APPLIED", PIN, flush=True)
 
