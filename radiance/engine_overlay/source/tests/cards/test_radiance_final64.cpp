@@ -583,6 +583,24 @@ TEST_F(RadianceFinal64Test, MordekaiserDiscardsOneToKillTargetOnAttackTrigger){
  EXPECT_FALSE(state.getObject(victim).location.has_value());
  EXPECT_FALSE(inHand(P1,discarded));
 }
+
+TEST_F(RadianceFinal64Test, MordekaiserPlayTriggerCanDiscardOneToKillAnEnemyUnit){
+ auto target=addUnit(P2,kInvalidId,3,0);
+ auto discard=addToHand(P1,CardDefId{1117});
+ auto mordekaiser=addToHand(P1,CardDefId{1127});
+ EnginePathAgent pay(EnginePathAgent::script({1,static_cast<int>(target.raw()),
+                                           static_cast<int>(discard.raw())}));
+ playThroughEngine(mordekaiser,&pay);
+ EXPECT_FALSE(state.getObject(target).location.has_value());
+ EXPECT_FALSE(inHand(P1,discard));
+}
+TEST_F(RadianceFinal64Test, MordekaiserCannotKillWithoutPayingDiscard){
+ auto target=addUnit(P2,kInvalidId,3,0);
+ auto mordekaiser=addUnit(P1,CardDefId{1127},8,0);
+ ASSERT_TRUE(state.player(P1).hand.empty());
+ fireTriggerThroughEngine(mordekaiser,TriggerType::WhenIAttack);
+ EXPECT_TRUE(state.getObject(target).location.has_value());
+}
 TEST_F(RadianceFinal64Test, RememberTheFallenPlaysEligibleTrashCardsButNotExpensiveUnits){
  auto gear=addToHand(P1,CardDefId{1116});
  auto unit=addToHand(P1,CardDefId{1120});
@@ -601,6 +619,29 @@ TEST_F(RadianceFinal64Test, RememberTheFallenPlaysEligibleTrashCardsButNotExpens
  EXPECT_TRUE(state.getObject(unit).location.has_value());
  EXPECT_EQ(state.getObject(expensive).zone,ZoneType::Trash);
  EXPECT_FALSE(state.getObject(expensive).location.has_value());
+}
+
+TEST_F(RadianceFinal64Test, RememberTheFallenPlaysNoMoreThanThreeCheapTrashCards){
+ std::vector<GameObjectId> cheap;
+ for(int i=0;i<4;++i){
+   auto id=addToHand(P1,CardDefId{i%2==0?1084:1083});
+   auto& hand=state.player(P1).hand;
+   hand.erase(std::remove(hand.begin(),hand.end(),id),hand.end());
+   state.getObject(id).zone=ZoneType::Trash;
+   state.getObject(id).location=std::nullopt;
+   state.player(P1).trash.push_back(id);
+   cheap.push_back(id);
+ }
+ auto spell=addToHand(P1,CardDefId{1125});
+ EnginePathAgent accept(EnginePathAgent::accepting());
+ playThroughEngine(spell,&accept);
+ int returned=0,remaining=0;
+ for(auto id:cheap){
+   if(state.getObject(id).location.has_value())++returned;
+   if(state.getObject(id).zone==ZoneType::Trash)++remaining;
+ }
+ EXPECT_EQ(returned,3);
+ EXPECT_EQ(remaining,1);
 }
 TEST_F(RadianceFinal64Test, CommandAttackLooksAtTopFiveAndDrawsOnlyRevealedGear){
  auto eligible=addToDeck(P1,CardDefId{1116});
@@ -765,6 +806,22 @@ TEST_F(RadianceFinal64Test, RivenBrokenBladeSpendsBuffToReadyWhenExhausted){
  EXPECT_EQ(state.getObject(riven).buff_count,0);
  EXPECT_EQ(state.getObject(riven).card_counters.at("__riven43_mask"),4);
 }
+
+TEST_F(RadianceFinal64Test, RivenBrokenBladeUnusedModesResetAtStartOfNextTurn){
+ auto riven=addUnit(P1,CardDefId{1079},4,0);
+ auto enemy=addUnit(P2,kInvalidId,4,0);
+ EnginePathAgent buff(EnginePathAgent::script({0}));
+ fireTriggerThroughEngine(riven,TriggerType::WhenIBecomeExhausted,&buff);
+ EnginePathAgent stun(EnginePathAgent::script({1,static_cast<int>(enemy.raw())}));
+ fireTriggerThroughEngine(riven,TriggerType::WhenIBecomeExhausted,&stun);
+ ASSERT_EQ(state.getObject(riven).card_counters.at("__riven43_mask"),3);
+ ASSERT_EQ(state.getObject(riven).buff_count,0);
+ ++state.turn.turn_number;
+ EnginePathAgent again(EnginePathAgent::script({0}));
+ fireTriggerThroughEngine(riven,TriggerType::WhenIBecomeExhausted,&again);
+ EXPECT_EQ(state.getObject(riven).card_counters.at("__riven43_mask"),1);
+ EXPECT_EQ(state.getObject(riven).buff_count,1);
+}
 TEST_F(RadianceFinal64Test, TrifarianCaptainRevealsAndDrawsOnlyEligibleFromTopFour){
  const auto cheapGear=addToDeck(P1,CardDefId{1116});
  const auto expensiveUnit=addToDeck(P1,CardDefId{1118});
@@ -778,6 +835,20 @@ TEST_F(RadianceFinal64Test, TrifarianCaptainRevealsAndDrawsOnlyEligibleFromTopFo
  EXPECT_FALSE(inHand(P1,spell));
  EXPECT_FALSE(inHand(P1,expensiveSpell));
  EXPECT_EQ(state.player(P1).main_deck.size(),3u);
+}
+
+TEST_F(RadianceFinal64Test, TrifarianCaptainDrawsNothingWhenTopFourContainNoEligibleCard){
+ auto expensiveUnit=addToDeck(P1,CardDefId{1118});
+ auto expensiveSpell=addToDeck(P1,CardDefId{1125});
+ auto captain=addToHand(P1,CardDefId{1120});
+ EnginePathAgent accept(EnginePathAgent::accepting());
+ playThroughEngine(captain,&accept);
+ EXPECT_FALSE(inHand(P1,expensiveUnit));
+ EXPECT_FALSE(inHand(P1,expensiveSpell));
+ ASSERT_EQ(state.player(P1).main_deck.size(),2u);
+ const auto& deck=state.player(P1).main_deck;
+ EXPECT_NE(std::find(deck.begin(),deck.end(),expensiveUnit),deck.end());
+ EXPECT_NE(std::find(deck.begin(),deck.end(),expensiveSpell),deck.end());
 }
 TEST_F(RadianceFinal64Test, DuneDevourerCanPayPrintedCostWithoutSacrificing){
  auto devourer=addToHand(P1,CardDefId{1118});
