@@ -7,7 +7,7 @@ permissions:
   contents: read
   actions: read
 jobs:
-  preregister-successive-halving-shortlist:
+  preregister_holdout_shortlist:
     runs-on: ubuntu-24.04
     timeout-minutes: 14
     outputs:
@@ -69,10 +69,10 @@ jobs:
           path: results/wave2_holdout_selection/selection.json
           retention-days: 30
   actual-independent-128-agent-matches:
-    needs: preregister-successive-halving-shortlist
+    needs: preregister_holdout_shortlist
     strategy:
       fail-fast: false
-      matrix: ${{ fromJSON(needs.preregister-successive-halving-shortlist.outputs.matrix) }}
+      matrix: ${{ fromJSON(needs.preregister_holdout_shortlist.outputs.matrix) }}
     runs-on: ubuntu-24.04
     timeout-minutes: 85
     steps:
