@@ -328,7 +328,45 @@ private:
 class R64_1126 final : public GearCard {
 public:
  const CardDef& def() const override { return d_; }
- // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
+ std::vector<TriggerType> triggerTypes()const override{
+   return {TriggerType::WhenYouPlayThis,TriggerType::WhenYouHoldHere};
+ }
+ unsigned choicesAtFinalization()const override{return kFinalizeTrigger;}
+ void onTrigger(CardContext& c,const std::vector<GameObjectId>&)override{
+   if(!c.state.objectExists(c.source)){(void)finalizingChoices(c);return;}
+   auto& source=c.state.getObject(c.source);
+   if(c.firing_trigger==TriggerType::WhenYouPlayThis){
+     if(!source.isAtBattlefield()){(void)finalizingChoices(c);return;}
+     const auto here=source.battlefieldId();
+     const auto units=boardObjects(c.state,[&](const GameObject& o){
+       return o.isUnit()&&!o.isToken()&&o.isAtBattlefield()&&
+              o.battlefieldId()==here;
+     });
+     const auto unit=pickTarget(c,"Dockside Lock-Up: banish a nontoken unit here",units);
+     if(finalizingChoices(c))return;
+     if(unit!=kInvalidId&&c.state.objectExists(unit)){
+       source.card_counters["__dockside_banished_card"]=static_cast<int>(unit.raw());
+       c.executor.banishObject(unit,c.controller);
+     }
+     return;
+   }
+   if(c.firing_trigger==TriggerType::WhenYouHoldHere){
+     const auto it=source.card_counters.find("__dockside_banished_card");
+     if(it==source.card_counters.end()){(void)finalizingChoices(c);return;}
+     const auto card=GameObjectId::fromRaw(it->second);
+     if(!c.state.objectExists(card)||
+        c.state.getObject(card).zone!=ZoneType::Banishment){
+       (void)finalizingChoices(c);return;
+     }
+     if(costDueNow(c))c.executor.killObject(c.source);
+     if(finalizingChoices(c))return;
+     const auto places=playLocationsFor(c,c.controller,card);
+     if(places.locations.empty())return;
+     const auto where=c.executor.chooseLocationNow(c.controller,places.locations,
+        "Dockside Lock-Up: choose location for banished unit");
+     (void)c.executor.playIgnoringCost(c.controller,card,where);
+   }
+ }
 private:
  const CardDef d_=[] {
   auto d=mkFinal64_d(1126,136,R"RB(Dockside Lock-Up)RB",CardType::Gear,6,2,0,{Domain::Order},Rarity::Epic,R"RB([Deploy] (Play this only to a battlefield. When an opponent holds here, kill this.)
