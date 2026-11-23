@@ -455,6 +455,22 @@ TEST_F(RadianceFinal64Test, SeraphicWyvernAddsOneExhaustedRuneToReadyChannel){
  EXPECT_EQ(exhausted,1);
  EXPECT_EQ(state.player(P1).rune_deck.size(),1u);
 }
+TEST_F(RadianceFinal64Test, DocksideLockUpBanishesNontokenUnitAndReplaysOnHold){
+ auto target=addUnit(P2,CardDefId{1120},2,0);
+ auto lock=addToHand(P1,CardDefId{1126});
+ auto& hand=state.player(P1).hand;
+ hand.erase(std::remove(hand.begin(),hand.end(),lock),hand.end());
+ state.getObject(lock).zone=ZoneType::BattlefieldZone;
+ state.getObject(lock).location=BattlefieldLocation{state.battlefields[0].id};
+ EnginePathAgent choose(EnginePathAgent::choosing(target));
+ fireTriggerThroughEngine(lock,TriggerType::WhenYouPlayThis,&choose);
+ EXPECT_EQ(state.getObject(target).zone,ZoneType::Banishment);
+ EXPECT_EQ(state.getObject(lock).card_counters.at("__dockside_banished_card"),
+           static_cast<int>(target.raw()));
+ fireTriggerThroughEngine(lock,TriggerType::WhenYouHoldHere);
+ EXPECT_FALSE(state.getObject(lock).location.has_value());
+ EXPECT_TRUE(state.getObject(target).location.has_value());
+}
 TEST_F(RadianceFinal64Test, MordekaiserDiscardsOneToKillTargetOnAttackTrigger){
  auto victim=addUnit(P2,kInvalidId,2,0);
  auto morde=addUnit(P1,CardDefId{1127},8,0);
