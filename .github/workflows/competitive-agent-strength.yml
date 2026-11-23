@@ -1,0 +1,94 @@
+name: Competitive agent-strength validation (isolated)
+on:
+  push:
+    branches: ['research/competitive-agent-benchmark-v1-2026-11-23']
+    paths:
+      - 'scripts/benchmark_agent_strength.py'
+      - 'scripts/test_benchmark_agent_strength.py'
+      - '.github/workflows/competitive-agent-strength.yml'
+  workflow_dispatch:
+    inputs:
+      repetitions:
+        description: 'Mirrored seed pairs per deck (start with 1)'
+        default: '1'
+        required: true
+        type: string
+      max_decks:
+        description: 'Number of exploratory deck archetypes (start with 3)'
+        default: '3'
+        required: true
+        type: string
+      baseline_agent:
+        description: 'AlphaRune baseline agent'
+        default: 'ismcts:sims=24'
+        required: true
+        type: string
+      challenger_agent:
+        description: 'AlphaRune challenger agent'
+        default: 'ismcts:sims=128'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  deterministic-unit-tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile script and run no-engine regression tests
+        run: |
+          python3 -m py_compile scripts/benchmark_agent_strength.py scripts/test_benchmark_agent_strength.py
+          python3 -m unittest discover -s scripts -p 'test_benchmark_agent_strength.py' -v
+
+  manually-invoked-agent-sample:
+    if: github.event_name == 'workflow_dispatch'
+    needs: deterministic-unit-tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 85
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download immutable 58 candidate decklists
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 45181493632
+          github-token: ${{ github.token }}
+          name: expanded-optimized-58-independent-radiance-bo3
+          path: results/selected
+      - name: Download immutable repaired full-Radiance engine
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 45205260187
+          github-token: ${{ github.token }}
+          name: repaired-fullfield-engine-1123
+          path: engine_build
+      - name: Install pinned Linux runtime dependencies
+        run: |
+          set -euo pipefail
+          sudo env DEBIAN_FRONTEND=noninteractive apt-get update -qq
+          sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends libboost-program-options1.83.0 libboost-filesystem1.83.0 libboost-system1.83.0 libboost-context1.83.0
+          chmod +x engine_build/riftbound
+          ldd engine_build/riftbound | tee results/engine_ldd.txt
+          ! grep -q 'not found' results/engine_ldd.txt
+      - name: Mirrored identical-deck ISMCTS-vs-ISMCTS quality comparison
+        run: |
+          python3 -u scripts/benchmark_agent_strength.py \
+            --engine engine_build/riftbound \
+            --decks-dir results/selected/selected_decks \
+            --output results/agent-strength/summary.json \
+            --baseline-agent "${{ inputs.baseline_agent }}" \
+            --challenger-agent "${{ inputs.challenger_agent }}" \
+            --repetitions "${{ inputs.repetitions }}" \
+            --max-decks "${{ inputs.max_decks }}" \
+            --timeout 300
+      - name: Preserve complete evidence even on engine failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: competitive-agent-strength-evidence
+          path: results/agent-strength/
+          retention-days: 30
+          if-no-files-found: warn
