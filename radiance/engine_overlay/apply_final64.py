@@ -769,6 +769,91 @@ marker="    ask(ps.legend_zone);"
 assert g.count(marker)==1,"Neeko legend effects"
 g=g.replace(marker,marker+"\n    for(const auto& grant:ps.neeko_granted_legends)ask(grant.legend);",1)
 ge.write_text(g)
+
+# Neeko secondary legends must receive the normal legend-zone triggers,
+# including phase and player-scoped legend abilities; treating them as
+# passive-only objects would make most selected legends inert in matches.
+neeko_tm_path=engine/"src/engine/trigger_manager.cpp"
+nt=neeko_tm_path.read_text()
+legend_start="""        auto legend_id = state_.player(pid).legend_zone;
+        if (legend_id == kInvalidId || !state_.objectExists(legend_id)) continue;
+        auto& legend = state_.getObject(legend_id);
+        if (cardFiresOn(card_registry_, legend.card_def_id, t)) {
+            fireTrigger(legend_id, pid, triggering_spell_energy_spent, t, subject);
+        }"""
+legend_replace="""        const auto& ps=state_.player(pid);
+        std::vector<GameObjectId> legends{ps.legend_zone};
+        for(const auto& grant:ps.neeko_granted_legends)legends.push_back(grant.legend);
+        for(auto legend_id:legends) {
+            if(legend_id==kInvalidId||!state_.objectExists(legend_id))continue;
+            const auto& legend=state_.getObject(legend_id);
+            if(legend.zone!=ZoneType::LegendZone)continue;
+            if(cardFiresOn(card_registry_,legend.card_def_id,t))
+                fireTrigger(legend_id,pid,triggering_spell_energy_spent,t,subject);
+        }"""
+assert nt.count(legend_start)==1,"Neeko legend event helper anchor"
+nt=nt.replace(legend_start,legend_replace,1)
+for trigger in ["AtEndOfTurn","AtStartOfBeginning","AtStartOfMain"]:
+    old=f"""                fireTrigger(ps.legend_zone, e.turn_player, 0, TriggerType::{trigger});
+            }}
+        }}"""
+    extra=f"""                fireTrigger(ps.legend_zone, e.turn_player, 0, TriggerType::{trigger});
+            }}
+        }}
+        for(const auto& grant:ps.neeko_granted_legends) {{
+            if(!state_.objectExists(grant.legend))continue;
+            const auto& legend=state_.getObject(grant.legend);
+            if(legend.zone!=ZoneType::LegendZone)continue;
+            if(cardFiresOn(card_registry_,legend.card_def_id,TriggerType::{trigger}))
+                fireTrigger(grant.legend,e.turn_player,0,TriggerType::{trigger});
+        }}"""
+    assert nt.count(old)==1,"Neeko phase legend anchor "+trigger
+    nt=nt.replace(old,extra,1)
+mighty="""        auto legend_id = state_.player(controller).legend_zone;
+        if (legend_id != kInvalidId && state_.objectExists(legend_id) &&
+            cardFiresOn(card_registry_, state_.getObject(legend_id).card_def_id,
+                        TriggerType::WhenAUnitBecomesMighty))
+            fireTrigger(legend_id, controller, 0,
+                        TriggerType::WhenAUnitBecomesMighty, /*subject=*/e.object);"""
+mighty_extra=mighty+"""
+        for(const auto& grant:state_.player(controller).neeko_granted_legends){
+            if(!state_.objectExists(grant.legend))continue;
+            const auto& legend=state_.getObject(grant.legend);
+            if(legend.zone!=ZoneType::LegendZone)continue;
+            if(cardFiresOn(card_registry_,legend.card_def_id,TriggerType::WhenAUnitBecomesMighty))
+                fireTrigger(grant.legend,controller,0,
+                            TriggerType::WhenAUnitBecomesMighty,e.object);
+        }"""
+assert nt.count(mighty)==1,"Neeko mighty event anchor"
+nt=nt.replace(mighty,mighty_extra,1)
+neeko_tm_path.write_text(nt)
+
+# Activated granted legends exhaust like other legends, and must be readied
+# when their controller's next Awakening Step begins.
+ng=engine/"src/engine/game_engine.cpp"
+gg=ng.read_text()
+ready_anchor="""        // Also ready the legend
+        auto legend_id = state_.player(player).legend_zone;
+        if (legend_id != kInvalidId && state_.objectExists(legend_id)) {
+            auto& legend = state_.getObject(legend_id);
+            if (legend.is_exhausted) {
+                legend.is_exhausted = false;
+                events_.emit(ObjectStateChangedEvent{legend_id, "readied"});
+            }
+        }"""
+ready_patch=ready_anchor+"""
+        for(const auto& grant:state_.player(player).neeko_granted_legends){
+            if(!state_.objectExists(grant.legend))continue;
+            auto& legend=state_.getObject(grant.legend);
+            if(legend.zone==ZoneType::LegendZone&&legend.is_exhausted){
+                legend.is_exhausted=false;
+                events_.emit(ObjectStateChangedEvent{grant.legend,"readied"});
+            }
+        }"""
+assert gg.count(ready_anchor)==1,"Neeko awakening ready anchor"
+gg=gg.replace(ready_anchor,ready_patch,1)
+ng.write_text(gg)
+
 # A Legend-Zone grant is a WHILE effect; immediately remove it when that
 # specific Neeko leaves the board, not when a triggered chain item resolves.
 ex=engine/"src/engine/effect_executor.cpp"
