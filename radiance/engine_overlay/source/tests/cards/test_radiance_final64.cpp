@@ -455,6 +455,25 @@ TEST_F(RadianceFinal64Test, SeraphicWyvernAddsOneExhaustedRuneToReadyChannel){
  EXPECT_EQ(exhausted,1);
  EXPECT_EQ(state.player(P1).rune_deck.size(),1u);
 }
+TEST_F(RadianceFinal64Test, RememberTheFallenPlaysEligibleTrashCardsButNotExpensiveUnits){
+ auto gear=addToHand(P1,CardDefId{1116});
+ auto unit=addToHand(P1,CardDefId{1120});
+ auto expensive=addToHand(P1,CardDefId{1118});
+ for(auto id:{gear,unit,expensive}){
+   auto& hand=state.player(P1).hand;
+   hand.erase(std::remove(hand.begin(),hand.end(),id),hand.end());
+   state.getObject(id).zone=ZoneType::Trash;
+   state.getObject(id).location=std::nullopt;
+   state.player(P1).trash.push_back(id);
+ }
+ auto spell=addToHand(P1,CardDefId{1125});
+ EnginePathAgent accept(EnginePathAgent::accepting());
+ playThroughEngine(spell,&accept);
+ EXPECT_TRUE(state.getObject(gear).location.has_value());
+ EXPECT_TRUE(state.getObject(unit).location.has_value());
+ EXPECT_EQ(state.getObject(expensive).zone,ZoneType::Trash);
+ EXPECT_FALSE(state.getObject(expensive).location.has_value());
+}
 TEST_F(RadianceFinal64Test, CommandAttackLooksAtTopFiveAndDrawsOnlyRevealedGear){
  auto eligible=addToDeck(P1,CardDefId{1116});
  addToDeck(P1,CardDefId{1117});
