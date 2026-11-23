@@ -9,7 +9,7 @@ permissions:
   contents: read
   actions: read
 concurrency:
-  group: full-field-58-provenance-45176567243
+  group: full-field-58-provenance-45181493632
   cancel-in-progress: false
 jobs:
   full-field-code-qa:
@@ -30,7 +30,7 @@ jobs:
       - name: Require successful completed 58-legend expanded search and immutable run provenance
         run: |
           set -euo pipefail
-          run_id=45176567243
+          run_id=45181493632
           for i in $(seq 1 180); do
             state=$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}" --jq '.status+" "+(.conclusion // "pending")')
             echo "SOURCE_SEARCH_STATE ${run_id} ${state}"
@@ -59,14 +59,14 @@ jobs:
       - name: Fetch exactly the completed 58-legend search decklists
         uses: actions/download-artifact@v4
         with:
-          run-id: 45176567243
+          run-id: 45181493632
           github-token: ${{ github.token }}
           name: expanded-optimized-58-independent-radiance-bo3
           path: results/selected
       - name: Fetch original compiled full-Radiance simulator
         uses: actions/download-artifact@v4
         with:
-          run-id: 45176567243
+          run-id: 45181493632
           github-token: ${{ github.token }}
           name: independent-58-compiled-engine
           path: .
@@ -108,7 +108,7 @@ jobs:
           path: results/shards
       - uses: actions/download-artifact@v4
         with:
-          run-id: 45176567243
+          run-id: 45181493632
           github-token: ${{ github.token }}
           name: expanded-optimized-58-independent-radiance-bo3
           path: results/selected
