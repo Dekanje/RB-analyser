@@ -100,3 +100,7 @@ regression failures remain open and the final64 mechanics ledger is pending.
   Shield doubling also have development implementations and tests.
 - The 64-entry per-card mechanics ledger is still *pending*; none of these
   fixes silently changes acceptance flags or removes regression tests.
+
+## Privacy leak origin probe
+
+Targeted CI now traces the first real overlap between a player's Hand and Main Deck, including the immediately preceding action, before hidden-card permutation. This is diagnostic only and cannot count toward acceptance.
