@@ -167,7 +167,7 @@ audit_anchor='        {"src/cards/units/0643_keeper_of_masks.cpp", 1},'
 audit_entry='        {"src/cards/units/1116_radiance_final64_d.cpp", 1},  // Dockside Lock-Up: __dockside_banished_card stores GameObjectId::raw; absence is none'
 assert audited.count(audit_anchor)==1, "StrongIds audit entry anchor changed"
 assert audit_entry not in audited, "StrongIds Dockside reader audited twice"
-audit.write_text(audited.replace(audit_anchor,audit_anchor+"\\n"+audit_entry,1))
+audit.write_text(audited.replace(audit_anchor,audit_anchor+"\n"+audit_entry,1))
 
 init=engine/"src/cards/cards_init.cpp"
 s=init.read_text()
