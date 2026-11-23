@@ -266,6 +266,24 @@ TEST_F(RadianceFinal64Test, IncorrigibleConstructEntersReadyAfterShowingOffMech)
  playThroughEngine(construct,&accept);
  EXPECT_FALSE(state.getObject(construct).is_exhausted);
 }
+
+TEST_F(RadianceFinal64Test, IncorrigibleConstructEntersExhaustedWithoutFriendlyMech){
+ // A non-Mech in hand and an opponent's Mech must not satisfy Show Off.
+ addToHand(P1,CardDefId{1084}); // Trinket Peddler is not a Mech.
+ addUnit(P2,CardDefId{1090},8,0); // Opponent's Mech is not friendly.
+ auto construct=addToHand(P1,CardDefId{1070});
+ playThroughEngine(construct);
+ EXPECT_TRUE(state.getObject(construct).is_exhausted)
+   << "Showing off is optional but requires a Mech in hand or a friendly Mech";
+}
+TEST_F(RadianceFinal64Test, IncorrigibleConstructAcceptsFriendlyBoardMech){
+ // Showing off a friendly Mech already on the board is also legal.
+ addUnit(P1,CardDefId{1090},8,0);
+ auto construct=addToHand(P1,CardDefId{1070});
+ EnginePathAgent accept(EnginePathAgent::accepting());
+ playThroughEngine(construct,&accept);
+ EXPECT_FALSE(state.getObject(construct).is_exhausted);
+}
 TEST_F(RadianceFinal64Test, TheEmpyreanShowsOffAndDrawsTwo){
  addToHand(P1,CardDefId{1090});
  for(int i=0;i<4;i++)addToDeck(P1,CardDefId{1070});
