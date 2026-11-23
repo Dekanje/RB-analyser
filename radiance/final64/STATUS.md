@@ -144,3 +144,12 @@ pending, and MUST NOT report complete until all 64 pass in the full
 regression XML. Firebrand Raider's three focused tests passed in run
 45103320523. Full regression is required after its global aura and Awaken
 hook changes, before considering engine-wide integration stable.
+
+## RAD-125 and RAD-016 adversarial mechanics tests
+
+Dune Devourer's optional kill-as-cost now checks an actual LeftBoardEvent
+death via Card::killAsCost. A friendly unit saved by Soraka's death
+replacement does not earn the 2-Energy discount. A new real-engine path
+tests paid-but-prevented sacrifice and full printed cost. Coalesced Energy's
+end-turn test also checks that exactly four runes remain on-board, to catch
+accidental duplication during recycle/channel. Pending cached targeted CI.
