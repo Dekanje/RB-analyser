@@ -283,7 +283,40 @@ private:
 class R64_1125 final : public SpellCard {
 public:
  const CardDef& def() const override { return d_; }
- // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
+ static std::vector<GameObjectId> eligibleTrash(CardContext& c){
+   std::vector<GameObjectId> out;
+   for(auto id:c.state.player(c.controller).trash){
+     if(!c.state.objectExists(id))continue;
+     const auto& o=c.state.getObject(id);
+     if((!o.isUnit()&&!o.isGear())||o.isToken()||o.card_def_id==kInvalidId)continue;
+     const auto& d=c.executor.cardDB().get(o.card_def_id);
+     if(d.energy_cost<=3&&d.power_cost<=1)out.push_back(id);
+   }
+   return out;
+ }
+ void onResolve(CardContext& c,const std::vector<GameObjectId>&)override{
+   for(int i=0;i<3;++i){
+     auto options=eligibleTrash(c);
+     if(options.empty())break;
+     if(!c.executor.confirmNow(c.controller,
+        "Remember the Fallen: play another cheap unit or gear from trash?"))break;
+     const auto chosen=c.executor.chooseObjectNow(c.controller,options,
+        "Remember the Fallen: choose a unit or gear from trash to play");
+     if(chosen==kInvalidId||!c.state.objectExists(chosen))break;
+     const auto& obj=c.state.getObject(chosen);
+     auto places=playLocationsFor(c,c.controller,chosen);
+     if(obj.isGear()&&obj.hasKeyword(Keyword::Deploy)){
+       auto& choices=places.locations;
+       choices.erase(std::remove_if(choices.begin(),choices.end(),[](const LocationId& loc){
+         return std::holds_alternative<BaseLocation>(loc);
+       }),choices.end());
+     }
+     if(places.locations.empty())break;
+     const auto where=c.executor.chooseLocationNow(c.controller,places.locations,
+       "Remember the Fallen: choose play location");
+     (void)c.executor.playIgnoringCost(c.controller,chosen,where);
+   }
+ }
 private:
  const CardDef d_=[] {
   auto d=mkFinal64_d(1125,135,R"RB(Remember the Fallen)RB",CardType::Spell,8,2,0,{Domain::Order},Rarity::Rare,R"RB(Play up to 3 units and/or gear from your trash, each with Energy cost no more than [3] and Power cost no more than [A], ignoring their costs.)RB");
