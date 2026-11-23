@@ -46,9 +46,14 @@
     },
     "RAD-019/167": {
       "engine_id": 1075,
-      "status": "pending",
-      "engine_scenarios": [],
-      "unverified_rules": "I enter ready.\nWhen you play me, ready all enemy units.\nOther units enter ready.\nUnits don't ready during the Awaken Phase."
+      "status": "accepted",
+      "engine_scenarios": [
+        "RadianceFinal64Test.FirebrandRaiderEntersReadyAndReadiesEnemiesOnPlay",
+        "RadianceFinal64Test.FirebrandRaiderMakesOpponentsNewUnitEnterReady",
+        "RadianceFinal64Test.FirebrandRaiderPreventsUnitAwakenEvenForOpponent"
+      ],
+      "verified_rules": "I enter ready.\nWhen you play me, ready all enemy units.\nOther units enter ready.\nUnits don't ready during the Awaken Phase.",
+      "review_note": "Printed text compared with card class and engine-path scenarios. Generic Shield, Deploy, Show Off, token and phase semantics supplied by pinned engine; all listed scenarios passed in full or targeted CI."
     },
     "RAD-022/167": {
       "engine_id": 1076,
@@ -62,9 +67,12 @@
     },
     "RAD-031/167": {
       "engine_id": 1077,
-      "status": "pending",
-      "engine_scenarios": [],
-      "unverified_rules": "[Shield 3] (+3 :rb_might: while I'm a defender.)\nWhen you play me to a battlefield, you may move another unit you control here to your base."
+      "status": "accepted",
+      "engine_scenarios": [
+        "RadianceFinal64Test.FerrymanMovesAnotherUnitFromItsBattlefieldToBase"
+      ],
+      "verified_rules": "[Shield 3] (+3 :rb_might: while I'm a defender.)\nWhen you play me to a battlefield, you may move another unit you control here to your base.",
+      "review_note": "Printed text compared with card class and engine-path scenarios. Generic Shield, Deploy, Show Off, token and phase semantics supplied by pinned engine; all listed scenarios passed in full or targeted CI."
     },
     "RAD-033/167": {
       "engine_id": 1078,
@@ -87,9 +95,12 @@
     },
     "RAD-044/167": {
       "engine_id": 1080,
-      "status": "pending",
-      "engine_scenarios": [],
-      "unverified_rules": "[Deploy] (Play this only to a battlefield. When an opponent holds here, kill this.)\nWhen you play this, you may move an enemy unit to this battlefield.\nFriendly units here have [Shield 2]. (+2 :rb_might: while they're defenders.)"
+      "status": "accepted",
+      "engine_scenarios": [
+        "RadianceFinal64Test.HuntingBlindGrantsShieldToFriendsAndMovesOpponentHere"
+      ],
+      "verified_rules": "[Deploy] (Play this only to a battlefield. When an opponent holds here, kill this.)\nWhen you play this, you may move an enemy unit to this battlefield.\nFriendly units here have [Shield 2]. (+2 :rb_might: while they're defenders.)",
+      "review_note": "Printed text compared with card class and engine-path scenarios. Generic Shield, Deploy, Show Off, token and phase semantics supplied by pinned engine; all listed scenarios passed in full or targeted CI."
     },
     "RAD-045/167": {
       "engine_id": 1081,
@@ -317,9 +328,12 @@
     },
     "RAD-124/167": {
       "engine_id": 1117,
-      "status": "pending",
-      "engine_scenarios": [],
-      "unverified_rules": "Banish a unit with 3 :rb_might: or less or a gear. [Burn 2]. (Put the top 2 cards of your Main Deck into your trash.)"
+      "status": "accepted",
+      "engine_scenarios": [
+        "RadianceFinal64Test.BurnAwayBanishesSmallEnemyAndBurnsExactlyTwo"
+      ],
+      "verified_rules": "Banish a unit with 3 :rb_might: or less or a gear. [Burn 2]. (Put the top 2 cards of your Main Deck into your trash.)",
+      "review_note": "Printed text compared with card class and engine-path scenarios. Generic Shield, Deploy, Show Off, token and phase semantics supplied by pinned engine; all listed scenarios passed in full or targeted CI."
     },
     "RAD-125/167": {
       "engine_id": 1118,
@@ -334,9 +348,13 @@
     },
     "RAD-127/167": {
       "engine_id": 1119,
-      "status": "pending",
-      "engine_scenarios": [],
-      "unverified_rules": "[Show Off] a card with Energy cost :rb_energy_7: or more. (As you play this, you may reveal such a card from hand or pick a friendly one.)\nPlay two 1 :rb_might: Recruit unit tokens to your base. If you showed off, play four to your base instead.disa"
+      "status": "accepted",
+      "engine_scenarios": [
+        "RadianceFinal64Test.RousingDisplayCreatesTwoRecruitsWithoutShowOff",
+        "RadianceFinal64Test.RousingDisplayShowsOffExpensiveCardToCreateFourRecruits"
+      ],
+      "verified_rules": "[Show Off] a card with Energy cost :rb_energy_7: or more. (As you play this, you may reveal such a card from hand or pick a friendly one.)\nPlay two 1 :rb_might: Recruit unit tokens to your base. If you showed off, play four to your base instead.disa",
+      "review_note": "Printed text compared with card class and engine-path scenarios. Generic Shield, Deploy, Show Off, token and phase semantics supplied by pinned engine; all listed scenarios passed in full or targeted CI."
     },
     "RAD-129/167": {
       "engine_id": 1120,
@@ -367,9 +385,12 @@
     },
     "RAD-134/167": {
       "engine_id": 1124,
-      "status": "pending",
-      "engine_scenarios": [],
-      "unverified_rules": "Ready your units and give them +3 :rb_might: this turn."
+      "status": "accepted",
+      "engine_scenarios": [
+        "RadianceFinal64Test.RaucousAnthemReadiesAndStrengthensAllFriendliesOnly"
+      ],
+      "verified_rules": "Ready your units and give them +3 :rb_might: this turn.",
+      "review_note": "Printed text compared with card class and engine-path scenarios. Generic Shield, Deploy, Show Off, token and phase semantics supplied by pinned engine; all listed scenarios passed in full or targeted CI."
     },
     "RAD-135/167": {
       "engine_id": 1125,
