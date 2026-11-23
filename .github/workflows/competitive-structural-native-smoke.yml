@@ -1,0 +1,74 @@
+name: Worlds trio registered structure native C++ compatibility smoke
+on:
+  push:
+    branches: ['research/competitive-agent-benchmark-v1-2026-11-23']
+    paths: ['.github/workflows/competitive-structural-native-smoke.yml']
+permissions:
+  contents: read
+  actions: read
+jobs:
+  validate-native-structure-variants:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile structural source and exact manifest validation script
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/native_structural_smoke.py scripts/structural_deck_population.py
+          python3 -m unittest discover -s scripts -p 'test_structural_deck_population.py' -v
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45258002938
+          github-token: ${{ github.token }}
+          name: worlds-all58-registered-structure-legal-unvalidated-variants
+          path: results/structural
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45181493632
+          github-token: ${{ github.token }}
+          name: expanded-optimized-58-independent-radiance-bo3
+          path: results/selected
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45244227502
+          github-token: ${{ github.token }}
+          name: competitive-rule407-verified-engine-binary
+          path: engine_build
+      - name: Resolve native compiled AlphaRune shared dependencies
+        timeout-minutes: 12
+        run: |
+          set -euo pipefail
+          if ! sudo env DEBIAN_FRONTEND=noninteractive timeout -k 10s 55s apt-get -o Acquire::Retries=0 update -qq; then
+            echo '::warning::using cached package indexes'
+          fi
+          sudo env DEBIAN_FRONTEND=noninteractive timeout 360s apt-get -o Acquire::Retries=2 install -y -qq --no-install-recommends libboost-program-options1.83.0 libboost-filesystem1.83.0 libboost-system1.83.0 libboost-context1.83.0
+          chmod +x engine_build/riftbound
+          if ldd engine_build/riftbound | grep -q 'not found'; then exit 1; fi
+      - name: Play 3 Worlds Legends' distinct rune, battlefield, sideboard and Champion structural registrations
+        timeout-minutes: 18
+        run: |
+          python3 -u scripts/native_structural_smoke.py \
+            --selected results/selected \
+            --variants results/structural \
+            --registry engine_build/registry.json \
+            --engine engine_build/riftbound \
+            --timeout 120 --seed 202611251810 \
+            --output results/structural_native/smoke.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          x=json.loads(Path('results/structural_native/smoke.json').read_text())
+          assert x['status']=='STRUCTURAL_NATIVE_PROBE_NOT_FITNESS'
+          assert x['failed_games']==0 and x['games_attempted']>=9
+          assert x['strength_inferences']==0
+          assert x['all_58_structural_variants_certified'] is False
+          print('REGISTERED_STRUCTURAL_REAL_ENGINE_SMOKE_PASS',x['completed_games'])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: worlds-trio-native-registered-structure-compatibility-receipts
+          path: results/structural_native/
+          retention-days: 30
+          if-no-files-found: warn
