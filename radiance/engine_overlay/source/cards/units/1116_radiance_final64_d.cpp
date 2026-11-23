@@ -211,7 +211,35 @@ private:
 class R64_1121 final : public UnitCard {
 public:
  const CardDef& def() const override { return d_; }
- // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
+ TriggerType triggerType()const override{
+   return TriggerType::WhenFriendlyGearDiesAtBattlefield;
+ }
+ unsigned choicesAtFinalization()const override{return kFinalizeTrigger;}
+ void onTrigger(CardContext& c,const std::vector<GameObjectId>&)override{
+   const auto dead=c.state.chain.resuming
+       ?c.state.chain.resuming->triggering_subject:kInvalidId;
+   auto recoverable=[&](){
+     if(dead==kInvalidId||!c.state.objectExists(dead))return false;
+     const auto& obj=c.state.getObject(dead);
+     if(!obj.isGear()||obj.isToken()||obj.zone!=ZoneType::Trash)
+       return false;
+     const auto& trash=c.state.player(obj.owner).trash;
+     return std::find(trash.begin(),trash.end(),dead)!=trash.end();
+   };
+   // The optional payment is made at finalization, before resolution.
+   // Do not ask when gear is no longer in Trash or [1] cannot be paid.
+   const auto may=confirmOptional(c,
+       "Battlefield Armorer: pay 1 Energy to return dead gear?",
+       [&](){return recoverable()&&canPayEnergy(c,c.controller,1);});
+   if(may<1)return;
+   if(costDueNow(c)&&!payEnergy(c,c.controller,1))return;
+   if(finalizingChoices(c))return;
+   if(!recoverable())return;
+   const auto owner=c.state.getObject(dead).owner;
+   auto& trash=c.state.player(owner).trash;
+   trash.erase(std::remove(trash.begin(),trash.end(),dead),trash.end());
+   deck::putInHand(c.state,dead);
+ }
 private:
  const CardDef d_=[] {
   auto d=mkFinal64_d(1121,130,R"RB(Battlefield Armorer)RB",CardType::Unit,3,0,3,{Domain::Order},Rarity::Rare,R"RB(When a friendly gear at a battlefield dies, you may pay [1] to return it to its owner's hand.)RB");
