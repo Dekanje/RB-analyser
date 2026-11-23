@@ -1394,6 +1394,71 @@ TEST_F(RadianceFinal64Test, BushwhackTrapGrantsExtraFacedownSlotOnlyWhileHeld){
  });
  EXPECT_EQ(state.battlefields[0].facedown_max_occupancy,1);
 }
+
+TEST_F(RadianceFinal64Test, KaisaRebelGivesOrdinarySpellReactionOnlyAtHerShowdown){
+ auto kaisa=addUnit(P1,CardDefId{1087},5,0);
+ auto spell=addToHand(P1,CardDefId{1069}); // Forbidden Technique: no printed timing keyword.
+ ASSERT_FALSE(state.getObject(spell).keywords.has(Keyword::Action));
+ ASSERT_FALSE(state.getObject(spell).keywords.has(Keyword::Reaction));
+ state.player(P1).rune_pool.energy=30;
+ state.turn.phase=TurnPhase::MainPhase;
+ state.turn.turn_player=P1;
+ state.turn.ns_state=NeutralShowdownState::Showdown;
+ state.turn.focus_holder=P1;
+ state.battlefields[0].showdown_in_progress=true;
+ withEngine([&](GameEngine& e){
+   const auto actions=e.generateLegalActions();
+   EXPECT_TRUE(std::any_of(actions.begin(),actions.end(),[&](const Intent& i){
+     return i.card==spell && i.type==IntentType::PlayActionCard;
+   }))<<"A regular non-Action spell must be playable as Reaction in Kai'Sa's showdown";
+ });
+ EXPECT_FALSE(state.getObject(spell).keywords.has(Keyword::Reaction))
+   <<"The granted timing must not permanently rewrite printed keywords";
+ EXPECT_TRUE(state.getObject(kaisa).isAtBattlefield());
+}
+TEST_F(RadianceFinal64Test, KaisaRebelDoesNotGrantReactionAtAnotherShowdownOrFromBase){
+ auto kaisa=addUnit(P1,CardDefId{1087},5,0);
+ auto spell=addToHand(P1,CardDefId{1069});
+ state.player(P1).rune_pool.energy=30;
+ state.turn.phase=TurnPhase::MainPhase;
+ state.turn.turn_player=P1;
+ state.turn.ns_state=NeutralShowdownState::Showdown;
+ state.turn.focus_holder=P1;
+ state.battlefields[1].showdown_in_progress=true;
+ auto offered=[&](){
+   bool found=false;
+   withEngine([&](GameEngine& e){
+     auto acts=e.generateLegalActions();
+     found=std::any_of(acts.begin(),acts.end(),[&](const Intent& i){
+       return i.card==spell && i.type==IntentType::PlayActionCard;
+     });
+   });
+   return found;
+ };
+ EXPECT_FALSE(offered())<<"Kai'Sa at a different battlefield is not in this showdown";
+ state.battlefields[1].showdown_in_progress=false;
+ state.battlefields[0].showdown_in_progress=true;
+ EXPECT_TRUE(offered());
+ state.getObject(kaisa).location=BaseLocation{P1};
+ EXPECT_FALSE(offered())<<"Kai'Sa at base cannot grant the timing keyword";
+}
+TEST_F(RadianceFinal64Test, KaisaRebelDoesNotGrantEnemySpellsReaction){
+ addUnit(P1,CardDefId{1087},5,0);
+ auto enemySpell=addToHand(P2,CardDefId{1069});
+ state.player(P2).rune_pool.energy=30;
+ state.turn.phase=TurnPhase::MainPhase;
+ state.turn.turn_player=P1;
+ state.turn.ns_state=NeutralShowdownState::Showdown;
+ state.turn.focus_holder=P2;
+ state.battlefields[0].showdown_in_progress=true;
+ withEngine([&](GameEngine& e){
+   const auto acts=e.generateLegalActions();
+   EXPECT_FALSE(std::any_of(acts.begin(),acts.end(),[&](const Intent& i){
+     return i.card==enemySpell && i.type==IntentType::PlayActionCard;
+   }));
+ });
+}
+
 TEST_F(RadianceFinal64Test, SixtyFourUniqueCardDefinitionsHaveCanonicalMetadata){
  ASSERT_EQ(expected.size(),64u);
  std::set<int> ids,numbers;std::set<std::string> public_codes;

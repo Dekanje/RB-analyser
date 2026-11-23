@@ -246,4 +246,34 @@ s=s.replace(last_decl,last_decl+"\n"+"\n".join(
 s=s.replace(last_call,last_call+"\n"+"\n".join(
     f"    register_card_{i}(registry);" for i in range(1068,1132)),1)
 init.write_text(s)
+
+# RAD-063 Kai'Sa, Rebel: a spell of the player's gains [Reaction] only
+# while the player's Kai'Sa is actually at an ACTIVE showdown battlefield.
+# Do not permanently mutate the spell's printed keyword set (hand, trash,
+# chain) or use an aura snapshot from before the showdown opened.
+game_engine_path=engine/"src/engine/game_engine.cpp"
+source=game_engine_path.read_text()
+helper_anchor="void GameEngine::generateSpellActions("
+helper= """static bool radianceRebelGrantsSpellReaction(const GameState& state, PlayerId player) {
+    for (const auto& bf : state.battlefields) {
+        if (!bf.showdown_in_progress) continue;
+        for (const auto& [id, obj] : state.objects.onBoard()) {
+            if (obj.card_def_id != CardDefId{1087} || obj.controller != player ||
+                !obj.isUnit() || !obj.isAtBattlefield()) continue;
+            if (obj.battlefieldId() == bf.id) return true;
+        }
+    }
+    return false;
+}
+
+"""
+assert source.count(helper_anchor)==1,"RAD-063 grant anchor changed"
+source=source.replace(helper_anchor,helper+helper_anchor,1)
+reaction_anchor="        bool has_reaction = card.keywords.has(Keyword::Reaction);"
+assert source.count(reaction_anchor)==2,"RAD-063 hand/trash timing anchors changed"
+source=source.replace(reaction_anchor,
+    "        bool has_reaction = card.keywords.has(Keyword::Reaction) ||\\n"
+    "            radianceRebelGrantsSpellReaction(state_, player);")
+game_engine_path.write_text(source)
+
 print("RADIANCE_FINAL64_OVERLAY_APPLIED: engine IDs 1068..1131 (64 distinct identities)")
