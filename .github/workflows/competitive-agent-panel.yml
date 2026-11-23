@@ -64,7 +64,7 @@ jobs:
             --deck-name orianna_lady_of_clockwork.txt \
             --deck-name ziggs_hexplosives_expert.txt \
             --deck-name teemo_swift_scout.txt \
-            --deck-name fiora_grand_duelist.txt 
+            --deck-name fiora_grand_duelist.txt \
             --timeout 180
       - uses: actions/upload-artifact@v4
         if: always()
