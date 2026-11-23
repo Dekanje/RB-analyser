@@ -31,7 +31,8 @@ anchor_enum="    WhenEnemyMightReducedHere, // Radiance Ahri; emitted only for r
 assert t.count(anchor_enum)==1, "Final64 exhaust enum anchor changed"
 t=t.replace(anchor_enum,anchor_enum+"""
     WhenIBecomeExhausted, // Radiance Riven, Rostrum, Oracle, Seraphine
-    WhenAnotherFriendlyUnitBecomesExhausted, // Radiance Riven Deserter""",1)
+    WhenAnotherFriendlyUnitBecomesExhausted, // Radiance Riven Deserter
+    WhenFriendlyGearDiesAtBattlefield, // Radiance Battlefield Armorer""",1)
 effects.write_text(t)
 
 trigger=engine/"src/engine/trigger_manager.cpp"
@@ -62,6 +63,38 @@ replace_trigger=anchor_trigger+"""
     }
 """
 trigger.write_text(t.replace(anchor_trigger,replace_trigger,1))
+
+
+# Battlefield Armorer: a friendly gear dying at a battlefield must be a
+# reactable trigger with the dead gear as its subject, not a test-only callback.
+# TriggerManager already receives LeftBoardEvent after the gear was sent to
+# Trash; use that event's last-known location and controller.
+tr=trigger.read_text()
+armorer_anchor="    if (!e.was_killed || e.card_type != CardType::Gear) return;"
+assert tr.count(armorer_anchor)==1, "Armorer gear death trigger anchor changed"
+tr=tr.replace(armorer_anchor,"""
+    if(e.was_killed && e.card_type==CardType::Gear &&
+       std::holds_alternative<BattlefieldLocation>(e.was_at) &&
+       e.controller!=PlayerId::None) {
+       const auto &dead=state_.getObject(e.object);
+       // Tokens do not enter Trash (CR 183.1); no token can be recovered.
+       if(!dead.isToken() && dead.zone==ZoneType::Trash) {
+           std::vector<GameObjectId> watchers;
+           for(const auto& [id,obj]:state_.objects.onBoard()) {
+               if(id==e.object || !obj.isUnit() || !obj.location ||
+                  obj.controller!=e.controller || obj.card_def_id==kInvalidId)
+                   continue;
+               if(cardFiresOn(card_registry_,obj.card_def_id,
+                              TriggerType::WhenFriendlyGearDiesAtBattlefield))
+                   watchers.push_back(id);
+           }
+           for(auto wid:watchers)
+               fireTrigger(wid,e.controller,0,
+                           TriggerType::WhenFriendlyGearDiesAtBattlefield,e.object);
+       }
+    }
+""" + armorer_anchor,1)
+trigger.write_text(tr)
 
 
 # Bloodscent Swarm reduces cost only for battlefield CONQUESTS, not holds.
