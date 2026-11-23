@@ -1,0 +1,77 @@
+name: Recover only sideboard 174 shard 6 actual native failure and preserve stderr
+on:
+  push:
+    branches: ['research/competitive-agent-benchmark-v1-2026-11-23']
+    paths: ['.github/workflows/competitive-sideboard-174-shard6-replay.yml']
+permissions:
+  contents: read
+  actions: read
+jobs:
+  exact-native-replay-of-only-failed-sideboard-shard:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 100
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate actual swap and preserved engine error semantics
+        run: |
+          python3 -m py_compile scripts/structural_sideboard_174.py scripts/tournament_bo3_policy.py
+          python3 -m unittest discover -s scripts -p 'test_structural_sideboard_174.py' -v
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45259246337
+          github-token: ${{ github.token }}
+          name: worlds-all58-registered-structure-legal-unvalidated-variants
+          path: results/structure
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45270672340
+          github-token: ${{ github.token }}
+          name: competitive-all580-registered-structure-native-evidence
+          path: results/native_certified
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45181493632
+          github-token: ${{ github.token }}
+          name: expanded-optimized-58-independent-radiance-bo3
+          path: results/selected
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45208732588
+          github-token: ${{ github.token }}
+          name: all-58-optimized-head-to-head-rankings-and-matchups
+          path: results/ranked
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45244227502
+          github-token: ${{ github.token }}
+          name: competitive-rule407-verified-engine-binary
+          path: engine_build
+      - name: Install exact previously accepted native C++ runtime
+        timeout-minutes: 12
+        run: |
+          set -euo pipefail
+          if ! sudo env DEBIAN_FRONTEND=noninteractive timeout -k 10s 55s apt-get -o Acquire::Retries=0 update -qq; then
+            echo '::warning::using cached package indexes'
+          fi
+          sudo env DEBIAN_FRONTEND=noninteractive timeout 360s apt-get -o Acquire::Retries=2 install -y -qq --no-install-recommends libboost-program-options1.83.0 libboost-filesystem1.83.0 libboost-system1.83.0 libboost-context1.83.0
+          chmod +x engine_build/riftbound
+          if ldd engine_build/riftbound | grep -q 'not found'; then exit 1; fi
+      - name: Replay exact original shard-6 seed, preserve any underlying native crash
+        timeout-minutes: 80
+        run: |
+          set -euo pipefail
+          python3 -u scripts/structural_sideboard_174.py \
+            --selected results/selected --variants results/structure \
+            --registry engine_build/registry.json --engine engine_build/riftbound \
+            --certification results/native_certified/acceptance.json \
+            --ranked results/ranked/all_58_ranked.json \
+            --shards 29 --shard 6 --agent ismcts:sims=24 \
+            --seed 202611270101 --timeout 175 \
+            --output results/sideboard174/6/sideboard_fitness.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sideboard174-6
+          path: results/sideboard174/6/
+          retention-days: 30
+          if-no-files-found: warn
