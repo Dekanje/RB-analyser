@@ -177,9 +177,15 @@
     },
     "RAD-063/167": {
       "engine_id": 1087,
-      "status": "pending",
-      "engine_scenarios": [],
-      "unverified_rules": "[Disarm] (When I attack, give an enemy unit here -1 :rb_might: this turn).\nWhile I'm in a showdown, your spells have [Reaction]. (Play them any time, even before spells and abilities resolve.)"
+      "status": "accepted",
+      "engine_scenarios": [
+        "RadianceFinal64Test.KaisaRebelGivesOrdinarySpellReactionOnlyAtHerShowdown",
+        "RadianceFinal64Test.KaisaRebelDoesNotGrantReactionAtAnotherShowdownOrFromBase",
+        "RadianceFinal64Test.KaisaRebelDoesNotGrantEnemySpellsReaction",
+        "RadianceFinal64Test.KaisaRebelDisarmDamagesEnemyMightOnAttack"
+      ],
+      "verified_rules": "[Disarm] (When I attack, give an enemy unit here -1 :rb_might: this turn).\nWhile I'm in a showdown, your spells have [Reaction]. (Play them any time, even before spells and abilities resolve.)",
+      "review_note": "Printed Disarm and temporary Reaction for controller's spells during the showdown that includes Kai'Sa audited against effect engine spell action generation and shared Disarm keyword. Four focused engine-path tests verify positive and adversarial battlefield, ownership, base, and attack scenarios; 4/4 passed in GitHub Actions run 45139771638 (2026-11-23). Full 64-card mechanics gate still fails closed for other pending cards."
     },
     "RAD-064/167": {
       "engine_id": 1088,
