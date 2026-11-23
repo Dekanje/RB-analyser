@@ -1,0 +1,85 @@
+name: Competitive first real 407 matchup-specific strategic sideboard screen
+on:
+  push:
+    branches: ['research/competitive-agent-benchmark-v1-2026-11-23']
+    paths:
+      - 'data/launch_sideboard_policy_pilot_407.txt'
+permissions:
+  contents: read
+  actions: read
+jobs:
+  policy-search-unit-tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate legal transitions and C++ start player receipt contract
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s scripts -p 'test_sideboard_policy_search.py' -v
+          python3 -m unittest discover -s scripts -p 'test_tournament_bo3_policy.py' -v
+  draven-vs-leblanc-policy-pilot:
+    needs: policy-search-unit-tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45244227502
+          github-token: ${{ github.token }}
+          name: competitive-rule407-verified-engine-binary
+          path: engine_build
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45181493632
+          github-token: ${{ github.token }}
+          name: expanded-optimized-58-independent-radiance-bo3
+          path: results/selected
+      - name: Install exact C++ runtime
+        timeout-minutes: 12
+        run: |
+          set -euo pipefail
+          if ! sudo env DEBIAN_FRONTEND=noninteractive timeout -k 10s 55s apt-get -o Acquire::Retries=0 update -qq; then
+            echo '::warning::using cached package indexes'
+          fi
+          sudo env DEBIAN_FRONTEND=noninteractive timeout 360s apt-get -o Acquire::Retries=2 install -y -qq --no-install-recommends libboost-program-options1.83.0 libboost-filesystem1.83.0 libboost-system1.83.0 libboost-context1.83.0
+          chmod +x engine_build/riftbound
+          test -f engine_build/registry.json
+          if ldd engine_build/riftbound | grep -q 'not found'; then exit 1; fi
+      - name: Compare legal sideboard strategies against immutable registered baseline, mirrored seats and repeated seeds
+        timeout-minutes: 60
+        run: |
+          python3 -u scripts/sideboard_policy_search.py \
+            --selected results/selected \
+            --engine engine_build/riftbound \
+            --registry engine_build/registry.json \
+            --output results/bo3_policy_draven_leblanc \
+            --legend 'Draven, Glorious Executioner' \
+            --opponent 'LeBlanc, Deceiver' \
+            --max-tech-options 3 --repetitions 2 \
+            --agent ismcts:sims=24 --timeout 200 --seed 202611240818
+      - name: Require real 407 evidence for every paired series, no automatic policy adoption
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path('results/bo3_policy_draven_leblanc/sideboard_policy_screen.json').read_text())
+          assert d['status']=='SINGLE_MATCHUP_STRATEGIC_BO3_POLICY_SCREEN_ONLY'
+          assert d['baseline_completed_series']==4
+          assert d['candidate_completed_series']==4*d['search_candidates']
+          assert d['loser_chooses_first_verified'] is True
+          assert d['any_deck_changes_adopted'] is False
+          for row in d['candidate_results']:
+            assert row['paired_series']==4
+            assert len(row['cases'])==4
+            assert all(g['forced_start_receipts'] for g in row['cases'])
+          print('MATCHUP_SIDEBOARD_407_SEARCH_PASS',d['search_candidates'])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: competitive-draven-leblanc-407-sideboard-policy-discovery
+          path: results/bo3_policy_draven_leblanc/
+          retention-days: 30
+          if-no-files-found: warn
