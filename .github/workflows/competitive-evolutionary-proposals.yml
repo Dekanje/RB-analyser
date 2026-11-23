@@ -2,7 +2,10 @@ name: Competitive 58-Legend broad candidate generation (one-shot)
 on:
   push:
     branches: ['research/competitive-agent-benchmark-v1-2026-11-23']
-    paths: ['.github/workflows/competitive-evolutionary-proposals.yml']
+    paths:
+      - '.github/workflows/competitive-evolutionary-proposals.yml'
+      - 'scripts/evolutionary_candidates.py'
+      - 'scripts/test_evolutionary_candidates.py'
 permissions:
   contents: read
   actions: read
