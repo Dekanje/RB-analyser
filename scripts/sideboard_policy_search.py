@@ -169,6 +169,7 @@ def play(engine,target,opponent,byname,option,case,agent,timeout):
     return {
         "seat":case["seat"],"rep":case["rep"],"seed":case["seed"],
         "target_win":int(payload["winner"]==my_seat),
+        "game1_winner_seat":payload["games"][0]["winner_seat"],
         "game_count":len(payload["games"]),
         "forced_start_receipts":[{
             "game":g["game"],"loser":g["previous_game_loser_identity"],
