@@ -243,9 +243,15 @@
     },
     "RAD-068/167": {
       "engine_id": 1091,
-      "status": "pending",
-      "engine_scenarios": [],
-      "unverified_rules": "Once each turn, while I'm at a battlefield, you may pay :rb_energy_1::rb_rune_rainbow: less to play a gear."
+      "status": "accepted",
+      "engine_scenarios": [
+        "RadianceFinal64Test.OriannaBattlefieldAuraDiscountsGearEnergyAndPower",
+        "RadianceFinal64Test.OriannaAuraNotGrantedFromBaseOrToOpponent",
+        "RadianceFinal64Test.OriannaDiscountOnlyOncePerSourcePerTurn",
+        "RadianceFinal64Test.OriannaMayDeclineFirstAndDiscountSecondGear"
+      ],
+      "verified_rules": "Once each turn, while I'm at a battlefield, you may pay :rb_energy_1::rb_rune_rainbow: less to play a gear.",
+      "review_note": "Orianna grants an optional [1][A] cost reduction for friendly gear while at a battlefield, independently tracked once per source per turn. Four real engine-path cases cover cost payment, proper controller/location scope, consuming only one discount per source per turn, and declining one offer to save it for the next gear. Targeted CI 45161618284 passed 15/15 across all remaining three cards. Full regression still required."
     },
     "RAD-069/167": {
       "engine_id": 1092,
@@ -627,15 +633,30 @@
     },
     "RAD-163/167": {
       "engine_id": 1130,
-      "status": "pending",
-      "engine_scenarios": [],
-      "unverified_rules": "For each player, the first unit or gear they play here on their turn costs :rb_energy_1: less."
+      "status": "accepted",
+      "engine_scenarios": [
+        "RadianceFinal64Test.HuntersCircleFirstPlayAtThisBattlefieldDiscountsUnit",
+        "RadianceFinal64Test.HuntersCircleActualPlayPaysDiscountAndConsumesIt",
+        "RadianceFinal64Test.HuntersCircleSecondUnitOnSameTurnNotDiscounted",
+        "RadianceFinal64Test.HuntersCircleFirstPlayTrackedSeparatelyForEachPlayer",
+        "RadianceFinal64Test.HuntersCircleDeployGearOnlyToBattlefield"
+      ],
+      "verified_rules": "For each player, the first unit or gear they play here on their turn costs :rb_energy_1: less.",
+      "review_note": "Hunters' Circle gives each player a one-Energy reduction for their own first legal unit or gear played to that battlefield on their turn, independently tracked by player. Five engine-path cases cover legal battlefield access, actual discounted resource payment and use marking, second play not discounted, player counter isolation, and Deploy gear restrictions. CI 45161618284 targeted 15/15 passed. Full regression still required."
     },
     "RAD-167/167": {
       "engine_id": 1131,
-      "status": "pending",
-      "engine_scenarios": [],
-      "unverified_rules": "(Neutral cards can go in decks of any Domain.)\nIf Neeko is in your deck, choose 3 different legends in addition to your starting legend. (Different means none match names.)\nWhen you play me, choose one of those legends and add it to your Legend Zone while I'm on the board."
+      "status": "accepted",
+      "engine_scenarios": [
+        "RadianceFinal64Test.NeekoPlayAddsOneOfTheThreeSelectedLegends",
+        "RadianceFinal64Test.NeekoGrantedLooseCannonTriggersBeginningPhase",
+        "RadianceFinal64Test.NeekoGrantedLegendRemovedWhenNeekoLeavesBoard",
+        "RadianceFinal64Test.NeekoQueuedPlayTriggerDoesNotGrantAfterLeavingBoard",
+        "RadianceFinal64Test.NeekoNoPregameOptionsDoesNotInventLegends",
+        "RadianceFinal64Test.NeekoDeckValidatorRequiresThreeDistinctLegendNames"
+      ],
+      "verified_rules": "(Neutral cards can go in decks of any Domain.)\nIf Neeko is in your deck, choose 3 different legends in addition to your starting legend. (Different means none match names.)\nWhen you play me, choose one of those legends and add it to your Legend Zone while I'm on the board.",
+      "review_note": "Neeko requires three distinct extra legend names outside starting legend at deck validation; game setup records selections; her play trigger chooses one and adds it to the Legend Zone only while she remains on board. Added legends fire normal legend/phase triggers, are readied each turn, and are removed immediately when granting Neeko leaves; a delayed play trigger cannot create an orphan grant. Six engine-path tests passed in targeted CI 45161618284 (15/15 combined). Full regression still required."
     }
   }
 }
