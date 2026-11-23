@@ -168,7 +168,7 @@ replace_once(
             // A chain-resuming context cannot be probed by this engine; its
             // normal finalization legality path remains in place there.
             const auto& n = card.name.get();
-            if ((n == "Mesmerize" || n == "Rocket Barrage") &&
+            if ((n == "Mesmerize" || n == "Rocket Barrage" || n == "One-Two Punch") &&
                 !state_.chain.resuming.has_value() &&
                 !payableThroughAFinalizeChoice(player, card_id, nullptr, true))
                 continue;
