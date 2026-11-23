@@ -16,9 +16,14 @@
     },
     "RAD-011/167": {
       "engine_id": 1070,
-      "status": "pending",
-      "engine_scenarios": [],
-      "unverified_rules": "[Show Off] a Mech. (As you play me, you may reveal a Mech from hand or pick another friendly Mech.)\nI enter ready if you showed off."
+      "status": "accepted",
+      "engine_scenarios": [
+        "RadianceFinal64Test.IncorrigibleConstructEntersReadyAfterShowingOffMech",
+        "RadianceFinal64Test.IncorrigibleConstructEntersExhaustedWithoutFriendlyMech",
+        "RadianceFinal64Test.IncorrigibleConstructAcceptsFriendlyBoardMech"
+      ],
+      "verified_rules": "[Show Off] a Mech. (As you play me, you may reveal a Mech from hand or pick another friendly Mech.)\nI enter ready if you showed off.",
+      "review_note": "Printed Show Off criteria audited against the card class and shared Show Off helper; full-engine scenarios verify hand Mech, friendly-board Mech, rejection of an opponent's Mech/non-Mech, and the ready/exhausted outcomes. All three passed in targeted CI 45127025773. Final 64-card gate remains fail-closed."
     },
     "RAD-012/167": {
       "engine_id": 1071,
