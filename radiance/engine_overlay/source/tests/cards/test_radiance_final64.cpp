@@ -225,6 +225,14 @@ TEST_F(RadianceFinal64Test, CataclysmBlocksOpponentSpellsAndMovesIntoOccupiedEne
  EXPECT_TRUE(state.player(P2).cant_play_spells_this_turn);
  EXPECT_EQ(state.getObject(own).battlefieldId(),state.battlefields[1].id);
 }
+
+TEST_F(RadianceFinal64Test, CataclysmRequiresAnOccupiedEnemyHeldBattlefield){
+ addUnit(P1,kInvalidId,3,-1);
+ const auto* spell=card_registry.get(CardDefId{1097});
+ ASSERT_NE(spell,nullptr);
+ EXPECT_FALSE(spell->canBePlayed(state,P1))
+   << "The spell requires an occupied enemy-held battlefield";
+}
 TEST_F(RadianceFinal64Test, EvelynnConsumingReadiesAndStrengthensOnFacedownPlayTrigger){
  auto eve=addUnit(P1,CardDefId{1099},5,0);
  state.getObject(eve).is_exhausted=true;
@@ -386,6 +394,14 @@ TEST_F(RadianceFinal64Test, ScorchedEarthMayDamageFriendlyUnitAtSecondBattlefiel
  playThroughEngine(spell,&select);
  EXPECT_EQ(state.getObject(friendly).damage_marked,5);
  EXPECT_EQ(state.getObject(elsewhere).damage_marked,0);
+}
+
+TEST_F(RadianceFinal64Test, PrimordialRoarWithoutShowOffDoesNotDamageUnit){
+ auto enemy=addUnit(P2,kInvalidId,9,0);
+ auto spell=addToHand(P1,CardDefId{1096});
+ playThroughEngine(spell);
+ EXPECT_EQ(state.getObject(enemy).damage_marked,0)
+  << "Without a shown friendly or hand unit the spell must not deal damage";
 }
 TEST_F(RadianceFinal64Test, TrinketPeddlerSharedDisarmReducesEnemyMight){
  auto peddler=addUnit(P1,CardDefId{1084},3,0);
@@ -693,19 +709,50 @@ TEST_F(RadianceFinal64Test, RavingWitnessRecyclingTopCardDoesNotDuplicateDeckObj
                        state.player(P1).hand.end(),revealed)==state.player(P1).hand.end());
  EXPECT_EQ(state.getObject(revealed).zone,ZoneType::MainDeck);
 }
-TEST_F(RadianceFinal64Test, MechanicalBanditRecycleAndDrawLeaveUniqueDeckMembership){
- auto high=addToDeck(P1,CardDefId{1118}); // Dune Devourer, Energy 7
- auto low=addToDeck(P2,CardDefId{1116}); // Protector's Shield, Energy 1
+
+TEST_F(RadianceFinal64Test, RavingWitnessDrawsMightyRevealedUnit){
+ auto mighty=addToDeck(P1,CardDefId{1090}); // Printed 8 Might.
+ auto witness=addUnit(P1,CardDefId{1093},3,0);
+ fireTriggerThroughEngine(witness,TriggerType::WhenIMove);
+ EXPECT_TRUE(inHand(P1,mighty)) << "Mighty card must be drawn, not recycled";
+ EXPECT_EQ(state.player(P1).main_deck.size(),0u);
+}
+TEST_F(RadianceFinal64Test, MechanicalBanditControllerLowCardDrawnAndOpponentHighRecycled){
+ auto low=addToDeck(P1,CardDefId{1116}); // Cost 2
+ auto high=addToDeck(P2,CardDefId{1118}); // Cost 7
+ auto bandit=addToHand(P1,CardDefId{1110});
+ playThroughEngine(bandit);
+ fireTriggerThroughEngine(bandit,TriggerType::AtStartOfBeginning);
+ EXPECT_TRUE(inHand(P1,low));
+ EXPECT_FALSE(inHand(P2,high));
+ EXPECT_EQ(state.player(P1).main_deck.size(),0u);
+ EXPECT_EQ(state.player(P2).main_deck.size(),1u);
+}
+TEST_F(RadianceFinal64Test, MechanicalBanditTiedEnergyStillOnlyControllerDraws){
+ auto ours=addToDeck(P1,CardDefId{1084}); // Printed cost 3
+ auto theirs=addToDeck(P2,CardDefId{1084}); // Equal cost 3
+ auto bandit=addToHand(P1,CardDefId{1110});
+ playThroughEngine(bandit);
+ fireTriggerThroughEngine(bandit,TriggerType::AtStartOfBeginning);
+ EXPECT_TRUE(inHand(P1,ours));
+ EXPECT_FALSE(inHand(P2,theirs));
+ EXPECT_EQ(state.player(P1).main_deck.size(),0u);
+ EXPECT_EQ(state.player(P2).main_deck.size(),1u);
+}
+TEST_F(RadianceFinal64Test, MechanicalBanditOpponentLowCardStillRecyclesNotDraws){
+ auto high=addToDeck(P1,CardDefId{1118}); // Dune Devourer, Energy 7.
+ auto low=addToDeck(P2,CardDefId{1116}); // Protector's Shield, Energy 2.
  auto bandit=addToHand(P1,CardDefId{1110});
  playThroughEngine(bandit);
  fireTriggerThroughEngine(bandit,TriggerType::AtStartOfBeginning);
  const auto& deck1=state.player(P1).main_deck;
  const auto& deck2=state.player(P2).main_deck;
  EXPECT_EQ(std::count(deck1.begin(),deck1.end(),high),1);
- EXPECT_EQ(std::count(deck2.begin(),deck2.end(),low),0);
- EXPECT_TRUE(inHand(P2,low));
+ EXPECT_EQ(std::count(deck2.begin(),deck2.end(),low),1);
+ EXPECT_FALSE(inHand(P2,low)) << "Opponent must not draw from our Mechanical Bandit";
+ EXPECT_FALSE(inHand(P1,high)) << "Controller did not reveal the lowest-cost card";
  EXPECT_EQ(state.getObject(high).zone,ZoneType::MainDeck);
- EXPECT_EQ(state.getObject(low).zone,ZoneType::Hand);
+ EXPECT_EQ(state.getObject(low).zone,ZoneType::MainDeck);
 }
 TEST_F(RadianceFinal64Test, WhirlingTwirligigPaysFriendlyGearDeathToCreateRecruit){
  auto gear=addToHand(P1,CardDefId{1088});
