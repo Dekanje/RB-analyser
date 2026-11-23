@@ -36,6 +36,11 @@ def playable_pool(byname: dict, domains: set) -> list[dict]:
             continue
         if c.get("banned") or key(c["name"]) in BAN_KEYS:
             continue
+        # RAD-167 needs three additional registered Legends. This exporter
+        # does not yet support the special 401.2.a deck-registration fields.
+        # Exclude it instead of proposing silently illegal tournament lists.
+        if c["name"]=="Neeko, Blending In":
+            continue
         if "signature" in supertype or "token" in supertype:
             continue
         if set(c.get("domains") or ()) - domains:
