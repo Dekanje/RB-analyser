@@ -77,7 +77,8 @@ class Sideboard174ActualNativeTests(unittest.TestCase):
             "winner":2,"sideboarding_applied":True,
             "source_decks_return_to_registered_state_next_match":True,
             "games":[
-                {"game":1,"engine_status":"complete","winner_seat":1},
+                {"game":1,"engine_status":"complete","winner_seat":1,
+                 "sideboard_swaps":[[],[]]},
                 {"game":2,"engine_status":"complete",
                  "sideboard_swaps":[[],chosen["plan"]["swaps"]],
                  "forced_start_verified":True,
