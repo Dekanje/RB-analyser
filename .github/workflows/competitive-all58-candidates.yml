@@ -2,7 +2,10 @@ name: Competitive all-58 multi-card mutation discovery (one-shot)
 on:
   push:
     branches: ['research/competitive-agent-benchmark-v1-2026-11-23']
-    paths: ['.github/workflows/competitive-all58-candidates.yml']
+    paths:
+      - '.github/workflows/competitive-all58-candidates.yml'
+      - 'scripts/competitive_all58_candidates.py'
+      - 'scripts/test_competitive_all58_candidates.py'
 permissions:
   contents: read
   actions: read
