@@ -626,22 +626,37 @@ block=block.replace(needle,"""        const bool printed_ok=canAfford(player,car
         if(!printed_ok&&!hunter_ok)continue;
 
         Intent play_intent;""",1)
-needle="        play_intent.play_location = BaseLocation{player};\n        actions.push_back(play_intent);"
-assert block.count(needle)==1,"hunter gear destination"
-block=block.replace(needle,"""        if(card.keywords.has(Keyword::Deploy)){
-            for(const auto& bf:state_.battlefields){
+# Initial Radiance overlay rewrites the gear destination as a Deploy/else
+# branch; locate that block rather than the original pre-Deploy sequence.
+gear_begin=block.index("    // Play gear from hand or permission-granted banishment")
+gear_end=block.index("    // Play spells from hand",gear_begin)
+gear_block=block[gear_begin:gear_end]
+needle="""        if (card.hasKeyword(Keyword::Deploy)) {
+            for (const auto& bf : state_.battlefields) {
+                Intent battlefield_play = play_intent;
+                battlefield_play.play_location = BattlefieldLocation{bf.id};
+                actions.push_back(battlefield_play);
+            }
+        } else {
+            play_intent.play_location = BaseLocation{player};
+            actions.push_back(play_intent);
+        }"""
+assert gear_block.count(needle)==1,"hunter post-Deploy gear destination"
+gear_block=gear_block.replace(needle,"""        if (card.hasKeyword(Keyword::Deploy)) {
+            for (const auto& bf : state_.battlefields) {
                 const std::optional<LocationId> to=BattlefieldLocation{bf.id};
                 const bool with_discount=radianceHuntersFirstPlayHere(state_,player,card_id,to)&&
                     canAffordWith(player,card_id,0,hunter_adj);
                 if(!printed_ok&&!with_discount)continue;
-                Intent playing=play_intent;
-                playing.play_location=to;
-                actions.push_back(playing);
+                Intent battlefield_play=play_intent;
+                battlefield_play.play_location=to;
+                actions.push_back(battlefield_play);
             }
-        } else {
+        } else if(printed_ok) {
             play_intent.play_location=BaseLocation{player};
             actions.push_back(play_intent);
         }""",1)
+block=block[:gear_begin]+gear_block+block[gear_end:]
 end_anchor="    return actions;\n}"
 assert block.count(end_anchor)==1,"Hunter main-phase return"
 block=block.replace(end_anchor,"""    actions.erase(std::remove_if(actions.begin(),actions.end(),[&](const Intent& a){
