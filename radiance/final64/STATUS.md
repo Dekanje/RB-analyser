@@ -175,3 +175,47 @@ GoogleTest cases, not identity-only assertions.
 Re-run the entire upstream AlphaRune suite and strict registry audit at
 this revision, then retain final CI failure only for still-unaccepted
 printed mechanics (41 cards).
+
+## 23 November — accepted 52/64, pending 12/64; full regression checkpoint
+
+The accepted per-card ledger now records 52 independently reviewed cards with
+passing named AlphaRune engine-path scenarios, up from 23 at the beginning of
+this implementation session. Source-level and targeted-CI defects were
+corrected, including RAD-111 Mechanical Bandit: only its controller draws
+their own revealed card when it has the lowest Energy cost; the opponent's
+revealed card is recycled. Positive, negative, tied-cost and ownership tests
+all passed.
+
+Focused CI checkpoints (all passed):
+- 45127025773 — Incorrigible Construct's valid/invalid Show Off.
+- 45127376772 — Scorched Earth and Strigian Oracle.
+- 45127670182 — Command: Attack's two modes and Seraphine.
+- 45128246359 — Riven, Trifarian Captain, Remember the Fallen and Mordekaiser.
+- 45128572504 — Mechanical Bandit, Raving Witness, Primordial Roar, Cataclysm.
+- 45128898773 — Ziggs, Riven Deserter and Transpositionist.
+- 45129313864 — Gutter Guardian, Empyrean, Spirit, Rostrum and Jarvan.
+- 45129782350 — complete 100-test focused Final64 suite; six additional cards accepted.
+- 45130151465 — strict Bomb death cascade and token-prohibited Dockside Lock-Up.
+
+Remaining **not accepted** (requires implementing gameplay mechanics and
+independent printed-effect tests, not just identity registration):
+- RAD-010/167 Forbidden Technique
+- RAD-012/167 Runeblade Anvil
+- RAD-015/167 Akali, Brash
+- RAD-062/167 Gravity Field
+- RAD-063/167 Kai'Sa, Rebel
+- RAD-068/167 Orianna, Mechanical Marvel
+- RAD-120/167 Meticulous Restorationist
+- RAD-130/167 Battlefield Armorer
+- RAD-132/167 Heimerdinger, Academy Instructor
+- RAD-158/167 Black Market
+- RAD-163/167 Hunters' Circle
+- RAD-167/167 Neeko, Blending In
+
+**The 64-card mechanics acceptance gate must remain FAILED** until all
+remaining 12 effects have correct full gameplay implementations and
+passing adversarial engine-path scenarios. A passing compiler or upstream
+regression alone does not imply complete Radiance simulation support.
+Run the full 1,123-definition registry, focused tests, full upstream
+AlphaRune regression and separate strict acceptance at this checkpoint;
+record each result independently.
