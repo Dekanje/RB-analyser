@@ -588,6 +588,74 @@ TEST_F(RadianceFinal64Test, ZeroPointInflectionAtTenCardsDiscardsAndGivesPoint){
  EXPECT_EQ(state.player(P2).score,before+1);
  EXPECT_FALSE(inHand(P1,incoming));
 }
+
+TEST_F(RadianceFinal64Test, BlackMarketBothPlayersCanDrawOnOwnTurnsWithoutControllingIt){
+ auto bf=addUnit(P1,CardDefId{1129},0,-1);
+ state.getObject(bf).card_type=CardType::Battlefield;
+ state.getObject(bf).location.reset();
+ state.battlefields[0].card_object_id=bf;
+ state.battlefields[0].controller.reset(); // Nobody controls this battlefield.
+ auto p1legend=addUnit(P1,CardDefId{249},0,-1);
+ state.getObject(p1legend).card_type=CardType::Legend;
+ state.getObject(p1legend).zone=ZoneType::LegendZone;
+ state.getObject(p1legend).location=BaseLocation{P1};
+ state.player(P1).legend_zone=p1legend;
+ auto p2legend=addUnit(P2,CardDefId{252},0,-1);
+ state.getObject(p2legend).card_type=CardType::Legend;
+ state.getObject(p2legend).zone=ZoneType::LegendZone;
+ state.getObject(p2legend).location=BaseLocation{P2};
+ state.player(P2).legend_zone=p2legend;
+ withEngine([&](GameEngine& e){e.testHook_recalculateAuras();});
+ const auto* market=card_registry.get(CardDefId{1129});
+ ASSERT_NE(market,nullptr);
+ ASSERT_TRUE(market->canActivateAbilityAt(state,P1,p1legend,0));
+ EXPECT_FALSE(market->canActivateAbilityAt(state,P2,p2legend,0))
+   << "Black Market activation is limited to the acting player's turn";
+ auto p1draw=addToDeck(P1,CardDefId{1084});
+ state.player(P1).rune_pool.universal_power=2;
+ Intent act;act.type=IntentType::ActivateAbility;act.player=P1;
+ act.ability_source=p1legend;act.granted_ability_def=CardDefId{1129};
+ act.ability_index=0;
+ withEngineDefaultTurn([&](GameEngine& e){
+   e.testHook_executeIntent(act);settleLikeTheEngine(e);
+ },nullptr,nullptr,P1);
+ EXPECT_TRUE(inHand(P1,p1draw));
+ EXPECT_EQ(state.player(P1).rune_pool.universal_power,0);
+ EXPECT_FALSE(market->canActivateAbilityAt(state,P1,p1legend,0));
+ state.turn.turn_player=P2;
+ EXPECT_TRUE(market->canActivateAbilityAt(state,P2,p2legend,0));
+ auto p2draw=addToDeck(P2,CardDefId{1084});
+ state.player(P2).rune_pool.universal_power=2;
+ act.player=P2;act.ability_source=p2legend;
+ withEngineDefaultTurn([&](GameEngine& e){
+   e.testHook_executeIntent(act);settleLikeTheEngine(e);
+ },nullptr,nullptr,P2);
+ EXPECT_TRUE(inHand(P2,p2draw));
+ EXPECT_EQ(state.player(P2).rune_pool.universal_power,0);
+ EXPECT_FALSE(market->canActivateAbilityAt(state,P2,p2legend,0));
+}
+TEST_F(RadianceFinal64Test, BlackMarketPendingAbilityCannotBeActivatedTwice){
+ auto bf=addUnit(P1,CardDefId{1129},0,-1);
+ state.getObject(bf).card_type=CardType::Battlefield;
+ state.getObject(bf).location.reset();
+ state.battlefields[0].card_object_id=bf;
+ auto legend=addUnit(P1,CardDefId{249},0,-1);
+ state.getObject(legend).card_type=CardType::Legend;
+ state.getObject(legend).zone=ZoneType::LegendZone;
+ state.getObject(legend).location=BaseLocation{P1};
+ state.player(P1).legend_zone=legend;
+ const auto* market=card_registry.get(CardDefId{1129});
+ ASSERT_NE(market,nullptr);
+ ASSERT_TRUE(market->canActivateAbilityAt(state,P1,legend,0));
+ ChainItem pending;
+ pending.source=legend;
+ pending.granted_ability_def=CardDefId{1129};
+ pending.ability_index=0;
+ pending.is_ability=true;
+ state.chain.items.push_back(pending);
+ EXPECT_FALSE(market->canActivateAbilityAt(state,P1,legend,0))
+   << "Once-per-turn activation cannot be raced while the first is on chain";
+}
 TEST_F(RadianceFinal64Test, ZeroPointInflectionDrawsTwoAfterPlayingAnotherCard){
  for(int i=0;i<3;i++)addToDeck(P1,CardDefId{1084});
  auto inflection=addToHand(P1,CardDefId{1092});
