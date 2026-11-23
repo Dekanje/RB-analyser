@@ -175,6 +175,9 @@ audit.write_text(audited.replace(audit_anchor,audit_anchor+"\n"+audit_entry,1))
 # Keep this as a pin-anchored upstream engine patch, not a global rule change.
 engine_cpp=engine/"src/engine/game_engine.cpp"
 engine_source=engine_cpp.read_text()
+awaken_begin=engine_source.index("void GameEngine::awakenPhase()")
+awaken_end=engine_source.index("void GameEngine::beginningStep()",awaken_begin)
+awaken_source=engine_source[awaken_begin:awaken_end]
 awaken_head="""    auto player = state_.turn.turn_player;
     {
         const SimultaneousTriggers together(state_.chain);"""
@@ -189,15 +192,16 @@ awaken_replacement="""    auto player = state_.turn.turn_player;
     }
     {
         const SimultaneousTriggers together(state_.chain);"""
-assert engine_source.count(awaken_head)==1, "AwakenPhase turn-player anchor changed"
-engine_source=engine_source.replace(awaken_head,awaken_replacement,1)
+assert awaken_source.count(awaken_head)==1, "AwakenPhase turn-player anchor changed"
+awaken_source=awaken_source.replace(awaken_head,awaken_replacement,1)
 ready_anchor="""            if (obj.controller == player && obj.is_exhausted && obj.location.has_value()) {
                 const Card* card = obj.card_def_id != kInvalidId"""
 ready_replacement="""            if (obj.controller == player && obj.is_exhausted && obj.location.has_value()) {
                 if (firebrand_prevents_unit_ready && obj.isUnit()) continue;
                 const Card* card = obj.card_def_id != kInvalidId"""
-assert engine_source.count(ready_anchor)==1, "AwakenPhase unit-ready gate anchor changed"
-engine_cpp.write_text(engine_source.replace(ready_anchor,ready_replacement,1))
+assert awaken_source.count(ready_anchor)==1, "AwakenPhase unit-ready gate anchor changed"
+awaken_source=awaken_source.replace(ready_anchor,ready_replacement,1)
+engine_cpp.write_text(engine_source[:awaken_begin]+awaken_source+engine_source[awaken_end:])
 
 init=engine/"src/cards/cards_init.cpp"
 s=init.read_text()
