@@ -278,20 +278,21 @@ public:
      return;
    }
    if(index==1){
-     if(costAlreadyPaid(c)){
-       if(finalizingChoices(c))return;
-       if(costUnpaid(c))return;
-       f64Recruit(c,atBase,1);
-       return;
-     }
+     // This is a cost choice, NOT a target: it owes no Deflect.
      auto gears=sacrificialGears(c.state,c.controller,c.source);
      std::sort(gears.begin(),gears.end());
-     const auto sacrifice=pickTarget(c,"Whirling Twirligig: kill friendly gear as cost",gears);
-     if(costDueNow(c)){
-       if(sacrifice==kInvalidId)markCostUnpaid(c);
-       else (void)killAsCost(c,sacrifice); // fail if a replacement prevents the death
+     const auto sacrifice=pickCostObject(c,
+        "Whirling Twirligig: kill friendly gear as activation cost",gears);
+     if(sacrifice==kInvalidId && c.state.chain.resuming.has_value() &&
+         c.state.chain.resuming->resume_point==7)return; // awaiting agent
+     bool paid=true;
+     if(costDueNow(c)&&!costUnpaid(c)){
+       paid=sacrifice!=kInvalidId && killAsCost(c,sacrifice);
+       if(!paid)markCostUnpaid(c);
      }
      if(finalizingChoices(c))return;
+     if(!paid || costUnpaid(c))return;
+     f64Recruit(c,atBase,1);
      return;
    }
    if(index==2){
