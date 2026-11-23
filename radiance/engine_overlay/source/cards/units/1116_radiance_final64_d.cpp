@@ -344,7 +344,30 @@ When you hold here, kill this to play the banished card, ignoring its cost. (Tok
 class R64_1127 final : public UnitCard {
 public:
  const CardDef& def() const override { return d_; }
- // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
+ std::vector<TriggerType> triggerTypes()const override{
+   return {TriggerType::WhenYouPlayMe,TriggerType::WhenIAttack};
+ }
+ unsigned choicesAtFinalization()const override{return kFinalizeTrigger;}
+ static std::vector<GameObjectId> victims(const GameState& s){
+   return boardObjects(s,[](const GameObject& o){
+     return (o.isUnit()||o.isGear())&&o.location;
+   });
+ }
+ void onTrigger(CardContext& c,const std::vector<GameObjectId>&)override{
+   const auto targets=victims(c.state);
+   if((!costAlreadyPaid(c)&&c.state.player(c.controller).hand.empty())||targets.empty()){
+     (void)finalizingChoices(c);return;
+   }
+   const int yes=confirmOptional(c,"Mordekaiser: discard 1 to kill a unit or gear?",[&]{
+     return !targets.empty()&&(costAlreadyPaid(c)||!c.state.player(c.controller).hand.empty());
+   });
+   if(yes!=1){(void)finalizingChoices(c);return;}
+   const auto selected=pickTarget(c,"Mordekaiser: choose unit or gear to kill",targets);
+   if(selected==kInvalidId){(void)finalizingChoices(c);return;}
+   if(costDueNow(c))c.executor.discardCards(c.controller,1);
+   if(finalizingChoices(c))return;
+   c.executor.killObject(selected);
+ }
 private:
  const CardDef d_=[] {
   auto d=mkFinal64_d(1127,137,R"RB(Mordekaiser, Dominating)RB",CardType::Unit,9,2,8,{Domain::Order},Rarity::Epic,R"RB(When you play me or when I attack, you may discard 1 to kill a unit or gear.)RB");
