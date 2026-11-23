@@ -134,3 +134,13 @@ unit entering and the opponent's unit remaining exhausted in Awaken. The
 focused execution and full regressions must pass before accepting RAD-019.
 
 Raider overlay preflight repair: the upstream `game_engine.cpp` contains multiple similar turn-player batches. The patch now anchors strictly within `GameEngine::awakenPhase()` before replacing the global-ready loop. No gameplay acceptance was inferred from the earlier failed installation.
+
+## Mechanics acceptance review progress
+
+Six source-reviewed Final64 cards are now marked accepted with dedicated
+engine-path scenarios: RAD-019, RAD-031, RAD-044, RAD-124, RAD-127, RAD-134.
+The ledger remains **fail closed** at 6 accepted / 10 in review / 48
+pending, and MUST NOT report complete until all 64 pass in the full
+regression XML. Firebrand Raider's three focused tests passed in run
+45103320523. Full regression is required after its global aura and Awaken
+hook changes, before considering engine-wide integration stable.
