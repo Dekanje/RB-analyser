@@ -1671,6 +1671,72 @@ TEST_F(RadianceFinal64Test, GravityFieldEffectMoveFailsIfEffectControllerCannotP
  EXPECT_EQ(state.player(P2).rune_pool.universal_power,1);
 }
 
+
+TEST_F(RadianceFinal64Test, HeimerdingerReplacesFriendlyUnitTokenWithMech){
+ addUnit(P1,CardDefId{1123},5,0);
+ EnginePathAgent yes(EnginePathAgent::accepting());
+ GameObjectId token=kInvalidId;
+ withEngine([&](GameEngine& e){
+   token=e.testHook_executor().createToken(P1,CardType::Unit,"Recruit",1,
+          {},KeywordSet{},BaseLocation{P1},false);
+ },&yes);
+ ASSERT_NE(token,kInvalidId);
+ const auto& obj=state.getObject(token);
+ EXPECT_TRUE(obj.isToken());
+ EXPECT_TRUE(obj.isAtBase());
+ EXPECT_EQ(obj.name,"Mech");
+ EXPECT_EQ(obj.base_might,3);
+ EXPECT_NE(std::find(obj.tags.begin(),obj.tags.end(),"Mech"),obj.tags.end());
+ EXPECT_EQ(obj.card_def_id,kInvalidId);
+ EXPECT_FALSE(yes.prompts.empty())<<"Heimerdinger's optional replacement must be offered";
+}
+TEST_F(RadianceFinal64Test, HeimerdingerMayDeclineAndKeepOriginalToken){
+ addUnit(P1,CardDefId{1123},5,0);
+ EnginePathAgent no;
+ GameObjectId token=kInvalidId;
+ withEngine([&](GameEngine& e){
+   token=e.testHook_executor().createToken(P1,CardType::Unit,"Recruit",1,
+          {},KeywordSet{},BattlefieldLocation{state.battlefields[1].id},false);
+ },&no);
+ ASSERT_NE(token,kInvalidId);
+ const auto& obj=state.getObject(token);
+ EXPECT_EQ(obj.name,"Recruit");
+ EXPECT_EQ(obj.base_might,1);
+ ASSERT_TRUE(obj.battlefieldId().has_value());
+ EXPECT_EQ(*obj.battlefieldId(),state.battlefields[1].id);
+ EXPECT_FALSE(no.prompts.empty());
+}
+TEST_F(RadianceFinal64Test, HeimerdingerInactiveAtBaseOrForEnemyToken){
+ auto heimer=addUnit(P1,CardDefId{1123},5,-1);
+ EnginePathAgent yes(EnginePathAgent::accepting());
+ GameObjectId token1=kInvalidId,token2=kInvalidId;
+ withEngine([&](GameEngine& e){
+   token1=e.testHook_executor().createToken(P1,CardType::Unit,"Recruit",1,
+             {},KeywordSet{},BaseLocation{P1},false);
+ },&yes);
+ ASSERT_NE(token1,kInvalidId);
+ EXPECT_EQ(state.getObject(token1).name,"Recruit");
+ state.getObject(heimer).location=BattlefieldLocation{state.battlefields[0].id};
+ withEngine([&](GameEngine& e){
+   token2=e.testHook_executor().createToken(P2,CardType::Unit,"Soldier",1,
+             {},KeywordSet{},BaseLocation{P2},false);
+ },&yes);
+ ASSERT_NE(token2,kInvalidId);
+ EXPECT_EQ(state.getObject(token2).name,"Soldier");
+}
+TEST_F(RadianceFinal64Test, HeimerdingerLeavesGearTokensUnchanged){
+ addUnit(P1,CardDefId{1123},5,0);
+ EnginePathAgent yes(EnginePathAgent::accepting());
+ GameObjectId gear=kInvalidId;
+ withEngine([&](GameEngine& e){
+   gear=e.testHook_executor().createToken(P1,CardType::Gear,"Gold",0,
+          {},KeywordSet{},BaseLocation{P1},false);
+ },&yes);
+ ASSERT_NE(gear,kInvalidId);
+ EXPECT_TRUE(state.getObject(gear).isGear());
+ EXPECT_EQ(state.getObject(gear).name,"Gold");
+}
+
 TEST_F(RadianceFinal64Test, SixtyFourUniqueCardDefinitionsHaveCanonicalMetadata){
  ASSERT_EQ(expected.size(),64u);
  std::set<int> ids,numbers;std::set<std::string> public_codes;

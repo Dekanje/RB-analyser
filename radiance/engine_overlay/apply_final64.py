@@ -401,4 +401,67 @@ move=move.replace(old_loc,"""    // The PLAYER performing the movement pays, eve
 ex=ex[:beg]+move+ex[end:]
 expath.write_text(ex)
 
+
+# RAD-132 Heimerdinger Academy Instructor token replacement. This happens
+# before the token is created/played (replacement effect), not after the
+# original token emits TokenCreatedEvent / EnteredBoardEvent.
+ex_path=engine/"src/engine/effect_executor.cpp"
+ex=ex_path.read_text()
+token_begin=ex.index("GameObjectId EffectExecutor::createToken(")
+token_end=ex.index("BattlefieldId EffectExecutor::addBattlefieldToken(", token_begin)
+token_fn=ex[token_begin:token_end]
+start_anchor="    const bool asked_enter_ready = enter_ready;\n    auto id = state_.createObject();"
+start_replacement="""    const bool asked_enter_ready = enter_ready;
+    // Heimerdinger Academy Instructor (RAD-132): replacement is optional,
+    // applies only to unit-token PLAY events controlled by this player,
+    // and is active only while a friendly Heimerdinger is at a battlefield.
+    // Preserve the location and ready/exhaust instructions.
+    std::string played_name = name;
+    int played_might = might;
+    std::vector<std::string> played_tags = tags;
+    KeywordSet played_keywords = keywords;
+    CardDefId played_token_card = token_card;
+    if (type == CardType::Unit) {
+        bool heimer_present = false;
+        for (const auto& [sid, source] : state_.objects.onBoard()) {
+            if (source.card_def_id == CardDefId{1123} &&
+                source.controller == controller && source.isUnit() &&
+                source.isAtBattlefield()) {
+                heimer_present = true;
+                break;
+            }
+        }
+        if (heimer_present && (!agent_query_ ||
+                confirmNow(controller, "Heimerdinger: replace unit token with 3 Might Mech?"))) {
+            played_name = "Mech";
+            played_might = 3;
+            played_tags = {"Mech"};
+            played_keywords = KeywordSet{};
+            played_token_card = kInvalidId;
+        }
+    }
+    auto id = state_.createObject();"""
+assert token_fn.count(start_anchor)==1,"Heimer token begin anchor changed"
+token_fn=token_fn.replace(start_anchor,start_replacement,1)
+replacements=[
+ ("obj.card_def_id = token_card;","obj.card_def_id = played_token_card;"),
+ ("obj.name = name;","obj.name = played_name;"),
+ ("obj.base_might = might;","obj.base_might = played_might;"),
+ ("obj.current_might = might;","obj.current_might = played_might;"),
+ ("obj.tags = tags;","obj.tags = played_tags;"),
+ ("obj.keywords = keywords;","obj.keywords = played_keywords;"),
+ ('"TOKEN: created " + name + (','"TOKEN: created " + played_name + ('),
+ ("std::to_string(might) +","std::to_string(played_might) +"),
+ ("TokenCreatedEvent{id, controller, type, name, location}","TokenCreatedEvent{id, controller, type, played_name, location}"),
+ ('"play an additional copy of " + name + "?"','"play an additional copy of " + played_name + "?"'),
+ ('"play the additional " + name + " to"','"play the additional " + played_name + " to"'),
+ ('"TOKEN: an additional copy of " + name + " is played"','"TOKEN: an additional copy of " + played_name + " is played"'),
+ ("createToken(controller, type, name, might, tags, keywords, copy_at,","createToken(controller, type, played_name, played_might, played_tags, played_keywords, copy_at,"),
+ ("asked_enter_ready, location_choices, token_card, enters_exhausted);","asked_enter_ready, location_choices, played_token_card, enters_exhausted);")
+]
+for old,new in replacements:
+    assert token_fn.count(old)==1,"Heimer token anchor missing or duplicated: "+old
+    token_fn=token_fn.replace(old,new,1)
+ex_path.write_text(ex[:token_begin]+token_fn+ex[token_end:])
+
 print("RADIANCE_FINAL64_OVERLAY_APPLIED: engine IDs 1068..1131 (64 distinct identities)")
