@@ -77,7 +77,7 @@ class SideboardPolicyResearchTest(unittest.TestCase):
             "rule_407_4_start_choice_verified":True,
             "winner":2,
             "games":[
-                {"game":1,"engine_status":"complete",
+                {"game":1,"engine_status":"complete","winner_seat":1,
                  "previous_game_loser_identity":None,"loser_chose":None,
                  "expected_engine_starting_seat":None,
                  "verified_engine_starting_seat":None},
@@ -91,6 +91,7 @@ class SideboardPolicyResearchTest(unittest.TestCase):
             row=play(pathlib.Path("engine"),pathlib.Path("target"),
                      pathlib.Path("opponent"),self.db,option,case,"random",12)
         self.assertEqual(row["target_win"],1)
+        self.assertEqual(row["game1_winner_seat"],1)
         self.assertEqual(row["forced_start_receipts"][0]["actual"],1)
         self.assertEqual(mocked.call_args.args[1],pathlib.Path("opponent"))
         fake["rule_407_4_start_choice_verified"]=False
