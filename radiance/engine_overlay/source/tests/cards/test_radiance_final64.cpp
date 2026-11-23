@@ -606,11 +606,18 @@ TEST_F(RadianceFinal64Test, WhirlingTwirligigSacrificeOnlyTargetsFriendlyUnit){
  ASSERT_NE(card,nullptr);
  const auto& abilities=card->abilities();
  ASSERT_EQ(abilities.size(),3u);
- EXPECT_TRUE(abilities[2].cost.kill_friendly_unit);
- EXPECT_TRUE(abilities[2].targets.must_be_friendly);
- const auto eligible=card->enumerateLegalTargets(state,P1,2,source);
- EXPECT_TRUE(std::find(eligible.begin(),eligible.end(),friendly)!=eligible.end());
- EXPECT_TRUE(std::find(eligible.begin(),eligible.end(),enemy)==eligible.end());
+ EXPECT_FALSE(abilities[2].cost.kill_friendly_unit)
+   << "A unit killed as cost is chosen at finalization, not targeted";
+ EXPECT_EQ(abilities[2].targets.count,0);
+ Intent act;act.type=IntentType::ActivateAbility;act.player=P1;
+ act.ability_source=source;act.ability_index=2;
+ EnginePathAgent choose(EnginePathAgent::choosing(friendly));
+ withEngineDefaultTurn([&](GameEngine& e){
+   e.testHook_executeIntent(act);settleLikeTheEngine(e);
+ },&choose,nullptr,P1);
+ EXPECT_FALSE(choose.wasOffered(enemy));
+ EXPECT_FALSE(state.getObject(friendly).location.has_value());
+ EXPECT_TRUE(state.getObject(enemy).location.has_value());
 }
 TEST_F(RadianceFinal64Test, WhirlingTwirligigSacrificesUnitAsCostToCreateMech){
  auto sacrifice=addUnit(P1,kInvalidId,2,-1);
@@ -618,7 +625,7 @@ TEST_F(RadianceFinal64Test, WhirlingTwirligigSacrificesUnitAsCostToCreateMech){
  playThroughEngine(source);
  Intent act;act.type=IntentType::ActivateAbility;act.player=P1;
  act.ability_source=source;act.ability_index=2;
- act.targets={sacrifice}; // required target chosen as the activation's cost
+ // Sole friendly unit is chosen as a cost at activation finalization.
  withEngineDefaultTurn([&](GameEngine& e){
    e.testHook_executeIntent(act);settleLikeTheEngine(e);
  },nullptr,nullptr,P1);
@@ -628,6 +635,26 @@ TEST_F(RadianceFinal64Test, WhirlingTwirligigSacrificesUnitAsCostToCreateMech){
  for(const auto& [id,o]:state.objects.onBoard())
    if(o.controller==P1&&o.name=="Mech"&&o.isUnit()&&o.current_might==3)++mechs;
  EXPECT_EQ(mechs,1);
+}
+TEST_F(RadianceFinal64Test, WhirlingTwirligigUnitSacrificePreventedBySorakaCreatesNoMech){
+ auto soraka=addUnit(P1,CardDefId{550},4,0);
+ auto saved=addUnit(P1,kInvalidId,2,0);
+ auto source=addToHand(P1,CardDefId{1076});
+ playThroughEngine(source);
+ Intent act;act.type=IntentType::ActivateAbility;act.player=P1;
+ act.ability_source=source;act.ability_index=2;
+ EnginePathAgent choose(EnginePathAgent::choosing(saved));
+ withEngineDefaultTurn([&](GameEngine& e){
+   e.testHook_executeIntent(act);settleLikeTheEngine(e);
+ },&choose,nullptr,P1);
+ EXPECT_TRUE(state.getObject(source).is_exhausted);
+ EXPECT_TRUE(state.getObject(saved).isAtBase());
+ EXPECT_TRUE(state.getObject(saved).is_exhausted);
+ EXPECT_TRUE(state.getObject(soraka).location.has_value());
+ int mechs=0;
+ for(const auto& [id,o]:state.objects.onBoard())
+   if(o.controller==P1&&o.isUnit()&&o.name=="Mech")++mechs;
+ EXPECT_EQ(mechs,0) << "Prevented kill-as-cost cannot create a free Mech";
 }
 TEST_F(RadianceFinal64Test, RivenBrokenBladeBuffAndStunAreDistinctModesThisTurn){
  auto riven=addUnit(P1,CardDefId{1079},4,0);
