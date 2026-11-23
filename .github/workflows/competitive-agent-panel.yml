@@ -1,0 +1,75 @@
+name: Competitive agent expanded panel (one-shot)
+on:
+  push:
+    branches: ['research/competitive-agent-benchmark-v1-2026-11-23']
+    paths: ['.github/workflows/competitive-agent-panel.yml']
+permissions:
+  contents: read
+  actions: read
+jobs:
+  representative-panel:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 70
+    steps:
+      - uses: actions/checkout@v4
+      - name: Re-run benchmark regression tests
+        run: |
+          python3 -m unittest discover -s scripts -p 'test_benchmark_agent_strength.py' -v
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45181493632
+          github-token: ${{ github.token }}
+          name: expanded-optimized-58-independent-radiance-bo3
+          path: results/selected
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45205260187
+          github-token: ${{ github.token }}
+          name: repaired-fullfield-engine-1123
+          path: engine_build
+      - name: Resolve pinned compiled engine dependencies
+        timeout-minutes: 12
+        run: |
+          set -euo pipefail
+          test "$(find results/selected/selected_decks -maxdepth 1 -name '*.txt' | wc -l)" -eq 58
+          if ! sudo env DEBIAN_FRONTEND=noninteractive timeout -k 10s 55s apt-get -o Acquire::Retries=0 update -qq; then
+            echo '::warning::using cached package indexes'
+          fi
+          sudo env DEBIAN_FRONTEND=noninteractive timeout 360s apt-get -o Acquire::Retries=2 install -y -qq --no-install-recommends libboost-program-options1.83.0 libboost-filesystem1.83.0 libboost-system1.83.0 libboost-context1.83.0
+          chmod +x engine_build/riftbound
+          if ldd engine_build/riftbound | grep -q 'not found'; then exit 1; fi
+      - name: Evaluate 16 Legends, three paired-seed repetitions, both agent seating orders
+        timeout-minutes: 55
+        run: |
+          python3 -u scripts/benchmark_agent_strength.py \
+            --engine engine_build/riftbound \
+            --decks-dir results/selected/selected_decks \
+            --output results/agent-strength/expanded-panel.json \
+            --baseline-agent ismcts:sims=24 \
+            --challenger-agent ismcts:sims=128 \
+            --repetitions 3 \
+            --max-decks 0 \
+            --deck-name ambessa_matriarch_of_war.txt \
+            --deck-name rek_sai_void_burrower.txt \
+            --deck-name volibear_relentless_storm.txt \
+            --deck-name leblanc_deceiver.txt \
+            --deck-name draven_glorious_executioner.txt \
+            --deck-name master_yi_wuju_bladesman.txt \
+            --deck-name kai_sa_daughter_of_the_void.txt \
+            --deck-name rengar_pridestalker.txt \
+            --deck-name darius_hand_of_noxus.txt \
+            --deck-name kennen_heart_of_the_tempest.txt \
+            --deck-name annie_dark_child.txt \
+            --deck-name miss_fortune_bounty_hunter.txt \
+            --deck-name orianna_lady_of_clockwork.txt \
+            --deck-name ziggs_hexplosives_expert.txt \
+            --deck-name teemo_swift_scout.txt \
+            --deck-name fiora_grand_duelist.txt 
+            --timeout 180
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: competitive-agent-expanded-panel-evidence
+          path: results/agent-strength/
+          retention-days: 30
+          if-no-files-found: warn
