@@ -46,6 +46,8 @@ class StructuralDeckTest(unittest.TestCase):
             self.db[name]=c(name,kind="battlefield",domains=())
         self.db["Illegal Field"]=c(
             "Illegal Field",kind="battlefield",domains=(),banned=True)
+        self.db["Baron Pit"]=c(
+            "Baron Pit",kind="battlefield",domains=(),supertype="token")
         self.db["Neeko, Blending In"]=c(
             "Neeko, Blending In",domains=(),supertype="champion")
         self.source=DeckState(
@@ -97,6 +99,13 @@ class StructuralDeckTest(unittest.TestCase):
         mutated.battlefields["Illegal Field"]=1
         with self.assertRaises(ValueError):
             legal_registration(self.source,mutated,self.db)
+        mutated=self.source.clone()
+        mutated.battlefields.pop("Field 00")
+        mutated.battlefields["Baron Pit"]=1
+        with self.assertRaises(ValueError):
+            legal_registration(self.source,mutated,self.db)
+        self.assertTrue(all("Baron Pit" not in row[2].values()
+                            for row in battlefield_variants(self.source,self.db,2026)))
         mutated=self.source.clone()
         mutated.runes=collections.Counter({"Chaos Rune":12})
         legal_registration(self.source,mutated,self.db)
