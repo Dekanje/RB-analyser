@@ -221,6 +221,17 @@ public:
  const CardDef& def() const override { return d_; }
 
  bool entersReadyOnPlay()const override{return true;}
+ // "Other units enter ready" applies to both players, unlike Magma Wurm's
+ // friendly-only aura. The engine's existing units_enter_ready_by list is
+ // rebuilt on each aura pass and excludes the entering source itself.
+ void applyPassiveAura(GameState& state,PlayerId controller)const override{
+   for(const auto& [id,obj]:state.objects.onBoard()){
+     if(obj.card_def_id!=CardDefId{1075}||obj.controller!=controller||
+        !obj.isUnit()||!obj.location.has_value())continue;
+     state.player(PlayerId::Player1).units_enter_ready_by.push_back(id);
+     state.player(PlayerId::Player2).units_enter_ready_by.push_back(id);
+   }
+ }
  TriggerType triggerType()const override{return TriggerType::WhenYouPlayMe;}
  void onTrigger(CardContext& c,const std::vector<GameObjectId>&)override{
    std::vector<GameObjectId> enemies;
@@ -228,7 +239,7 @@ public:
      if(o.isUnit()&&o.controller!=c.controller&&o.location)enemies.push_back(id);
    for(auto id:enemies)c.executor.readyObject(id);
  }
- // MECHANICS_INCOMPLETE: remaining continuous effect needs engine hook.
+ // The global Awaken restriction is wired by apply_final64.py.
 
 private:
  const CardDef d_=[] {
