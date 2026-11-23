@@ -78,3 +78,25 @@ RAD-123 Protector's Shield now declares its real Equipment, Quick-Draw,
 Reaction and [1] Equip behavior. Four new dedicated tests were added.
 Those edits remain provisional until compiled CI proves them. The known
 regression failures remain open and the final64 mechanics ledger is pending.
+
+## Full regression triage — run 45096185998
+
+- Focused Radiance 167/167 PASS and 167/167 compiled base identities PASS.
+- Full AlphaRune regression: 3,801/3,805 PASS; four failures, not accepted.
+- HiddenOrderLeak.PositionsTheDeciderCannotTellApartShowItTheSame:
+  identity-dependent action IDs/observations for hidden card variants in random
+  decks 1029/5029, seed 20261043; root cause still under investigation.
+- ActionIdsWalk.NoTwoLegalIntentsShareAnId_DecksFromTheWholePool:
+  80 knowledge-tracker inconsistencies in pool-deck walk, first in deck 47
+  (Matriarch of War) versus next at seed 7047, decision 157; unresolved.
+- LedgerTest.Defs_APermanentHasReactionOnlyWhenTheCardItselfDoes:
+  RAD-123 Protector's Shield missing Reaction keyword; corrected on the
+  development branch alongside Equipment classification, Might bonus,
+  functional [1] Equip cost and engine-path tests.
+- DeckFuzz.DeckOfSeedOneIsPinned: measured 1,123-card hash
+  2700713930748140182; this work branch pins that hash for exactly 1,123
+  definitions, preserving previous size-specific pins.
+- RAD-125 Dune Devourer optional kill-as-cost and RAD-045 K'Sante's triggered
+  Shield doubling also have development implementations and tests.
+- The 64-entry per-card mechanics ledger is still *pending*; none of these
+  fixes silently changes acceptance flags or removes regression tests.
