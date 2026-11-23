@@ -30,14 +30,20 @@ CardDef mkFinal64_d(int id,int num,const char* name,CardType type,int energy,int
 class R64_1116 final : public GearCard {
 public:
  const CardDef& def() const override { return d_; }
- // MECHANICS_INCOMPLETE: printed non-keyword abilities require implementation and tests.
+ bool hasEquipAbility()const override{return true;}
+ EquipCost equipCost(const GameState&,PlayerId,GameObjectId,GameObjectId)const override{
+   return {.valid=true,.energy=1};
+ }
 private:
  const CardDef d_=[] {
   auto d=mkFinal64_d(1116,123,R"RB(Protector's Shield)RB",CardType::Gear,2,1,1,{Domain::Order},Rarity::Common,R"RB([Quick-Draw] (This has [Reaction]. When you play it, attach it to a unit you control.)
 [Equip] [1] ([1]: Attach this to a unit you control.))RB");
   d.image_url=R"RB(https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/97618bc30e9b65a2e5223e6f94db58d7098d30a6-744x1039.png?accountingTag=RB)RB";
+  d.tags={"Equipment"};
+  d.might_bonus=1;
   d.keywords.set(Keyword::QuickDraw);
   d.keywords.set(Keyword::Equip);
+  d.keywords.set(Keyword::Reaction);
   return d;
  }();
 };
