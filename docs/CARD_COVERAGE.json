@@ -1,37 +1,72 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "as_of": "2026-11-24",
-  "status": "inventory_pending",
-  "baseline_commit": "0b9739bb6c20e8ed5a805a78239d5faa09b226ad",
+  "status": "historical_compiled_inventory_verified_official_pool_pending",
   "coverage_is_complete": false,
-  "entries": [],
-  "historical_report": {
-    "path": "radiance/qa/2026-11-23-full-qa.md",
-    "registered_identities": 1123,
-    "radiance_numbered_registered": 167,
-    "radiance_numbered_total": 167,
-    "final64_scenario_mapped": 64,
-    "edge_case_questions": 37,
-    "independent_reverification": false
+  "official_legal_pool_verified": false,
+  "variant_equivalence_verified": false,
+  "summary": {
+    "compiled_definitions": 1123,
+    "sets": {
+      "OGN": 298,
+      "OGS": 24,
+      "SFD": 234,
+      "UNL": 231,
+      "VEN": 168,
+      "RAD": 168
+    },
+    "types": {
+      "unit": 571,
+      "spell": 271,
+      "gear": 141,
+      "battlefield": 76,
+      "legend": 58,
+      "rune": 6
+    },
+    "tokens": 10,
+    "compiled_banned": 12,
+    "missing_public_code": 1,
+    "duplicate_name_groups": 20,
+    "numbered_radiance_registered": 167,
+    "radiance_catalog_printings": 219,
+    "unresolved_nonbase_printings": 52,
+    "variant_categories": {
+      "letter_variant": 18,
+      "overnumbered": 17,
+      "special_or_rune": 17
+    },
+    "letter_variant_raw_hash_mismatches": 15,
+    "explicit_scenario_mapped_cards": 64,
+    "explicit_scenario_test_links": 144,
+    "historical_gap_cards": 37,
+    "enabled_passing_tests": 3916,
+    "nonpassing_or_disabled_tests": [
+      "CardTestFixture.DISABLED_BaronNashor_AuraGivesFriendlyUnitsPlus2M"
+    ],
+    "verification_status": {
+      "implemented_unverified": 1059,
+      "scenario_verified": 64
+    }
   },
-  "required_entry_fields": [
-    "functional_id",
-    "print_ids",
-    "ruleset_id",
-    "legal_status",
-    "effect_implementation",
-    "scenario_test_ids",
-    "interaction_test_ids",
-    "evidence_commit",
-    "verification_status",
-    "known_gaps"
-  ],
-  "allowed_verification_status": [
-    "unknown",
-    "unsupported",
-    "implemented_unverified",
-    "scenario_verified",
-    "regression_verified",
-    "defective"
-  ]
+  "evidence": {
+    "run_id": 45305366242,
+    "artifact_id": 14879939071,
+    "archive_sha256": "475df235e78e19fd29544b0856c14cc1470c8940485bd1a767df9a4cfd7120d3",
+    "ledger_sha256": "3a02ed25f358642f7287b90f1fd7a17874d0d757173a51d600f4687b00a1b7ea",
+    "generator_commit": "ed286c34b520e4d010d4077c08119346252a6a0b",
+    "engine_evidence_commit": "c35ceffa290056764df410ea38f97e01f2654031",
+    "registry_sha256": "d8102dd0930f466ce16c917035aff15eb21e347879800b08fa334b677f198b89",
+    "qa_xml_sha256": "a063b69b50f06a0730bf67c64ac939100b4e1912100d414ed6e0a57c105b9d5c",
+    "source_hashes": {
+      "acceptance": "e372425058c5757098d3481d42db3c03d892e313357ef28cb6ae59ed4baeeb8a",
+      "catalog": "669613378f9f12f23ba4d94b487330e252164f69f89090eb38fca9766232fcf7",
+      "historical_ledger": "9df72fed4500fecc14c61780e922a8f8f3b5960bfc34effb5472a38568ea0d6a"
+    }
+  },
+  "generated_ledger": {
+    "path": "card_evidence.json",
+    "artifact_url": "https://github.com/Dekanje/RB-analyser/actions/runs/45305366242/artifacts/14879939071",
+    "generator": "audit/card_evidence_inventory.py",
+    "note": "Full 1123-row ledger and 52 unresolved printing rows stored in versioned CI artifact, reproducible from pinned source artifacts; preserve authorized local copy before expiration. Explicit scenario_verified is scoped to mapped tests only; 1059 unverified entries may have other tests not yet mapped. No card legality is inferred from registration."
+  }
 }

@@ -10,3 +10,5 @@
 2026-11-24 — P0-02R isolated correction implemented; eight unit tests and 174-registration repair step green; native replay acceptance pending. No engine or historical evidence overwritten.
 
 2026-11-24 — P0-02R scoped native acceptance: independently reconstructed all 174 corrected registrations and inspected all 32 native game receipts; 8/8 controlled comparisons matched. Integrated exact tested scripts from isolated branch. No deck adoption.
+
+2026-11-24 — P0-03 historical inventory subgate passed; exact tested generator integrated and 1123-row ledger artifact indexed. Official legality and wider mechanics mapping remain open.

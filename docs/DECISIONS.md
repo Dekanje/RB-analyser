@@ -9,3 +9,5 @@ D006: green CI and training screens are not acceptance or deck adoption. Preserv
 D007: repository hygiene first; preserve all historical branches, executable paths and workflow triggers until Phase 0 ancestry/artifact review. Use one current integration branch, scoped changes, explicit evidence indexes and a main landing page. No release or engine consolidation inferred from documentation cleanup.
 
 D008: preserve exact ordered playable sections for sideboard-only comparisons; native P0-02R sampled trace gate passed. Never retrofit historical manifests. Future versioned screening must enforce ordered equality before native certification/fitness.
+
+D009: historical card evidence ledger distinguishes compiled definition, explicit passing scenario, official legality and unresolved printing equivalence. No promotion from registry metadata or short test-name links alone.
