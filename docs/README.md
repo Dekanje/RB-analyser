@@ -1,0 +1,3 @@
+# Documentation
+
+The authoritative [documentation index](https://github.com/Dekanje/RB-analyser/blob/research/competitive-agent-benchmark-v1-2026-11-23/docs/README.md) lives on the active integration branch. See the [branch register](https://github.com/Dekanje/RB-analyser/blob/research/competitive-agent-benchmark-v1-2026-11-23/docs/BRANCH_REGISTER.md), [workflow catalog](https://github.com/Dekanje/RB-analyser/blob/research/competitive-agent-benchmark-v1-2026-11-23/docs/WORKFLOW_CATALOG.md), and [evidence index](https://github.com/Dekanje/RB-analyser/blob/research/competitive-agent-benchmark-v1-2026-11-23/docs/EVIDENCE_INDEX.md). The historical Radiance integration backlog remains here unchanged.

@@ -1,0 +1,3 @@
+# Contributing
+
+The current development process is defined in [CONTRIBUTING.md on the active research branch](https://github.com/Dekanje/RB-analyser/blob/research/competitive-agent-benchmark-v1-2026-11-23/CONTRIBUTING.md). Read [AGENTS.md](https://github.com/Dekanje/RB-analyser/blob/research/competitive-agent-benchmark-v1-2026-11-23/AGENTS.md), [development status](https://github.com/Dekanje/RB-analyser/blob/research/competitive-agent-benchmark-v1-2026-11-23/DEVELOPMENT_STATUS.md) and [handover](https://github.com/Dekanje/RB-analyser/blob/research/competitive-agent-benchmark-v1-2026-11-23/docs/HANDOVER.md) before starting. Do not branch from historical main for new engine work.
