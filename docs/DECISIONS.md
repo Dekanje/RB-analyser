@@ -31,3 +31,5 @@ Neeko privacy: model unknown opponent extra legend pool with independent public-
 Reuse exact accepted privacy binary for behavioral noninterference; vary only hidden registration, use random legal-action owner, compare pre-choice traces and require actual sensitivity controls. No recompilation for test-only Python changes.
 
 Keep failed behavioral experiment immutable, retain strict both-seat positive selection gate; increase fixture exposure with legal three-copy Neeko and fixed fresh seeds, not strength optimization. If again inconclusive, use deterministic native scenario rather than unconstrained seed search.
+
+Stop random seed screening after two inconclusive positive-control experiments. Use native OpenSpiel search summaries on naturally reached scripted checkpoints and separate funded legal-play fixture, explicitly report the latter as synthetic. Keep prior artifacts immutable, no engine promotion from partial evidence.

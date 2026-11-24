@@ -76,3 +76,5 @@
 2026-11-24 — Corrected illegal private-registration test fixture after preflight failure; reran cached native behavioral screen.
 
 2026-11-24 — Recorded 18 completed native behavioral games with missing positive control; added three-Neeko diagnostic fixture and expanded trace receipts.
+
+2026-11-24 — Three-copy behavioral screen completed but lacked positive control; implemented controlled actual ISMCTS search-summary test and synthetic funded legal-play positive controls in both seats.

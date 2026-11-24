@@ -77,3 +77,5 @@
 - Native agent behavioral screen initially failed on invalid fixture identity before any gameplay; corrected ID verified against compiled registry, cached rerun pending. Prior native sampler own-pool preservation fixture used nonlegend sentinel ID258; it does not establish legality of that own registration. Replace with valid legend during next rebuild. No change to old approvals.
 
 - Actual ISMCTS behavioral screen: 18 games, 8/8 identical trace pairs and 2 repeat controls, but zero detected Neeko selection prompts. Overall gate failed; no general noninterference certification. Three-copy diagnostic fixture with fresh seeds and trace diagnostics pending. No new authorization.
+
+- V2 behavioral screen: all eight pairs matched but no actual Neeko selection observed, so overall gate failed. Controlled OpenSpiel search-summary and funded legal-play test implemented, pending CI. Separate synthetic positive play is not a naturally reached competitive position or end-to-end privacy proof. Historical approved engine unchanged.
