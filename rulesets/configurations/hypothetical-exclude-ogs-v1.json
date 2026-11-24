@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "configuration_id": "hypothetical-exclude-ogs-v1",
+  "classification": "hypothetical_set_filter",
+  "profile_id": "standard-global-2026-11-23",
+  "profile_sha256": "5525a697ec86e792d86fe7f8f418d7ff7dad95b3ee5912ac5efaea344fb790b4",
+  "registry_sha256": "d8102dd0930f466ce16c917035aff15eb21e347879800b08fa334b677f198b89",
+  "engine_sha256": "e49c0e4d97a86805b9d911175b686c53ff348736ee4406c50941fa0d7e88db6a",
+  "allowed_sets": [
+    "OGN",
+    "SFD",
+    "UNL",
+    "VEN",
+    "RAD"
+  ],
+  "rune_exempt_ids": [],
+  "official_full_legality_certified": false,
+  "scope": "Test-only exclusion of OGS compiled definitions; not Worlds or official rotation."
+}
