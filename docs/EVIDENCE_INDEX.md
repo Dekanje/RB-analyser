@@ -159,3 +159,5 @@ P0-07 Champion/multi-swap artifact 14960658892 (CI 45481302454) independently ac
 P0-08 historical projection evidence artifact 14961579369, CI 45481940927, accepted read-only audit. See P0_08_TOURNAMENT_EVIDENCE.md for exact pins and TR-01–25 inventory.
 
 P0-09 durable lock commit 08110a8; CI 45482620464, availability artifact 14962760522. Original lock/plan hashes and fresh runner observation in P0_09_LOCAL_REPRODUCIBILITY.md.
+
+Phase 0 ancestry artifact 14963787417 (CI 45486067777), exact report/hash/branch triage and pinned license provenance in P0_00_ANCESTRY_LICENSE.md.

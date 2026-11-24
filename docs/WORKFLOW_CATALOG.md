@@ -150,3 +150,5 @@ The reviewed competitive workflow definitions explicitly reference the current r
 - [P0-08 historical tournament projection evidence](https://github.com/Dekanje/RB-analyser/blob/988d48b28ee50c91fff1a6bb36f670c8eb85b965/.github/workflows/p0-08-tournament-evidence.yml) — read-only archive audit, not a tournament simulator.
 
 - [P0-09 durable lock and host availability](https://github.com/Dekanje/RB-analyser/blob/7317192d113e261ba58f6dd8df22aadf84c37bf6/.github/workflows/p0-09-durable-lock.yml) — exact two-file retention on isolated branch and read-only runner probe.
+
+- [Phase 0 frozen ancestry inventory](https://github.com/Dekanje/RB-analyser/blob/a516a3a515da7583c5921f7cf26d60a839ed22a5/.github/workflows/p0-00-ancestry.yml) — 141 distinct workflow paths, 152 path+blob versions, 125 current integration workflows at snapshot 7f250a0; 37 literal artifact run IDs; static inventory only.

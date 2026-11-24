@@ -52,3 +52,5 @@ Snapshot before repository cleanup, 2026-11-24: 44 branches. Heads below are imm
 The active branch was 839 commits ahead and 1 behind main at comparison time; merge base `0b6d0c2eda7e6dc829d635f8a14e05ab0e669724`. Do not infer that every historical branch is contained in the active branch. Phase 0 consolidation requires actual comparison before moving main or retiring branches.
 
 - `feature/p0-09-durable-lock` — [08110a8](https://github.com/Dekanje/RB-analyser/commit/08110a8c1ca5d8eca7c8f578663e072621d99030), retain exact accepted configuration evidence; dependency on package-preflight and clean-build commits, consolidation pending.
+
+2026-11-24 refreshed frozen snapshot at 7f250a013c5fa48e8f66cf6e3042f77a8fa572dc: 78 branches, 76 unique tips, 57 contained, 20 diverged, 1 same; main two ahead / 925 behind. Exact pinned refs in [audit/p0_00_branch_pins.json](https://github.com/Dekanje/RB-analyser/blob/a516a3a515da7583c5921f7cf26d60a839ed22a5/audit/p0_00_branch_pins.json), report artifact 14963787417; see [ancestry/license audit](P0_00_ANCESTRY_LICENSE.md). Historical table above is not current tip inventory. No branch retired.

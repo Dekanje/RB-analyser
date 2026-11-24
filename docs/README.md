@@ -30,3 +30,5 @@ Historical documents are indexed in [Evidence index](EVIDENCE_INDEX.md), rather 
 - [P0-07 BO3 and sideboard evidence](P0_07_BO3_EVIDENCE.md)
 
 - [P0-08 tournament functionality evidence](P0_08_TOURNAMENT_EVIDENCE.md)
+
+- [Phase 0 ancestry and licensing evidence](P0_00_ANCESTRY_LICENSE.md)

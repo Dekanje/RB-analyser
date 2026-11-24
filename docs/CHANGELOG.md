@@ -124,3 +124,5 @@
 2026-11-24 — P0-08 scoped baseline accepted: historical fixed-deck receipts, lineup projection replay and independent probability checks, complete TR-01–25 gap matrix. Disclosed unenforced historical five-set label. No new games.
 
 2026-11-24 — P0-09 exact lock and package plan retained in Git; fresh runner read-only availability observation completed; three tests passed. No host installation or native execution.
+
+2026-11-24 — Phase 0 frozen ancestry audit accepted: 78 refs, 152 distinct workflow versions, five tests passed; six pinned root dependency licenses reviewed, AlphaRune license unresolved. No merge or retirement.

@@ -67,3 +67,5 @@ P0-07: accept only bounded points-only declared match evidence. Do not promote a
 P0-08: preserve historical projections as nonpredictive; do not infer official Worlds format or conflate OGS with Legacy; require exact versioned legal identity policy. Accept baseline audit only, not any full event capability. Proceed P0-09.
 
 P0-09: preserve immutable small lock/plan bytes on tested dependency branch via narrowly scoped one-time commit job. Treat current apt-index and solver observations separately from package download/clean-host availability and exact historical executable bytes. No forced downgrades; physical PC requires read-only preflight and reviewed host setup.
+
+Phase 0: classify ancestry separately from consolidation; retain all historical refs/workflows until dependency review. Root permissive dependency licenses do not grant AlphaRune rights; block distribution/production approval pending permission and Riot rights review. Continue source/metadata audits without publishing new binaries.
