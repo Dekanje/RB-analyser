@@ -58,3 +58,5 @@
 2026-11-24 — Elnuk follow-up six focused tests and 3922 enabled native tests accepted; no gameplay source change in follow-up.
 
 2026-11-24 — Native Neeko errata corrective candidate and six targeted regression tests implemented in isolation; acceptance pending.
+
+2026-11-24 — Scoped RAD-167 native correction accepted: six focused and 3928 enabled tests pass.

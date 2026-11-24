@@ -59,3 +59,5 @@
 - RAD-081 follow-up accepted within six native scenarios; hidden payment and full response sequence remain outside scope. No candidate binary authorization; build hashes differ despite identical registry and unchanged gameplay source in follow-up.
 
 - RAD-167 candidate native correction written; additional legend cardinality, sideboard registration, shared active pool and resolve-time choice addressed in source. Full legal registrations, guarded BO3, ban/set gate, private observation and prompt leakage remain open; native CI acceptance pending.
+
+- RAD-167 scoped native correction accepted (6/6 focused, 3928 enabled full suite); full legal registration, BO3 and ordered receipt including extra legends, set/ban checks and privacy remain open. Old approved engine unchanged.
