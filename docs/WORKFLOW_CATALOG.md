@@ -133,3 +133,7 @@ The reviewed competitive workflow definitions explicitly reference the current r
 
 ### P0-04 provenance (isolated candidate branch)
 - [p0-04-overlay-provenance.yml](https://github.com/Dekanje/RB-analyser/blob/39cc94bf866d61b3638b216fe6c4e45f0b77204d/.github/workflows/p0-04-overlay-provenance.yml) — pinned read-only overlay reconstruction and historical XML reconciliation, run 45463414756. No C++ build. Retain candidate ancestry.
+
+### P0-09 local reproducibility (isolated candidate branches)
+- [Clean native build](https://github.com/Dekanje/RB-analyser/blob/6432f9832b147903ec82eaa3e61e278e77c3e5df/.github/workflows/p0-09-local-reproducibility.yml) — run 45464883262.
+- [Independent package preflight](https://github.com/Dekanje/RB-analyser/blob/6dee53a2249b06216bc3da07c0628e61b092c8df/.github/workflows/p0-09-package-preflight.yml) — run 45465382677, no compilation.

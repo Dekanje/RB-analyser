@@ -45,3 +45,5 @@ P0-04: accept triage provenance separately from behavior. Preserve all 37 histor
 P0-04: accept reconstructed source provenance and classified baseline backlog only. Keep all 37 card interaction questions open in Phase 2; retain suppressed Baron placeholder and alternate evidence. Fixture hand play bypasses legal-action membership. Reuse historical XML only as historical evidence. Advance remaining Phase 0 work without asserting rules completeness.
 
 P0-09: distinguish recorded observed package lock from archived installable snapshot; verify Git dependency revisions before compile; disable object-cache reuse for first clean reproduction; require exact registry/core outcome and bounded cross-build trace equivalence, not timestamp-dependent binary byte equality. No redistribution or production authorization.
+
+P0-09: use separate read-only package preflight while the uncached native build runs. Record actual executable versions separately from apt versions; keep full observed lock check strict and never automatically modify local host or treat selected package plan as complete lock. No duplicate builds.

@@ -100,3 +100,5 @@
 2026-11-24 — Implemented isolated P0-09 clean local toolchain capture, exact source/dependency pins and cross-build native replay gate; CI initiated; no new native results accepted.
 
 2026-11-24 — Fixed P0-09 shallow-checkout ancestry failure; replacement CI initiated.
+
+2026-11-24 — Accepted P0-09 observed configuration receipt; implemented and independently verified 59-package read-only preflight plan. Clean native build remains in progress.

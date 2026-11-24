@@ -135,3 +135,5 @@ P0-04 overlay provenance CI 45463414756 completed/success at 39cc94bf866d61b3638
 P0-09 candidate 5f08f952e9b1a9fe6b61afe54628b9c4c1830ec4; CI 45464663432. See P0_09_LOCAL_REPRODUCIBILITY.md for pending acceptance and local procedure.
 
 P0-09 CI 45464663432 failed before configure; correction 6432f9832b147903ec82eaa3e61e278e77c3e5df, retry 45464883262 pending acceptance.
+
+P0-09 configuration artifact 14955535283 from 45464883262 and package preflight artifact 14954388764 from 45465382677 accepted for configuration only; hashes in P0_09_LOCAL_REPRODUCIBILITY.md. Native build still unaccepted.
