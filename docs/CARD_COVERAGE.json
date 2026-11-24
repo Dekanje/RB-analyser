@@ -161,5 +161,18 @@
     "null_hash_candidates": 18,
     "approved_aliases": 0,
     "equivalence_verified": false
+  },
+  "errata_audit": {
+    "status": "inventory_accepted_behavior_open",
+    "run_id": 45403609402,
+    "artifact_id": 14925085962,
+    "entries": 67,
+    "compiled_identity_references": 68,
+    "test_name_leads": 54,
+    "confirmed_source_defect_ids": [
+      986,
+      1131
+    ],
+    "all_errata_behavior_verified": false
   }
 }
