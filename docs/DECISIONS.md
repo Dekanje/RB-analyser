@@ -47,3 +47,5 @@ P0-04: accept reconstructed source provenance and classified baseline backlog on
 P0-09: distinguish recorded observed package lock from archived installable snapshot; verify Git dependency revisions before compile; disable object-cache reuse for first clean reproduction; require exact registry/core outcome and bounded cross-build trace equivalence, not timestamp-dependent binary byte equality. No redistribution or production authorization.
 
 P0-09: use separate read-only package preflight while the uncached native build runs. Record actual executable versions separately from apt versions; keep full observed lock check strict and never automatically modify local host or treat selected package plan as complete lock. No duplicate builds.
+
+P0-05: audit historical agent evidence while physical-host P0-09 work remains open; no duplicate native build. Separate engines and overlapping pilot/panel conditions, use seed pairs as the initial statistical unit and disclose dependence/selection; no promotion. Retain all remaining Phase 0 gates.

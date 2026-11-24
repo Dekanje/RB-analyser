@@ -103,3 +103,6 @@
 - P0-09 first run failed at shallow checkout source comparison before configure; corrected checkout depth, replacement CI pending. No clean-build or game claim.
 
 - P0-09 configuration subgate accepted; 180 recorded packages, actual CMake/Ninja differ from apt packages, 59 exact selected package specs in read-only plan. Package availability, installation, physical host and native clean-build/replay remain unverified; no production approval.
+
+- P0-09 native clean-build and 12 bounded replay games accepted, physical host/complete package availability and durable lock retention still open. No bitwise binary equality or general determinism claim.
+- P0-05 historical agent evidence: 126 game records, two overlapping pilot/panel conditions, different engines across budgets, no current candidate strength certification; conditional pair-sign calculations not independent population proof. New read-only audit CI pending.
