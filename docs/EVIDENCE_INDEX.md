@@ -127,3 +127,5 @@ Fresh format-aware roster candidate 93727c5393a0cfeb1b96cea057c94333fa992df1; CI
 Fresh roster CI 45460257917 artifact 14952208337 accepted; exact hashes in P0_03_ERRATA.md. Baseline matrix: P0_03_BASELINE_RECONCILIATION.md.
 
 P0-04 triage e0774ada633727945357c36786df47305173a84a; CI 45461392357 observed in_progress/pending.
+
+P0-04 triage CI 45461392357 completed/success, artifact 14952707499 independently reconciled against original ledger/core XML; see P0_04_EDGE_CASE_EVIDENCE.md for pinned source review.

@@ -92,3 +92,5 @@
 2026-11-24 — Accepted fresh format-aware 58-legend compatibility and nine negative controls; reconciled and closed P0-03 baseline scope, retained detailed phase blockers; next P0-04.
 
 2026-11-24 — Started P0-04 pinned interaction evidence triage, reviewed disabled Baron placeholder and alternate enabled basic aura test.
+
+2026-11-24 — Independently accepted P0-04 triage artifact and reviewed actual named behavioral test bodies for all 37 historical questions; recorded residual test gaps and two evidenced subcases. No new native gameplay.
