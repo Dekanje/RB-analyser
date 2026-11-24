@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "candidate": "e1123124e0d20164a3a063d73363d200c59cb5fb",
+  "upstream": "ec90f0fed002aed374d06249fa95e83e3cfbd386",
+  "overlays": [
+    "radiance/engine_overlay/apply.py",
+    "radiance/engine_overlay/wave1_regression_fix.py",
+    "radiance/engine_overlay/apply_wave2.py",
+    "radiance/engine_overlay/apply_wave3.py",
+    "radiance/engine_overlay/apply_wave4.py",
+    "radiance/engine_overlay/apply_batch6.py",
+    "radiance/engine_overlay/apply_batch7.py",
+    "radiance/engine_overlay/apply_batch8.py",
+    "radiance/engine_overlay/apply_batch9.py",
+    "radiance/engine_overlay/apply_batch9_battlefields.py",
+    "radiance/engine_overlay/apply_batch9_disarm_chain.py",
+    "radiance/engine_overlay/apply_batch10.py",
+    "radiance/engine_overlay/apply_final64.py",
+    "radiance/engine_overlay/stability_patch.py",
+    "radiance/engine_overlay/fullfield_repair.py",
+    "radiance/engine_overlay/tournament_starting_player.py",
+    "radiance/engine_overlay/apply_elnuk_errata.py",
+    "radiance/engine_overlay/apply_elnuk_interaction_tests.py",
+    "radiance/engine_overlay/apply_neeko_errata.py",
+    "radiance/engine_overlay/apply_neeko_receipt.py",
+    "radiance/engine_overlay/apply_neeko_privacy.py",
+    "radiance/engine_overlay/apply_neeko_controlled_agent_tests.py",
+    "radiance/engine_overlay/apply_format_aware_prior.py"
+  ],
+  "dependency_git": {
+    "googletest-src": "f8d7d77c06936315286eb55f8de22cd23c188571",
+    "open_spiel-src": "32bfbecd651cca3940ecfe791eebcc069006f50a",
+    "open_spiel-src/open_spiel/abseil-cpp": "d38452e1ee03523a208362186fd42248ff2609f6",
+    "open_spiel-src/open_spiel/json": "9cca280a4d0ccf0c08f47a99aa71d1b0e52f8d03",
+    "open_spiel-src/open_spiel/pybind11_json": "d0bf434be9d287d73a963ff28745542daf02c08f",
+    "open_spiel-src/open_spiel/games/bridge/double_dummy_solver": "091ea94358a4016d4fb6069dea5c452cdc98d0bd"
+  },
+  "compiler_version": "13.3.0",
+  "boost_version": "1.83.0",
+  "registry_sha256": "0d6165c2ce08b3d60e423a9216150dc15c9527656f9358a6e119d94c6c189e0a",
+  "reference_engine_sha256": "bd3b0abbeba26b87223e407a5317eba91e5d459bf36fd842a7371afa695f5287"
+}

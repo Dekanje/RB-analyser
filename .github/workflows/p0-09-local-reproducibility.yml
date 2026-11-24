@@ -1,0 +1,56 @@
+name: P0-09 clean toolchain and cross-build replay
+on:
+  push:
+    branches: [feature/p0-09-local-reproducibility]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  clean-build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m unittest discover -s audit -p 'test_p0_09_toolchain.py' -v
+      - name: Install baseline native toolchain
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends gcc-13 g++-13 cmake ninja-build git python3 libboost-program-options-dev libboost-filesystem-dev libboost-system-dev libboost-context-dev nlohmann-json3-dev
+      - name: Configure exact candidate and capture observed lock
+        run: bash audit/p0_09_local.sh configure
+      - uses: actions/upload-artifact@v4
+        with:
+          name: p0-09-toolchain-lock
+          path: results/p0_09/toolchain_lock.json
+      - name: Fresh native build and core QA without compiler cache
+        run: bash audit/p0_09_local.sh build
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45454720801
+          github-token: ${{ github.token }}
+          name: format-aware-prior-binary
+          path: results/reference
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45454720801
+          github-token: ${{ github.token }}
+          name: format-aware-prior-qa
+          path: results/reference_qa
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45181493632
+          github-token: ${{ github.token }}
+          name: expanded-optimized-58-independent-radiance-bo3
+          path: results/selected
+      - name: Native cross-build replay
+        run: |
+          chmod +x results/reference/riftbound
+          python3 scripts/prepare_neeko_controlled_decks.py
+          RIFTBOUND_ROOT="$PWD/alpharune" RB_NEEKO_CONTROLLED_DECKS="$PWD/results/controlled_decks" alpharune/build/src/openspiel/riftbound_openspiel_tests --gtest_filter='NeekoControlledAgentTest.*' --gtest_output=xml:results/p0_09/controlled.xml
+          python3 audit/p0_09_replay.py --reference results/reference/riftbound --engine engine_build/riftbound --registry engine_build/registry.json --old_xml results/reference_qa/all_tests.xml --new_xml results/p0_09/all_tests.xml --decks results/controlled_decks --output results/p0_09/replay.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p0-09-build-evidence
+          path: results/p0_09/
+          if-no-files-found: warn
