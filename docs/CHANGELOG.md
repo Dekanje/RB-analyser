@@ -6,3 +6,5 @@
 2026-11-24 — P0-01 priority artifact audit: verified historical archive hashes, receipt counts, synergy package scores and sideboard holdout statistics; identified Game 1 coupling risk; no runtime changes or adopted decks.
 
 2026-11-24 — P0-02 source/build audit and read-only ordered-registration audit; 6 local tests passed, historical cross-tab reproduced. Found sideboard proposal ordering confound; native fix/validation pending. No runtime changes or new gameplay.
+
+2026-11-24 — P0-02R isolated correction implemented; eight unit tests and 174-registration repair step green; native replay acceptance pending. No engine or historical evidence overwritten.
