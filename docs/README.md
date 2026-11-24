@@ -24,3 +24,5 @@ Historical documents are indexed in [Evidence index](EVIDENCE_INDEX.md), rather 
 - [P0-09 local toolchain and native reproducibility](P0_09_LOCAL_REPRODUCIBILITY.md)
 
 - [P0-05 historical agent evidence](P0_05_AGENT_EVIDENCE.md)
+
+- [P0-06 optimizer evidence](P0_06_OPTIMIZER_EVIDENCE.md)

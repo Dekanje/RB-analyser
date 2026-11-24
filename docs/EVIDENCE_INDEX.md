@@ -143,3 +143,5 @@ P0-09 native build artifact 14955681687 accepted for scoped reproducibility, has
 P0-05 historical agent audit artifact 14954189936 accepted; exact hashes and caveats in P0_05_AGENT_EVIDENCE.md.
 
 P0-05 current candidate a1a753648227b134c0a06a8583c53546acb7c70b, CI 45469188236; native results not yet accepted; source inventory in P0_05_AGENT_EVIDENCE.md.
+
+P0-05 artifact 14956431078 independently accepted for scoped calibration; P0-06 historical aggregate 14823477036 and audit CI 45469892233, pending acceptance; see P0_06_OPTIMIZER_EVIDENCE.md.

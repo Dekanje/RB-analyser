@@ -51,3 +51,5 @@ P0-09: use separate read-only package preflight while the uncached native build 
 P0-05: audit historical agent evidence while physical-host P0-09 work remains open; no duplicate native build. Separate engines and overlapping pilot/panel conditions, use seed pairs as the initial statistical unit and disclose dependence/selection; no promotion. Retain all remaining Phase 0 gates.
 
 P0-05: current candidate calibration uses explicit sampled-world checks, fixed six-legend panel, identical ordered registrations, mirrored policy seats and 12 precommitted seed pairs. Treat any world-check failure, timeout or non-points terminal as an incomplete diagnostic, not a loss; do not relax guards or claim general strength from this sample. Keep tactical evaluator development for Phase 4.
+
+P0-05 scoped baseline accepted without agent promotion; retain Phase 4 requirements. P0-06: preserve historical selected lists as diagnostic incumbents, classify prior promotions as exploratory, never treat marginal p bounds as actual paired observations. Correct invalid-first ranking only in separately validated future optimizer paths.

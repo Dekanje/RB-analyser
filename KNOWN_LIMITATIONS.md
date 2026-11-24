@@ -108,3 +108,6 @@
 - P0-05 historical agent evidence: 126 game records, two overlapping pilot/panel conditions, different engines across budgets, no current candidate strength certification; conditional pair-sign calculations not independent population proof. New read-only audit CI pending.
 
 - P0-05 source inventory: sampled ISMCTS score-only leaf evaluator; UCT ignores evaluator tactical priors; random setup/unsearched fallbacks, root unmatched-world telemetry absent, heuristic sampling/copy-limit/floating-known constraints and privacy gaps remain. New 24-game candidate diagnostic pending; checking enabled does not establish general privacy. Points-only terminal policy is diagnostic, not tournament adjudication.
+
+- P0-05 baseline accepted; 24 current sampled agent games complete with checks enabled, 16/24 challenger wins, conditional paired p=0.21875 inconclusive. No general strength or privacy certification; Phase 4 open.
+- P0-06 historical expanded optimizer: invalid 85/201 training and 10/30 holdout evaluations, same opponent panel, invalid-first sort defect, nine provisional selections across eight legends with compatible unadjusted paired p lower bounds >=0.0625. Aggregate only, no current adoption; auditor CI pending.
