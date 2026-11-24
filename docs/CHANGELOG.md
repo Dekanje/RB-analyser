@@ -116,3 +116,5 @@
 2026-11-24 — P0-06 scoped baseline accepted after exact 12-shard, source correction, synergy, broad-population and holdout audits. Ten additional Python tests passed. No new simulations or deck adoption.
 
 2026-11-24 — P0-07 source audit and strict current-candidate declared points BO3 boundary; six targeted tests passed; corrected fixture seed range, native validation pending.
+
+2026-11-24 — Accepted four guarded current BO3 series (ten games); added two native Champion/multi-swap series and negative preflight controls.

@@ -117,3 +117,5 @@
 - P0-06 baseline accepted only: original source acquisition/blind provenance unknown; incumbent mutations are not independent archetypes. 2320 broad candidates per historical version, 13 Neeko extra-section changes, two legends screened and ten held out, zero confirmed. Historical engine/fixed-deck aggregates are not current guarded native or tournament validation. All Phase 6–14 implementation gates remain open.
 
 - P0-07 new guarded points-only declared BO3 diagnostic pending native results. Existing old wrappers accept loose terminals and may inherit environment flags; current new boundary isolates RIFTBOUND_* and validates receipts. No general draws/clock, adaptive sideboarding, G1 actual start receipt or native champion-switch proof; Phase 9 open.
+
+- P0-07 guarded current points-only BO3 subgate accepted (four series, ten games). No actual G1 first-player receipt, complete privacy, tournament time/draw/non-points adjudication or adaptive sideboard/mulligan proof. Champion and multi-swap native control pending; Phase 9 obligations unchanged.

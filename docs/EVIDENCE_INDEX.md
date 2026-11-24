@@ -151,3 +151,5 @@ P0-06 artifact 14957251191 accepted for historical aggregate only; correction CI
 P0-06 shard/diversity artifact 14956499424 (CI 45471739789), broad-population/holdout artifact 14956712876 (CI 45472092896) accepted for historical audit only; hashes in P0_06_OPTIMIZER_EVIDENCE.md.
 
 P0-07 current guarded BO3 a candidate at 0a3068f94261ed67929a9f88b40762c8da65af2e, CI 45472890301 pending; initial 45472857102 superseded. See P0_07_BO3_EVIDENCE.md.
+
+P0-07 artifact 14957173260 accepted, CI 45472890301; initial failed artifact 14958701121 retained. Champion/multi-swap CI 45481302454 pending; see P0_07_BO3_EVIDENCE.md.

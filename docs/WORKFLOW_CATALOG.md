@@ -144,3 +144,5 @@ The reviewed competitive workflow definitions explicitly reference the current r
 - [P0-06 broad population and holdout audit](https://github.com/Dekanje/RB-analyser/blob/b9f4d72cda587df96c73f90b230e0951a0a0d49d/.github/workflows/p0-06-broad-evidence.yml) — read-only historical evidence.
 
 - [P0-07 guarded current declared BO3](https://github.com/Dekanje/RB-analyser/blob/0a3068f94261ed67929a9f88b40762c8da65af2e/.github/workflows/p0-07-guarded-bo3.yml) — four research-only native series.
+
+- [P0-07 Champion and multi-swap native controls](https://github.com/Dekanje/RB-analyser/blob/f7619ab3c80096791b446db2d748f0186ce70ad1/.github/workflows/p0-07-champion-multiswap.yml) — two guarded diagnostic series.
