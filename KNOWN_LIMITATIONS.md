@@ -119,3 +119,5 @@
 - P0-07 new guarded points-only declared BO3 diagnostic pending native results. Existing old wrappers accept loose terminals and may inherit environment flags; current new boundary isolates RIFTBOUND_* and validates receipts. No general draws/clock, adaptive sideboarding, G1 actual start receipt or native champion-switch proof; Phase 9 open.
 
 - P0-07 guarded current points-only BO3 subgate accepted (four series, ten games). No actual G1 first-player receipt, complete privacy, tournament time/draw/non-points adjudication or adaptive sideboard/mulligan proof. Champion and multi-swap native control pending; Phase 9 obligations unchanged.
+
+- P0-07 scoped baseline accepted after six declared points-only series (14 native games); native champion switches and multi-swaps passed. No complete tournament BO3 certification; Phase 9 clock/draw/general terminal adjudication, information boundaries, adaptive policy, actual G1 receipt and unused-plan legality remain open.

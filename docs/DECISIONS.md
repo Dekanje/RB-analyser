@@ -61,3 +61,5 @@ P0-06: close inventory scope after reconciling historical lineage and diversity.
 P0-07: keep existing historical gateways unchanged, isolate new points-only diagnostic on current format-aware candidate, fail closed on non-points terminal rather than invent draw/concession handling; freeze all registrations and plans. No production migration or generalized tournament claims.
 
 P0-07: retain accepted points-only evidence; validate Champion changes from both registered main and sideboard, multi-card simultaneous swaps, and immutable G3 restoration on separately declared diagnostic fixtures, not optimization or general legality proof.
+
+P0-07: accept only bounded points-only declared match evidence. Do not promote as full tournament BO3 or extrapolate match fitness. P0-08 inventory next.
