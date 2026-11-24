@@ -5,6 +5,8 @@ from pathlib import Path
 
 ARCHIVE_SHA="1cdf59d8cc2c36dde035a142ad09556ee9323cfdbb836488e0c20bd75c09f872"
 TRIALS_SHA="6c2164971048c4cee981ce861f11e7c8866e2a8cb07812b21c9682d811b7d4e7"
+# Exact historical run 45181493632, job 137719193919 CLI log.
+HISTORICAL_MIN_GAIN=1
 
 def require(ok,msg):
     if not ok:raise ValueError(msg)
@@ -66,7 +68,7 @@ def audit(trials,selected_hashes,rows,summary):
             best=r["trials"][0]
             selected=r["selected"]
             if selected:
-                require(selected==best and best["train"]["valid"] and h is not None and h["valid"] and best["delta_train"]>=2 and delta>=2,"invalid historical promotion")
+                require(selected==best and best["train"]["valid"] and h is not None and h["valid"] and best["delta_train"]>=HISTORICAL_MIN_GAIN and delta>=HISTORICAL_MIN_GAIN,"invalid historical promotion")
                 flattened.extend({"round":ix,**s} for s in selected["swap_sequence"])
                 bounds=paired_p_bounds(h["baseline_wins"],h["candidate_wins"],h["total"])
                 promotions.append({"legend":name,"round":ix,"training_delta":best["delta_train"],"holdout":h,
@@ -79,6 +81,8 @@ def audit(trials,selected_hashes,rows,summary):
     require(summary["legends"]==58 and summary["improved_provisionally"]==stats["changed_legends"] and summary["globally_optimal"] is False and summary["sideboarded_bo3"] is False,"summary mismatch")
     return {"status":"PASS_HISTORICAL_AGGREGATE_AUDIT_ONLY","counts":dict(stats),"proposal_depths":dict(depths),
             "promotions":promotions,"promotion_rounds":len(promotions),
+            "historical_min_gain":HISTORICAL_MIN_GAIN,
+            "promotions_below_two_training_wins":sum(p["training_delta"]<2 for p in promotions),
             "promotions_with_any_compatible_unadjusted_p_le_0_05":sum(p["conditional_mcnemar_p_bounds_from_marginals"][0]<=.05 for p in promotions),
             "reported_bo3_evaluations_not_independently_reconstructed":summary["bo3_evaluations"],
             "error_record_status_counts":dict(errors),"opponent_holdout_independence":False,

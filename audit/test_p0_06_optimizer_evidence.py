@@ -1,6 +1,8 @@
 import unittest
-from p0_06_optimizer_evidence import paired_p_bounds,check_score
+from p0_06_optimizer_evidence import paired_p_bounds,check_score,HISTORICAL_MIN_GAIN
 class Tests(unittest.TestCase):
+    def test_historical_threshold(self):
+        self.assertEqual(HISTORICAL_MIN_GAIN,1)
     def test_bounds(self):
         self.assertEqual(paired_p_bounds(0,5,24),[.0625,.0625])
         self.assertEqual(paired_p_bounds(7,12,24)[0],.0625)
