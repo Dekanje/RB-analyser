@@ -1,0 +1,47 @@
+name: P0-03 Standard ban snapshot audit
+on:
+  push:
+    branches: ['feature/p0-03-standard-ban-profile']
+    paths:
+      - 'rulesets/standard-global-2026-11-23.json'
+      - 'audit/standard_ban_profile.py'
+      - 'audit/test_standard_ban_profile.py'
+      - '.github/workflows/p0-03-standard-ban-audit.yml'
+permissions:
+  contents: read
+  actions: read
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unit tests
+        run: python3 -m unittest discover -s audit -p 'test_standard_ban_profile.py' -v
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45282108093
+          github-token: ${{ github.token }}
+          name: competitive-guidebot-rule407-verified-engine-binary
+          path: results/p003b/engine
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45181493632
+          github-token: ${{ github.token }}
+          name: expanded-optimized-58-independent-radiance-bo3
+          path: results/p003b/selected
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45259246337
+          github-token: ${{ github.token }}
+          name: worlds-all58-registered-structure-legal-unvalidated-variants
+          path: results/p003b/structural
+      - name: Audit versioned profile and historical inputs
+        run: |
+          python3 audit/standard_ban_profile.py --profile rulesets/standard-global-2026-11-23.json --registry results/p003b/engine/registry.json --selected results/p003b/selected/selected_decks --structural results/p003b/structural --output results/p003b/report.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: p0-03-standard-ban-audit
+          path: results/p003b/report.json
+          if-no-files-found: error
+          retention-days: 30

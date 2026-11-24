@@ -11,3 +11,5 @@ D007: repository hygiene first; preserve all historical branches, executable pat
 D008: preserve exact ordered playable sections for sideboard-only comparisons; native P0-02R sampled trace gate passed. Never retrofit historical manifests. Future versioned screening must enforce ordered equality before native certification/fitness.
 
 D009: historical card evidence ledger distinguishes compiled definition, explicit passing scenario, official legality and unresolved printing equivalence. No promotion from registry metadata or short test-name links alone.
+
+D010: use explicit dated format profiles; a Python ban list and compiled native flags may disagree. Historical evidence must remain unchanged; new execution requires centralized fail-closed enforcement. Standard November 23 snapshot accepted, not full legality.

@@ -78,10 +78,17 @@
     "official_pool_verified": false,
     "feature_commit": "e219c6e7da53891856ecfe1253c7b302df7761e4",
     "run_id": 45305777127,
-    "acceptance": "pending",
+    "acceptance": "ban_snapshot_audit_passed_native_enforcement_open",
     "source_urls": [
       "https://playriftbound.com/en-us/rules-hub/",
       "https://playriftbound.com/en-us/news/announcements/radiance-ban-list-updates-effective-november-23-2026/"
-    ]
+    ],
+    "artifact_id": 14881450395,
+    "archive_sha256": "fc65f614da3942609bf9b37122f3a4c935d496f9d29dd5486cb2a60985863664",
+    "report_sha256": "c378c26cff120061be43bdf15d7d22995c49383d97336aca035c8dae38eb64fc",
+    "profile_sha256": "5525a697ec86e792d86fe7f8f418d7ff7dad95b3ee5912ac5efaea344fb790b4",
+    "selected_registrations": 58,
+    "structural_registrations": 580,
+    "ban_hits": 0
   }
 }
