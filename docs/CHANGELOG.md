@@ -110,3 +110,5 @@
 2026-11-24 — Added guarded current-candidate ISMCTS24 vs128 mirrored benchmark and source inventory; no engine policy changes or adopted decks.
 
 2026-11-24 — Accepted scoped current ISMCTS calibration; initiated P0-06 historical optimizer aggregate and promotion lineage audit.
+
+2026-11-24 — Corrected P0-06 auditor to actual historical CLI threshold and accepted aggregate evidence without adopting decks.
