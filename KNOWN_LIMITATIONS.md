@@ -69,3 +69,5 @@
 - Confirmed Neeko private-information leakage in sampled-world clone (opponent secret pool/count retained) and public mode-choice traces; corrective candidate implemented, native CI pending. Observer fingerprint correction pending; prior uncalibrated and registry-wide, new RNG sequence, public history same-game only; LogEvent audience and actual ISMCTS noninterference tests, broader view/continuation audit remain open. No candidate authorized.
 
 - Direct native negatives accepted (5/5). Initial privacy workflow failed at exact-source anchor before build; corrected anchor and added both-seat LogEvent regression. New CI pending; no engine authorization.
+
+- Scoped Neeko privacy correction accepted: four native privacy tests, full 3932 enabled regression tests, seven guarded games. Actual ISMCTS action-level invariance, broader observation/continuation privacy, format-aware sampling prior and cross-game knowledge remain open; no candidate authorization.
