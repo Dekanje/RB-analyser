@@ -1,0 +1,42 @@
+name: P0-07 guarded current declared BO3
+on:
+  push:
+    branches: [feature/p0-07-guarded-bo3]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  bo3:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m unittest discover -s scripts -p 'test_guarded_bo3.py' -v
+      - run: sudo apt-get install -y -qq --no-install-recommends libboost-context1.83.0 libboost-program-options1.83.0
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45454720801
+          github-token: ${{ github.token }}
+          name: format-aware-prior-binary
+          path: results/engine
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45181493632
+          github-token: ${{ github.token }}
+          name: expanded-optimized-58-independent-radiance-bo3
+          path: results/selected
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45306837115
+          github-token: ${{ github.token }}
+          name: p0-03r-native-receipts
+          path: results/prior
+      - name: Guarded four native BO3 series
+        run: |
+          chmod +x results/engine/riftbound
+          python3 -u scripts/check_guarded_bo3.py --engine results/engine/riftbound --registry results/engine/registry.json --profile rulesets/standard-global-2026-11-23.json --selected results/selected/selected_decks --prior results/prior/report.json --output results/p0_07/bo3.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p0-07-guarded-bo3
+          path: results/p0_07/bo3.json
