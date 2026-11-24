@@ -78,3 +78,5 @@
 2026-11-24 — Recorded 18 completed native behavioral games with missing positive control; added three-Neeko diagnostic fixture and expanded trace receipts.
 
 2026-11-24 — Three-copy behavioral screen completed but lacked positive control; implemented controlled actual ISMCTS search-summary test and synthetic funded legal-play positive controls in both seats.
+
+2026-11-24 — Accepted scoped controlled native ISMCTS search and legal-play test (6 pairs/288 worlds, 4 grants).

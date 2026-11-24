@@ -79,3 +79,5 @@
 - Actual ISMCTS behavioral screen: 18 games, 8/8 identical trace pairs and 2 repeat controls, but zero detected Neeko selection prompts. Overall gate failed; no general noninterference certification. Three-copy diagnostic fixture with fresh seeds and trace diagnostics pending. No new authorization.
 
 - V2 behavioral screen: all eight pairs matched but no actual Neeko selection observed, so overall gate failed. Controlled OpenSpiel search-summary and funded legal-play test implemented, pending CI. Separate synthetic positive play is not a naturally reached competitive position or end-to-end privacy proof. Historical approved engine unchanged.
+
+- Controlled ISMCTS noninterference accepted in scoped six paired searches and four distinct legal-play controls (288 sampled worlds). Positive play separate synthetic snapshot; broader continuation/feature privacy, format-aware prior and all-58 fresh certification remain open. No production approval.

@@ -113,3 +113,5 @@ ISMCTS screen CI 45427634377 failed before gameplay; no artifact. Corrective run
 Behavioral screen CI 45433336373 artifact 14938719489: partial evidence only, overall gate failed. V2 5abd1f5c81b910413e72cf77cbc6438d65a2f0cd; CI 45435045728 observed in_progress/pending.
 
 Behavioral v2 CI 45435045728 artifact 14939968366 partial evidence only; controlled native candidate CI 45436085679 pending.
+
+Controlled Neeko CI 45436085679 artifacts 14943110527/14942811133; hashes in P0_03_ERRATA.md.
