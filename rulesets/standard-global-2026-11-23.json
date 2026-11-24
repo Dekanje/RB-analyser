@@ -1,0 +1,172 @@
+{
+  "schema_version": 1,
+  "profile_id": "standard-global-2026-11-23",
+  "format": "standard_constructed_1v1",
+  "effective_date": "2026-11-23",
+  "scope": "Global circuits at Radiance release parity; excludes regional lag exceptions, 2v2 and casual preconstructed exceptions",
+  "source_urls": [
+    "https://playriftbound.com/en-us/rules-hub/",
+    "https://playriftbound.com/en-us/news/announcements/radiance-ban-list-updates-effective-november-23-2026/"
+  ],
+  "registry_reference_sha256": "d8102dd0930f466ce16c917035aff15eb21e347879800b08fa334b677f198b89",
+  "all_set_legality_certified": false,
+  "printing_equivalence_certified": false,
+  "ban_entries": [
+    {
+      "code": "OGN-026/298",
+      "engine_id": 26,
+      "name": "Brynhir Thundersong",
+      "type": "unit",
+      "aliases": []
+    },
+    {
+      "code": "OGN-077/298",
+      "engine_id": 77,
+      "name": "Zhonya's Hourglass",
+      "type": "gear",
+      "aliases": []
+    },
+    {
+      "code": "OGN-110/298",
+      "engine_id": 110,
+      "name": "Ekko, Recurrent",
+      "type": "unit",
+      "aliases": []
+    },
+    {
+      "code": "OGN-160/298",
+      "engine_id": 160,
+      "name": "Dazzling Aurora",
+      "type": "gear",
+      "aliases": []
+    },
+    {
+      "code": "OGN-168/298",
+      "engine_id": 168,
+      "name": "Fight or Flight",
+      "type": "spell",
+      "aliases": []
+    },
+    {
+      "code": "OGN-177/298",
+      "engine_id": 177,
+      "name": "Stealthy Pursuer",
+      "type": "unit",
+      "aliases": []
+    },
+    {
+      "code": "OGN-182/298",
+      "engine_id": 182,
+      "name": "Scrapheap",
+      "type": "gear",
+      "aliases": []
+    },
+    {
+      "code": "OGN-183/298",
+      "engine_id": 183,
+      "name": "Stacked Deck",
+      "type": "spell",
+      "aliases": []
+    },
+    {
+      "code": "OGN-194/298",
+      "engine_id": 194,
+      "name": "Nocturne, Horrifying",
+      "type": "unit",
+      "aliases": []
+    },
+    {
+      "code": "OGN-195/298",
+      "engine_id": 195,
+      "name": "Rhasa the Sunderer",
+      "type": "unit",
+      "aliases": []
+    },
+    {
+      "code": "OGN-242/298",
+      "engine_id": 242,
+      "name": "Baited Hook",
+      "type": "gear",
+      "aliases": []
+    },
+    {
+      "code": "OGN-276/298",
+      "engine_id": 271,
+      "name": "Aspirant's Climb",
+      "type": "battlefield",
+      "aliases": []
+    },
+    {
+      "code": "OGN-284/298",
+      "engine_id": 279,
+      "name": "Obelisk of Power",
+      "type": "battlefield",
+      "aliases": []
+    },
+    {
+      "code": "OGN-285/298",
+      "engine_id": 280,
+      "name": "Reaver's Row",
+      "type": "battlefield",
+      "aliases": []
+    },
+    {
+      "code": "OGN-290/298",
+      "engine_id": 285,
+      "name": "The Arena's Greatest",
+      "type": "battlefield",
+      "aliases": []
+    },
+    {
+      "code": "OGN-292/298",
+      "engine_id": 287,
+      "name": "The Dreaming Tree",
+      "type": "battlefield",
+      "aliases": [
+        "Dreaming Tree"
+      ]
+    },
+    {
+      "code": "SFD-020/221",
+      "engine_id": 343,
+      "name": "Draven, Vanquisher",
+      "type": "unit",
+      "aliases": []
+    },
+    {
+      "code": "SFD-048/221",
+      "engine_id": 371,
+      "name": "Stellacorn Herder",
+      "type": "unit",
+      "aliases": []
+    },
+    {
+      "code": "SFD-122/221",
+      "engine_id": 443,
+      "name": "Called Shot",
+      "type": "spell",
+      "aliases": []
+    },
+    {
+      "code": "SFD-207/221",
+      "engine_id": 521,
+      "name": "Emperor's Dais",
+      "type": "battlefield",
+      "aliases": []
+    },
+    {
+      "code": "UNL-215/219",
+      "engine_id": 771,
+      "name": "Star Spring",
+      "type": "battlefield",
+      "aliases": []
+    },
+    {
+      "code": "RAD-043/167",
+      "engine_id": 1079,
+      "name": "Riven, Broken Blade",
+      "type": "unit",
+      "aliases": []
+    }
+  ]
+}
