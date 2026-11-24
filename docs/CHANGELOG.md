@@ -1,0 +1,2 @@
+# Changelog
+2026-11-24 — RB-Analyser 2.0 documentation bootstrap: master plan, permanent agent instructions, baseline/status/limitations/handover, architecture and functional specs, QA, benchmarks, reproducibility and decision log. No engine implementation or fresh simulations in this change. Historical successful screening and certification runs referenced, not independently revalidated. Next: Phase 0 evidence audit.

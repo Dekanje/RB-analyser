@@ -1,0 +1,2 @@
+# Benchmarks
+No local benchmark measured during documentation setup. Record OS/CPU/RAM, worker count, build flags, source/overlay/binary hashes, rules, decks, agents and search budget, games/BO3 per second, elapsed, errors, memory peak, parallel scaling and checkpoint cost. Compare correctness/replays before and after optimization. Existing agent benchmark instructions: COMPETITIVE_VALIDATION_V1.md. Do not invent throughput or infer competitive strength from simulation volume.

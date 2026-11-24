@@ -1,0 +1,11 @@
+# Known limitations
+- Branch fragmentation: main is behind the active research branch; do not merge experimental code without audit.
+- AlphaRune upstream licensing marked TBD in README; verify actual license and distribution rights before redistribution.
+- Registered identity != mechanics correctness. Historical QA reports 37 unresolved edge-case coverage questions, one disabled upstream test, unverified variant equivalence; reconcile with subsequent fixes, do not label all cards certified.
+- Historical native certification and screening workflows are green but artifacts and raw results not independently inspected in this setup.
+- ISMCTS strength and real-human calibration not established by workflow success. Audit hidden observations and search budgets.
+- BO3 policy is partial: supplied rather than learned sideboards; clocks and full tournament modeling incomplete per source.
+- Latest coordinated multi-card screen is training-only; no adoption without independent validation.
+- Full Swiss, tiebreaks, intermediate qualification, playoff seeding, format versions and championship optimization not yet certified.
+- Local PC hardware/throughput, checkpoint recovery and resource budgets unknown. No guaranteed global optimum; simulation confidence intervals exclude systematic engine/pilot bias.
+- Public repository: do not publish secrets, private deck results or full protected text without authorization; visibility unchanged.

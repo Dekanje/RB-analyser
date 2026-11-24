@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "as_of": "2026-11-24",
+  "status": "inventory_pending",
+  "baseline_commit": "0b9739bb6c20e8ed5a805a78239d5faa09b226ad",
+  "coverage_is_complete": false,
+  "entries": [],
+  "historical_report": {
+    "path": "radiance/qa/2026-11-23-full-qa.md",
+    "registered_identities": 1123,
+    "radiance_numbered_registered": 167,
+    "radiance_numbered_total": 167,
+    "final64_scenario_mapped": 64,
+    "edge_case_questions": 37,
+    "independent_reverification": false
+  },
+  "required_entry_fields": [
+    "functional_id",
+    "print_ids",
+    "ruleset_id",
+    "legal_status",
+    "effect_implementation",
+    "scenario_test_ids",
+    "interaction_test_ids",
+    "evidence_commit",
+    "verification_status",
+    "known_gaps"
+  ],
+  "allowed_verification_status": [
+    "unknown",
+    "unsupported",
+    "implemented_unverified",
+    "scenario_verified",
+    "regression_verified",
+    "defective"
+  ]
+}
