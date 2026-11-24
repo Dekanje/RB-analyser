@@ -35,3 +35,5 @@
 - Scoped roster acceptance covers 58 historical registrations and 29 mirrored pairs, not all matchups or full mechanics. Existing native CLI and legacy scripts remain historical-only; new jobs use the verified gateway. Additional approved configurations and official legal pool still open.
 
 - P0-03R slice 4 implements named approved research configurations in isolation. Scoped validation accepted. Both configurations use the same dated ban snapshot; future Worlds/no-Legacy and other dated ban profiles require explicit legal pool/printing evidence and reviewed native support. Production optimizer/tournament integration remains open.
+
+- P0-03 duplicate-name audit: 13/20 groups differ in inspected compiled fields, seven do not; no equivalence certified. Direct official gallery acquisition implemented; CI receipt pending. Gallery row coverage, legal-pool enumeration, errata and 52 historical RAD nonbase printing equivalences still open. See docs/P0_03_OFFICIAL_GALLERY.md.

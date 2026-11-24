@@ -71,3 +71,5 @@ P0-03R slice 3 corrective acceptance: CI 45307885961 artifact 14882380280; prese
 P0-03R slice 4 CI 45343759670: named configurations and scoped native/negative controls, artifact acceptance pending; see gateway report.
 
 P0-03R slice 4 accepted: CI 45343759670 artifact 14896454760; hashes and scope in gateway report.
+
+[P0-03 official gallery](P0_03_OFFICIAL_GALLERY.md): direct registry duplicate-name inspection and isolated direct-source inventory; CI 45374674457 pending artifact acceptance.

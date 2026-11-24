@@ -90,5 +90,23 @@
     "selected_registrations": 58,
     "structural_registrations": 580,
     "ban_hits": 0
+  },
+  "duplicate_name_audit": {
+    "groups": 20,
+    "differing_groups": 13,
+    "matching_inspected_fields": 7,
+    "differences": {
+      "ability_text": 6,
+      "tags": 6,
+      "super_type": 1
+    },
+    "equivalence_verified": false,
+    "registry_sha256": "d8102dd0930f466ce16c917035aff15eb21e347879800b08fa334b677f198b89"
+  },
+  "official_gallery_audit": {
+    "feature_commit": "e18b39d2f45b68034fdbd718f4bf243c25d4164c",
+    "run_id": 45374674457,
+    "status": "pending_artifact_acceptance",
+    "official_pool_verified": false
   }
 }
