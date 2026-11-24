@@ -84,3 +84,5 @@
 2026-11-24 — Accepted controlled ISMCTS noninterference evidence; implemented candidate public format-aware sampling and native receipt binding, pending validation.
 
 2026-11-24 — Corrected three runtime strong-ID conversions after native compilation failure; recorded independently reconstructed public format policy counts and hashes.
+
+2026-11-24 — Accepted public format-aware opponent prior within two tested configurations.

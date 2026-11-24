@@ -85,3 +85,5 @@
 - Format-aware sampled identity universe implemented on candidate branch; native results pending. Heuristic prior and existing copy-limit/known placement fallbacks, broader privacy, official completeness, all-58 certification and production migration remain unresolved. Historical approved engine unchanged.
 
 - Format-aware candidate builds failed on runtime StrongId construction before native testing. Parser and native assertions corrected; retry CI 45454720801 pending. Static public allowlist expectations 1091/1067, not native certification.
+
+- Scoped format-aware prior accepted in two public configurations; 128 worlds, 6528 unknown slots, 12 paired searches/576 worlds, 8 funded controls and four guarded games. Remaining copy-limit and floating-known fallbacks, broader privacy, official completeness and calibration assigned to later detailed gates; no production approval or fresh roster yet.
