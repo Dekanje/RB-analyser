@@ -87,3 +87,5 @@ P0-03 errata inventory CI 45403609402 artifact 14925085962: [evidence](P0_03_ERR
 Elnuk candidate native QA CI 45403995961; pending artifact acceptance. See P0_03_ERRATA.md.
 
 RAD-081 target correction scoped acceptance: CI 45403995961 artifacts 14925581330 and 14926435438; hashes in P0_03_ERRATA.md.
+
+RAD-081 follow-up commit 616f24ec9e73d6057b23665781f96a9fc9fb7897; CI 45406368094 observed in_progress/pending.

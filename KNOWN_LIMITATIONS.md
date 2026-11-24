@@ -53,3 +53,5 @@
 - RAD-081 Elnuk native correction implemented in isolated post-baseline overlay; three native tests and full QA pending acceptance. Face-down and source-removal cases still require separate regressions. Current approved engine unchanged; no corrected gameplay claims yet.
 
 - RAD-081 target-selection correction accepted in candidate build (3/3 focused, 3919 enabled full suite). Candidate is not yet authorized by approved gateway. Face-down recycling and source-removal interactions still open. Historical binary remains immutable.
+
+- RAD-081 follow-up interaction tests written, native results pending. Hidden play uses prehidden fixture (not initial Hide payment or full legal-action gate); removal fixture queues trigger and kills source directly, not a full response sequence. Approved binary still unchanged.
