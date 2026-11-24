@@ -1,0 +1,62 @@
+name: Worlds nine-round Swiss threshold sensitivity (illustrative only)
+on:
+  push:
+    branches: ['research/competitive-agent-benchmark-v1-2026-11-23']
+    paths: ['.github/workflows/competitive-swiss-thresholds.yml']
+permissions:
+  contents: read
+  actions: read
+jobs:
+  all919-legal-lineups-record-sensitivity:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test exact independent-match convolution and source assumptions
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/worlds_swiss_sensitivity.py scripts/test_worlds_swiss_sensitivity.py
+          python3 -m unittest discover -s scripts -p 'test_worlds_swiss_sensitivity.py' -v
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45222607317
+          github-token: ${{ github.token }}
+          name: elite-58-stronger-agent-rankings-and-evidence
+          path: results/elite58
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45181493632
+          github-token: ${{ github.token }}
+          name: expanded-optimized-58-independent-radiance-bo3
+          path: results/selected
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45244227502
+          github-token: ${{ github.token }}
+          name: competitive-rule407-verified-engine-binary
+          path: engine_build
+      - name: Sample posterior nine-round Swiss records for all legal three-deck choices
+        timeout-minutes: 15
+        run: |
+          python3 -u scripts/worlds_swiss_sensitivity.py \
+            --field results/elite58 \
+            --selected results/selected \
+            --registry engine_build/registry.json \
+            --output results/illustrative_swiss \
+            --repetitions 600 --concentration 1.0 --seed 202611251100
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path('results/illustrative_swiss/swiss_threshold_sensitivity.json').read_text())
+          assert d['all_lineups']==919
+          assert d['rule_for_top4_qualification_assumed'] is False
+          assert d['actual_worlds_win_probability_estimated'] is False
+          assert d['assumed_swiss_total_rounds']==9
+          assert d['assumed_matches_per_deck']==3
+          print('EXACT_SWISS_THRESHOLD_MODEL_PASS',d['prior_lineup_rank_in_seven_win_sensitivity'])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: worlds-919-lineup-swiss-threshold-sensitivity-nonpredictive
+          path: results/illustrative_swiss/
+          retention-days: 30

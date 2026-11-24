@@ -1,0 +1,35 @@
+name: Aggregate real 407 Worlds trio sideboard strategy results (one-shot)
+on:
+  push:
+    branches: ['research/competitive-agent-benchmark-v1-2026-11-23']
+    paths: ['data/launch_worlds_policy_aggregate_407.txt']
+permissions:
+  contents: read
+  actions: read
+jobs:
+  cross-matchup-engine-receipts:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test strict source evidence and exact paired McNemar comparisons
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/aggregate_worlds_sideboard.py scripts/test_aggregate_worlds_sideboard.py
+          python3 -m unittest discover -s scripts -p 'test_aggregate_worlds_sideboard.py' -v
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45247195570
+          github-token: ${{ github.token }}
+          pattern: competitive-worlds-sideboard-*
+          path: results/worlds_sideboard_shards
+      - name: Require all three completed immutable 407 pilot matchups and rank only for independent holdout
+        run: |
+          python3 scripts/aggregate_worlds_sideboard.py \
+            --input results/worlds_sideboard_shards \
+            --output results/aggregated_407_worlds_policy
+      - uses: actions/upload-artifact@v4
+        with:
+          name: competitive-worlds-trio-407-cross-matchup-sideboard-shortlists
+          path: results/aggregated_407_worlds_policy/
+          retention-days: 30

@@ -1,0 +1,54 @@
+{
+  "schema": 1,
+  "source_workflow_run": 45224781531,
+  "source_proposals_run": 45223997723,
+  "baseline_roster_run": 45181493632,
+  "method": "Top five per Legend by screening paired wins minus baseline wins, then candidate wins, then ascending candidate index; all 40 candidates per Legend tested over exactly six paired BO3 series.",
+  "status": "EXPLORATORY_HOLDOUT_CANDIDATES_NOT_ACCEPTED",
+  "pilot": {
+    "Draven, Glorious Executioner": [
+      {
+        "id": 12,
+        "sha256": "3fc063806a96b56619896f85cb9cc6364efee570bc9f9a0bdc8e88e24faafee4"
+      },
+      {
+        "id": 24,
+        "sha256": "e482f392533d09516504e60fd0f86f2835b2ddc1959bcb2f6383f97ac52eafec"
+      },
+      {
+        "id": 25,
+        "sha256": "9cd8637080baf37ce96303ee29fefa117d8fcb8848cc82ed413f16fabac5545c"
+      },
+      {
+        "id": 2,
+        "sha256": "fe5acb2b13f3e704f8c9e80a9a29fbb5358e0887114c899d40701f44a732aabf"
+      },
+      {
+        "id": 6,
+        "sha256": "dc7b91fc09e5502eb4f763c8d44ab14845a19bd42b437f04b69cfb1c9723d545"
+      }
+    ],
+    "Rek'Sai, Void Burrower": [
+      {
+        "id": 0,
+        "sha256": "b287823dc2b8be98cc84cbab45d5a7425b699ed4d9ed06cd0128d919adb1f037"
+      },
+      {
+        "id": 21,
+        "sha256": "6a2170695e7f728cfa2b5b7695ffb734205c1cd0d12710915ee2f071d10901f2"
+      },
+      {
+        "id": 5,
+        "sha256": "db2a9146d84a8820477f2280be976a871e0a836feba1627264ad00dd143c13b7"
+      },
+      {
+        "id": 8,
+        "sha256": "c580a271617e86d7dc385c5555ca517d166e401bffdac5c3c7a2b7b239e9f345"
+      },
+      {
+        "id": 15,
+        "sha256": "ad7c7cdf37a0e5cd00445b13b0262f658fa28bfcc74adf3e4ac03b6d689f9185"
+      }
+    ]
+  }
+}

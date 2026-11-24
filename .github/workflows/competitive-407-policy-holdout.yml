@@ -1,0 +1,128 @@
+name: Competitive independent 407 Worlds sideboard policy holdout
+on:
+  push:
+    branches: ['research/competitive-agent-benchmark-v1-2026-11-23']
+    paths:
+      - '.github/workflows/competitive-407-policy-holdout.yml'
+      - 'scripts/competitive_407_policy_holdout.py'
+      - 'scripts/test_competitive_407_policy_holdout.py'
+permissions:
+  contents: read
+  actions: read
+jobs:
+  strict-policy-holdout-unit-tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check seeded opponent isolation, complete mirrored BO3 and rejection of false receipts
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/competitive_407_policy_holdout.py scripts/test_competitive_407_policy_holdout.py
+          python3 -m unittest discover -s scripts -p 'test_competitive_407_policy_holdout.py' -v
+          python3 -m unittest discover -s scripts -p 'test_sideboard_policy_search.py' -v
+  three-independent-holdouts:
+    needs: strict-policy-holdout-unit-tests
+    strategy:
+      fail-fast: false
+      matrix:
+        index: [0,1,2]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45251930166
+          github-token: ${{ github.token }}
+          name: competitive-worlds-trio-407-cross-matchup-sideboard-shortlists
+          path: results/preregistered_screen
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45244227502
+          github-token: ${{ github.token }}
+          name: competitive-rule407-verified-engine-binary
+          path: engine_build
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45181493632
+          github-token: ${{ github.token }}
+          name: expanded-optimized-58-independent-radiance-bo3
+          path: results/selected
+      - name: Load native 407 engine and immutable source artifacts
+        timeout-minutes: 12
+        run: |
+          set -euo pipefail
+          if ! sudo env DEBIAN_FRONTEND=noninteractive timeout -k 10s 55s apt-get -o Acquire::Retries=0 update -qq; then
+            echo '::warning::using cached package indexes'
+          fi
+          sudo env DEBIAN_FRONTEND=noninteractive timeout 360s apt-get -o Acquire::Retries=2 install -y -qq --no-install-recommends libboost-program-options1.83.0 libboost-filesystem1.83.0 libboost-system1.83.0 libboost-context1.83.0
+          chmod +x engine_build/riftbound
+          test -f results/preregistered_screen/all_ranked_candidates.json
+          test -f engine_build/registry.json
+          if ldd engine_build/riftbound | grep -q 'not found'; then exit 1; fi
+      - name: Run same-agent actual 407 BO3 with independent elite opposition and fresh seeds
+        timeout-minutes: 72
+        run: |
+          python3 -u scripts/competitive_407_policy_holdout.py \
+            --selection data/competitive_407_policy_holdout_selected.json \
+            --pilot results/preregistered_screen/all_ranked_candidates.json \
+            --selected results/selected \
+            --registry engine_build/registry.json \
+            --engine engine_build/riftbound \
+            --index ${{ matrix.index }} \
+            --output results/holdout-${{ matrix.index }} \
+            --agent ismcts:sims=128 --repetitions 2 \
+            --timeout 240 --seed 202611250531
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: competitive-407-policy-holdout-${{ matrix.index }}
+          path: results/holdout-${{ matrix.index }}/
+          retention-days: 30
+          if-no-files-found: warn
+  verify-and-correct-three-policy-decisions:
+    needs: three-independent-holdouts
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: competitive-407-policy-holdout-*
+          path: results/holdout_shards
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45251930166
+          github-token: ${{ github.token }}
+          name: competitive-worlds-trio-407-cross-matchup-sideboard-shortlists
+          path: results/preregistered_screen
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45244227502
+          github-token: ${{ github.token }}
+          name: competitive-rule407-verified-engine-binary
+          path: engine_build
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45181493632
+          github-token: ${{ github.token }}
+          name: expanded-optimized-58-independent-radiance-bo3
+          path: results/selected
+      - name: Require all three complete 128-agent holdouts and control familywise error
+        run: |
+          python3 scripts/competitive_407_policy_holdout.py --aggregate \
+            --selection data/competitive_407_policy_holdout_selected.json \
+            --pilot results/preregistered_screen/all_ranked_candidates.json \
+            --selected results/selected \
+            --registry engine_build/registry.json \
+            --engine engine_build/riftbound \
+            --input results/holdout_shards \
+            --output results/407_policy_decisions \
+            --agent ismcts:sims=128 --repetitions 2 \
+            --timeout 240 --seed 202611250531
+      - uses: actions/upload-artifact@v4
+        with:
+          name: competitive-407-policy-independent-holdout-decisions
+          path: results/407_policy_decisions/
+          retention-days: 30

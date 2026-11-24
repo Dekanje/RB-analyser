@@ -1,0 +1,92 @@
+name: Recover exact all174 sideboard-407 policy aggregate from 28 accepted and one repaired shard
+on:
+  push:
+    branches: ['research/competitive-agent-benchmark-v1-2026-11-23']
+    paths: ['data/launch_sideboard_174_recovery_aggregate.txt']
+permissions:
+  contents: read
+  actions: read
+jobs:
+  all174-recovered-native-407-aggregate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate strict policy activation and aggregate evidence arithmetic
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/structural_sideboard_174.py
+          python3 -m unittest discover -s scripts -p 'test_structural_sideboard_174.py' -v
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45275042017
+          github-token: ${{ github.token }}
+          pattern: sideboard174-*
+          path: results/shards
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45276279803
+          github-token: ${{ github.token }}
+          name: sideboard174-6
+          path: results/shards/sideboard174-6
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45259246337
+          github-token: ${{ github.token }}
+          name: worlds-all58-registered-structure-legal-unvalidated-variants
+          path: results/structure
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45270672340
+          github-token: ${{ github.token }}
+          name: competitive-all580-registered-structure-native-evidence
+          path: results/native_certified
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45181493632
+          github-token: ${{ github.token }}
+          name: expanded-optimized-58-independent-radiance-bo3
+          path: results/selected
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45208732588
+          github-token: ${{ github.token }}
+          name: all-58-optimized-head-to-head-rankings-and-matchups
+          path: results/ranked
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45244227502
+          github-token: ${{ github.token }}
+          name: competitive-rule407-verified-engine-binary
+          path: engine_build
+      - name: Validate all 174 actually swapped tech cards, legal comparator, 29 unaltered native receipts
+        run: |
+          set -euo pipefail
+          python3 scripts/structural_sideboard_174.py --aggregate \
+            --selected results/selected \
+            --variants results/structure \
+            --registry engine_build/registry.json \
+            --certification results/native_certified/acceptance.json \
+            --ranked results/ranked/all_58_ranked.json \
+            --input results/shards \
+            --output results/sideboard_174_summary \
+            --shards 29 --agent ismcts:sims=24 --seed 202611270101
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path('results/sideboard_174_summary/summary.json').read_text())
+          assert d['status']=='ALL174_SIDEB0ARD_VARIANTS_NATIVE_407_G2_G3_SCREEN_COMPLETE'
+          assert d['sideboard_variants_actually_played']==174
+          assert d['candidate_bo3_completed']==696 and d['baseline_bo3_completed']==232
+          assert d['confirmed_upgrades']==0 and d['accepted_deck_changes'] is False
+          assert isinstance(d['game1_winner_mismatch_count'],int)
+          print('SIDEBOARD_ALL174_NATIVE_407_AGGREGATE_PASS',
+                d['game1_winner_mismatch_count'])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: competitive-worlds-all174-sideboard-native-407-fitness-unconfirmed
+          path: results/sideboard_174_summary/
+          retention-days: 30
+          if-no-files-found: warn

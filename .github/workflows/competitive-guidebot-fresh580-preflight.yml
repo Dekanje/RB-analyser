@@ -1,0 +1,22 @@
+name: Worlds corrected engine full 580 native source and partition preflight
+on:
+  push:
+    branches: ['research/competitive-agent-benchmark-v1-2026-11-23']
+    paths:
+      - '.github/workflows/competitive-guidebot-fresh580-preflight.yml'
+      - 'scripts/fresh_580_native.py'
+      - 'scripts/test_fresh_580_native.py'
+permissions:
+  contents: read
+jobs:
+  exact-native580-partition:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check frozen 580 SHA and native receipt implementation without launching game jobs
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/fresh_580_native.py scripts/test_fresh_580_native.py
+          python3 -m unittest discover -s scripts -p 'test_fresh_580_native.py' -v
+          python3 -m unittest discover -s scripts -p 'test_structural_deck_population.py' -v

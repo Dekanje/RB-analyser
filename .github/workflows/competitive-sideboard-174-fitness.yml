@@ -1,0 +1,159 @@
+name: Worlds all-174 legal sideboard cards played in actual 407 BO3 fitness
+on:
+  push:
+    branches: ['research/competitive-agent-benchmark-v1-2026-11-23']
+    paths:
+      - '.github/workflows/competitive-sideboard-174-fitness.yml'
+      - 'scripts/structural_sideboard_174.py'
+      - 'scripts/test_structural_sideboard_174.py'
+permissions:
+  contents: read
+  actions: read
+jobs:
+  exact-registered-174-and-actual-swap-unit-tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - name: Ensure sideboard-only swaps execute in Game 2/3 and actual 407 receipts
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/structural_sideboard_174.py scripts/test_structural_sideboard_174.py
+          python3 -m unittest discover -s scripts -p 'test_structural_sideboard_174.py' -v
+  evaluate-native-tech-card-policies:
+    needs: exact-registered-174-and-actual-swap-unit-tests
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 100
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45259246337
+          github-token: ${{ github.token }}
+          name: worlds-all58-registered-structure-legal-unvalidated-variants
+          path: results/structure
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45270672340
+          github-token: ${{ github.token }}
+          name: competitive-all580-registered-structure-native-evidence
+          path: results/native_certified
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45181493632
+          github-token: ${{ github.token }}
+          name: expanded-optimized-58-independent-radiance-bo3
+          path: results/selected
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45208732588
+          github-token: ${{ github.token }}
+          name: all-58-optimized-head-to-head-rankings-and-matchups
+          path: results/ranked
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45244227502
+          github-token: ${{ github.token }}
+          name: competitive-rule407-verified-engine-binary
+          path: engine_build
+      - name: Install exact pinned 407 C++ simulator runtime
+        timeout-minutes: 12
+        run: |
+          set -euo pipefail
+          if ! sudo env DEBIAN_FRONTEND=noninteractive timeout -k 10s 55s apt-get -o Acquire::Retries=0 update -qq; then
+            echo '::warning::using cached apt package indexes'
+          fi
+          sudo env DEBIAN_FRONTEND=noninteractive timeout 360s apt-get -o Acquire::Retries=2 install -y -qq --no-install-recommends libboost-program-options1.83.0 libboost-filesystem1.83.0 libboost-system1.83.0 libboost-context1.83.0
+          chmod +x engine_build/riftbound
+          if ldd engine_build/riftbound | grep -q 'not found'; then exit 1; fi
+      - name: Play registered novel tech card in Game 2/3 against frozen original, mirrored seats
+        timeout-minutes: 82
+        run: |
+          set -euo pipefail
+          python3 -u scripts/structural_sideboard_174.py \
+            --selected results/selected \
+            --variants results/structure \
+            --registry engine_build/registry.json \
+            --engine engine_build/riftbound \
+            --certification results/native_certified/acceptance.json \
+            --ranked results/ranked/all_58_ranked.json \
+            --shards 29 --shard ${{ matrix.shard }} \
+            --agent ismcts:sims=24 --seed 202611270101 --timeout 175 \
+            --output results/sideboard174/${{ matrix.shard }}/sideboard_fitness.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sideboard174-${{ matrix.shard }}
+          path: results/sideboard174/${{ matrix.shard }}/
+          retention-days: 30
+          if-no-files-found: warn
+  aggregate-174-verified-native-bo3-tech-plays:
+    needs: evaluate-native-tech-card-policies
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: sideboard174-*
+          path: results/shards
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45259246337
+          github-token: ${{ github.token }}
+          name: worlds-all58-registered-structure-legal-unvalidated-variants
+          path: results/structure
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45270672340
+          github-token: ${{ github.token }}
+          name: competitive-all580-registered-structure-native-evidence
+          path: results/native_certified
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45181493632
+          github-token: ${{ github.token }}
+          name: expanded-optimized-58-independent-radiance-bo3
+          path: results/selected
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45208732588
+          github-token: ${{ github.token }}
+          name: all-58-optimized-head-to-head-rankings-and-matchups
+          path: results/ranked
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45244227502
+          github-token: ${{ github.token }}
+          name: competitive-rule407-verified-engine-binary
+          path: engine_build
+      - name: Verify 174/174 activated tech cards, matched controls, exact engine SHA, no auto-adoption
+        run: |
+          python3 scripts/structural_sideboard_174.py --aggregate \
+            --selected results/selected \
+            --variants results/structure \
+            --registry engine_build/registry.json \
+            --certification results/native_certified/acceptance.json \
+            --ranked results/ranked/all_58_ranked.json \
+            --input results/shards \
+            --output results/sideboard_174_summary \
+            --shards 29 --agent ismcts:sims=24 --seed 202611270101
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          x=json.loads(Path('results/sideboard_174_summary/summary.json').read_text())
+          assert x['sideboard_variants_actually_played']==174
+          assert x['candidate_bo3_completed']==174*4
+          assert x['baseline_bo3_completed']==58*4
+          assert x['confirmed_upgrades']==0 and x['accepted_deck_changes'] is False
+          print('NATIVE_174_407_ACTUAL_SWAP_FINAL_PASS')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: competitive-worlds-all174-sideboard-native-407-fitness-unconfirmed
+          path: results/sideboard_174_summary/
+          retention-days: 30

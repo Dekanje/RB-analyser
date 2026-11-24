@@ -1,0 +1,63 @@
+name: Competitive 58-Legend broad candidate generation (one-shot)
+on:
+  push:
+    branches: ['research/competitive-agent-benchmark-v1-2026-11-23']
+    paths:
+      - '.github/workflows/competitive-evolutionary-proposals.yml'
+      - 'scripts/evolutionary_candidates.py'
+      - 'scripts/test_evolutionary_candidates.py'
+permissions:
+  contents: read
+  actions: read
+jobs:
+  generate-structural-candidate-populations:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unit tests for multi-card mutations and legality preservation
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/evolutionary_candidates.py scripts/test_evolutionary_candidates.py
+          python3 -m unittest discover -s scripts -p 'test_evolutionary_candidates.py' -v
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45181493632
+          github-token: ${{ github.token }}
+          name: expanded-optimized-58-independent-radiance-bo3
+          path: results/selected
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45205260187
+          github-token: ${{ github.token }}
+          name: repaired-fullfield-engine-1123
+          path: engine_build
+      - name: Build 40 independent 3-to-8-swap candidates per Legend
+        timeout-minutes: 8
+        run: |
+          set -euo pipefail
+          python3 scripts/evolutionary_candidates.py \
+            --selected results/selected \
+            --registry engine_build/registry.json \
+            --output results/competitive_proposals \
+            --desired 40 --min-swaps 3 --max-swaps 8 \
+            --max-attempts 1600 --seed 202611240300
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path('results/competitive_proposals/manifest.json').read_text())
+          assert d['source_roster']==58 and d['legend_count']==58
+          assert d['candidate_count']==2320
+          assert all(x['generated']==40 for x in d['records'])
+          assert all(x['changed_main_slots']>=3 and not x['engine_simulated']
+                     for row in d['records'] for x in row['candidates'])
+          print('BROAD_58_POPULATION_PASS',d['candidate_count'])
+          PY
+      - name: Retain untested candidates and source SHA receipts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: competitive-all58-unvalidated-2320-proposals
+          path: results/competitive_proposals/
+          retention-days: 30
+          if-no-files-found: warn

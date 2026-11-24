@@ -1,0 +1,60 @@
+name: Neeko special-three-Legend registration real-engine smoke
+on:
+  push:
+    branches: ['research/competitive-agent-benchmark-v1-2026-11-23']
+    paths: ['.github/workflows/competitive-neeko-registration.yml']
+permissions:
+  contents: read
+  actions: read
+jobs:
+  exact-registered-neeko-game:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 32
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile special registration smoke harness
+        run: |
+          python3 -m py_compile scripts/test_registered_neeko_game.py
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45223997723
+          github-token: ${{ github.token }}
+          name: competitive-all58-unvalidated-2320-proposals
+          path: results/proposals
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45181493632
+          github-token: ${{ github.token }}
+          name: expanded-optimized-58-independent-radiance-bo3
+          path: results/selected
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45205260187
+          github-token: ${{ github.token }}
+          name: repaired-fullfield-engine-1123
+          path: engine_build
+      - name: Install exact AlphaRune engine runtime
+        timeout-minutes: 12
+        run: |
+          set -euo pipefail
+          if ! sudo env DEBIAN_FRONTEND=noninteractive timeout -k 10s 55s apt-get -o Acquire::Retries=0 update -qq; then
+            echo '::warning::using cached package indexes'
+          fi
+          sudo env DEBIAN_FRONTEND=noninteractive timeout 360s apt-get -o Acquire::Retries=2 install -y -qq --no-install-recommends libboost-program-options1.83.0 libboost-filesystem1.83.0 libboost-system1.83.0 libboost-context1.83.0
+          chmod +x engine_build/riftbound
+          if ldd engine_build/riftbound | grep -q 'not found'; then exit 1; fi
+      - name: Play two real registered Neeko candidate games
+        timeout-minutes: 15
+        run: |
+          python3 -u scripts/test_registered_neeko_game.py \
+            --proposals results/proposals \
+            --selected results/selected \
+            --engine engine_build/riftbound \
+            --output results/neeko_registered_smoke
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: competitive-neeko-extra-legend-engine-receipts
+          path: results/neeko_registered_smoke/
+          retention-days: 30
+          if-no-files-found: warn

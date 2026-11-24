@@ -1,0 +1,118 @@
+name: Competitive strength calibration 512 vs 128 ISMCTS on six elite Legends
+on:
+  push:
+    branches: ['research/competitive-agent-benchmark-v1-2026-11-23']
+    paths: ['.github/workflows/competitive-agent-512.yml']
+permissions:
+  contents: read
+  actions: read
+jobs:
+  validate-agent-mirror-metrics:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify identical deck controls and exact seeded paired engine receipts
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/benchmark_agent_strength.py scripts/aggregate_512_vs128.py scripts/test_aggregate_512_vs128.py
+          python3 -m unittest discover -s scripts -p 'test_aggregate_512_vs128.py' -v
+  native-512-vs-128-mirrors:
+    needs: validate-agent-mirror-metrics
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - index: 0
+            file: 'draven_glorious_executioner.txt'
+          - index: 1
+            file: 'leblanc_deceiver.txt'
+          - index: 2
+            file: 'master_yi_wuju_bladesman.txt'
+          - index: 3
+            file: 'miss_fortune_bounty_hunter.txt'
+          - index: 4
+            file: 'rek_sai_void_burrower.txt'
+          - index: 5
+            file: 'ambessa_matriarch_of_war.txt'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 70
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45244227502
+          github-token: ${{ github.token }}
+          name: competitive-rule407-verified-engine-binary
+          path: engine_build
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45181493632
+          github-token: ${{ github.token }}
+          name: expanded-optimized-58-independent-radiance-bo3
+          path: results/selected
+      - name: Install exact C++ shared libraries and verify pinned binary
+        timeout-minutes: 12
+        run: |
+          set -euo pipefail
+          if ! sudo env DEBIAN_FRONTEND=noninteractive timeout -k 10s 55s apt-get -o Acquire::Retries=0 update -qq; then
+            echo '::warning::using cached package indexes'
+          fi
+          sudo env DEBIAN_FRONTEND=noninteractive timeout 360s apt-get -o Acquire::Retries=2 install -y -qq --no-install-recommends libboost-program-options1.83.0 libboost-filesystem1.83.0 libboost-system1.83.0 libboost-context1.83.0
+          chmod +x engine_build/riftbound
+          test -f results/selected/selected_decks/${{ matrix.file }}
+          if ldd engine_build/riftbound | grep -q 'not found'; then exit 1; fi
+      - name: Mirror actual 512- and 128-ISMCTS in same deck and both agent seats
+        timeout-minutes: 55
+        run: |
+          python3 -u scripts/benchmark_agent_strength.py \
+            --engine engine_build/riftbound \
+            --decks-dir results/selected/selected_decks \
+            --deck-name "${{ matrix.file }}" \
+            --max-decks 1 --repetitions 2 \
+            --baseline-agent ismcts:sims=128 \
+            --challenger-agent ismcts:sims=512 \
+            --seed 202611250900 --timeout 600 \
+            --output results/agent512/strength.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: agent-strength-512-${{ matrix.index }}
+          path: results/agent512/
+          retention-days: 30
+          if-no-files-found: warn
+  aggregate-complete-strength-calibration:
+    needs: native-512-vs-128-mirrors
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: agent-strength-512-*
+          path: results/shards
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45244227502
+          github-token: ${{ github.token }}
+          name: competitive-rule407-verified-engine-binary
+          path: engine_build
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45181493632
+          github-token: ${{ github.token }}
+          name: expanded-optimized-58-independent-radiance-bo3
+          path: results/selected
+      - name: Confirm all 24 actual agent-vs-agent games and identical-game model
+        run: |
+          python3 scripts/aggregate_512_vs128.py \
+            --input results/shards \
+            --engine engine_build/riftbound \
+            --decks results/selected/selected_decks \
+            --output results/agent512_strength_decision.json \
+            --repetitions 2 --seed 202611250900
+      - uses: actions/upload-artifact@v4
+        with:
+          name: competitive-six-legend-512-versus-128-agent-strength-calibration
+          path: results/agent512_strength_decision.json
+          retention-days: 30

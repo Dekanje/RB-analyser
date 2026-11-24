@@ -1,0 +1,193 @@
+name: Competitive phase5 independent 128-ISMCTS positive-mutation holdouts
+on:
+  push:
+    branches: ['research/competitive-agent-benchmark-v1-2026-11-23']
+    paths: ['data/launch_phase5_independent_holdouts.txt']
+permissions:
+  contents: read
+  actions: read
+jobs:
+  preregister_holdout_shortlist:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 14
+    outputs:
+      matrix: ${{ steps.selection.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check independent deck selection and holdout scripts
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/select_wave2_holdouts.py scripts/competitive_wave2_holdout.py
+          python3 -m unittest discover -s scripts -p 'test_select_wave2_holdouts.py' -v
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45255031902
+          github-token: ${{ github.token }}
+          name: competitive-58-wave2-eight-proposal-exploratory-fitness
+          path: results/wave2_screen
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45233936357
+          github-token: ${{ github.token }}
+          name: competitive-all58-unvalidated-2320-proposals
+          path: results/proposals
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45181493632
+          github-token: ${{ github.token }}
+          name: expanded-optimized-58-independent-radiance-bo3
+          path: results/selected
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45208732588
+          github-token: ${{ github.token }}
+          name: all-58-optimized-head-to-head-rankings-and-matchups
+          path: results/ranked
+      - name: Preregister top positive exploratory improvements plus elite Worlds candidates
+        id: selection
+        run: |
+          set -euo pipefail
+          python3 scripts/select_wave2_holdouts.py \
+            --selected results/selected \
+            --proposals results/proposals \
+            --ranked results/ranked/all_58_ranked.json \
+            --screening results/wave2_screen/all58_candidate_screening.json \
+            --raw results/wave2_screen/raw_by_legend.json \
+            --output results/wave2_holdout_selection/selection.json \
+            --top-k 8
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          from pathlib import Path
+          d=json.loads(Path('results/wave2_holdout_selection/selection.json').read_text())
+          n=len(d['candidates'])
+          assert 1<=n<=13, 'No positive candidate or unexpectedly large family'
+          print('matrix='+json.dumps({'include':[{'index':i} for i in range(n)]},separators=(',',':')))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: phase5-preregistered-128-holdout-selection
+          path: results/wave2_holdout_selection/selection.json
+          retention-days: 30
+  actual-independent-128-agent-matches:
+    needs: preregister_holdout_shortlist
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.preregister_holdout_shortlist.outputs.matrix) }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 85
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: phase5-preregistered-128-holdout-selection
+          path: results/holdout_selection
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45233936357
+          github-token: ${{ github.token }}
+          name: competitive-all58-unvalidated-2320-proposals
+          path: results/proposals
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45181493632
+          github-token: ${{ github.token }}
+          name: expanded-optimized-58-independent-radiance-bo3
+          path: results/selected
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45208732588
+          github-token: ${{ github.token }}
+          name: all-58-optimized-head-to-head-rankings-and-matchups
+          path: results/ranked
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45244227502
+          github-token: ${{ github.token }}
+          name: competitive-rule407-verified-engine-binary
+          path: engine_build
+      - name: Verify C++ runtime with 167 Radiance and 407 start-policy patch
+        timeout-minutes: 12
+        run: |
+          set -euo pipefail
+          if ! sudo env DEBIAN_FRONTEND=noninteractive timeout -k 10s 55s apt-get -o Acquire::Retries=0 update -qq; then
+            echo '::warning::using cached package indexes'
+          fi
+          sudo env DEBIAN_FRONTEND=noninteractive timeout 360s apt-get -o Acquire::Retries=2 install -y -qq --no-install-recommends libboost-program-options1.83.0 libboost-filesystem1.83.0 libboost-system1.83.0 libboost-context1.83.0
+          chmod +x engine_build/riftbound
+          if ldd engine_build/riftbound | grep -q 'not found'; then exit 1; fi
+      - name: Real BO3 original versus mutated, six unseen elite opponents, both seats
+        timeout-minutes: 68
+        run: |
+          python3 -u scripts/competitive_wave2_holdout.py \
+            --selection results/holdout_selection/selection.json \
+            --selected results/selected \
+            --proposals results/proposals \
+            --ranked results/ranked/all_58_ranked.json \
+            --engine engine_build/riftbound \
+            --output results/phase5_holdout/${{ matrix.index }} \
+            --index ${{ matrix.index }} \
+            --agent ismcts:sims=128 \
+            --workers 3 --repetitions 1 --timeout 240 \
+            --seed 202611251505
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase5-128-holdout-${{ matrix.index }}
+          path: results/phase5_holdout/${{ matrix.index }}/
+          retention-days: 30
+          if-no-files-found: warn
+  verify-entire-hypothesis-family:
+    needs: actual-independent-128-agent-matches
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: phase5-preregistered-128-holdout-selection
+          path: results/holdout_selection
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: phase5-128-holdout-*
+          path: results/shards
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45233936357
+          github-token: ${{ github.token }}
+          name: competitive-all58-unvalidated-2320-proposals
+          path: results/proposals
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45181493632
+          github-token: ${{ github.token }}
+          name: expanded-optimized-58-independent-radiance-bo3
+          path: results/selected
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45208732588
+          github-token: ${{ github.token }}
+          name: all-58-optimized-head-to-head-rankings-and-matchups
+          path: results/ranked
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45244227502
+          github-token: ${{ github.token }}
+          name: competitive-rule407-verified-engine-binary
+          path: engine_build
+      - name: Recompute Holm-adjusted holdout decisions, never auto-overwrite registered source
+        run: |
+          python3 scripts/competitive_wave2_holdout.py --aggregate \
+            --selection results/holdout_selection/selection.json \
+            --selected results/selected \
+            --proposals results/proposals \
+            --ranked results/ranked/all_58_ranked.json \
+            --engine engine_build/riftbound \
+            --input results/shards \
+            --output results/phase5_decisions \
+            --agent ismcts:sims=128 --repetitions 1 \
+            --seed 202611251505
+      - uses: actions/upload-artifact@v4
+        with:
+          name: competitive-phase5-frozen-all58-mutant-strong-agent-holdouts
+          path: results/phase5_decisions/
+          retention-days: 30

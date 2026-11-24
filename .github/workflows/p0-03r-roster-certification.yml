@@ -1,0 +1,67 @@
+name: P0-03R guarded all-legend native certification
+on:
+  push:
+    branches: ['feature/p0-03r-roster-certification']
+    paths:
+      - 'scripts/format_roster_v2.py'
+      - 'scripts/test_format_roster_v2.py'
+      - 'scripts/run_verified_match.py'
+      - 'scripts/check_verified_match_cli.py'
+      - '.github/workflows/p0-03r-roster-certification.yml'
+permissions:
+  contents: read
+  actions: read
+jobs:
+  roster:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - name: Targeted unit tests
+        run: |
+          python3 -m unittest discover -s scripts -p 'test_format_gateway.py' -v
+          python3 -m unittest discover -s scripts -p 'test_format_match_v2.py' -v
+          python3 -m unittest discover -s scripts -p 'test_format_roster_v2.py' -v
+          python3 scripts/run_verified_match.py --help
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45282108093
+          github-token: ${{ github.token }}
+          name: competitive-guidebot-rule407-verified-engine-binary
+          path: results/p003rroster/engine
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45181493632
+          github-token: ${{ github.token }}
+          name: expanded-optimized-58-independent-radiance-bo3
+          path: results/p003rroster/selected
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45306837115
+          github-token: ${{ github.token }}
+          name: p0-03r-native-receipts
+          path: results/p003rroster/prior
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45307239080
+          github-token: ${{ github.token }}
+          name: p0-03r-guarded-roster
+          path: results/p003rroster/original
+      - name: Recheck original 58 native receipts using corrected coverage gate
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends libboost-context1.83.0 libboost-program-options1.83.0
+          chmod +x results/p003rroster/engine/riftbound
+          python3 scripts/format_roster_v2.py --engine results/p003rroster/engine/riftbound --registry results/p003rroster/engine/registry.json --profile rulesets/standard-global-2026-11-23.json --selected results/p003rroster/selected/selected_decks --prior results/p003rroster/prior/report.json --output results/p003rroster/report.json --recheck results/p003rroster/original/report.json
+      - name: Guarded CLI native and negative controls
+        run: |
+          python3 scripts/check_verified_match_cli.py --engine results/p003rroster/engine/riftbound --registry results/p003rroster/engine/registry.json --profile rulesets/standard-global-2026-11-23.json --selected results/p003rroster/selected/selected_decks --prior results/p003rroster/prior/report.json --output results/p003rroster/cli_report.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p0-03r-guarded-roster-recheck
+          path: |
+            results/p003rroster/report.json
+            results/p003rroster/cli_report.json
+          if-no-files-found: warn
+          retention-days: 30

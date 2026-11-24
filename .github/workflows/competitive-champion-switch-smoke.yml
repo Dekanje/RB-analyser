@@ -1,0 +1,72 @@
+name: Competitive alternate Chosen Champion real-engine BO3 (one-shot)
+on:
+  push:
+    branches: ['research/competitive-agent-benchmark-v1-2026-11-23']
+    paths: ['.github/workflows/competitive-champion-switch-smoke.yml']
+permissions:
+  contents: read
+  actions: read
+jobs:
+  switch-champion-between-games:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - name: Confirm rules and policy invariants
+        run: |
+          python3 -m unittest discover -s scripts -p 'test_tournament_bo3_policy.py' -v
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45181493632
+          github-token: ${{ github.token }}
+          name: expanded-optimized-58-independent-radiance-bo3
+          path: results/selected
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45205260187
+          github-token: ${{ github.token }}
+          name: repaired-fullfield-engine-1123
+          path: engine_build
+      - name: Install real compiled engine runtime
+        timeout-minutes: 12
+        run: |
+          set -euo pipefail
+          if ! sudo env DEBIAN_FRONTEND=noninteractive timeout -k 10s 55s apt-get -o Acquire::Retries=0 update -qq; then
+            echo '::warning::using cached package indexes'
+          fi
+          sudo env DEBIAN_FRONTEND=noninteractive timeout 360s apt-get -o Acquire::Retries=2 install -y -qq --no-install-recommends libboost-program-options1.83.0 libboost-filesystem1.83.0 libboost-system1.83.0 libboost-context1.83.0
+          chmod +x engine_build/riftbound
+          if ldd engine_build/riftbound | grep -q 'not found'; then exit 1; fi
+      - name: Execute genuine alternate Chosen Champion changes in full BO3
+        timeout-minutes: 18
+        run: |
+          python3 -u scripts/tournament_bo3_policy.py \
+            --engine engine_build/riftbound \
+            --registry engine_build/registry.json \
+            --deck1 results/selected/selected_decks/kennen_heart_of_the_tempest.txt \
+            --deck2 results/selected/selected_decks/miss_fortune_bounty_hunter.txt \
+            --policy data/competitive_champion_switch_smoke.json \
+            --agent ismcts:sims=24 --seed 202611240303 \
+            --timeout 180 --output results/champion_switch/actual_engine.json
+      - name: Verify native engine played both eligible swapped champions after game one
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p=json.loads(Path('results/champion_switch/actual_engine.json').read_text())
+          assert p['status']=='COMPLETE_SIDEBOARD_AWARE_APPROXIMATION'
+          assert p['sideboarding_applied']
+          assert len(p['games'])>=2
+          assert p['games'][0]['chosen_champions']==['Kennen, Storm of Shuriken','Miss Fortune, Buccaneer']
+          assert p['games'][1]['chosen_champions']==['Kennen, Keeper of Balance','Miss Fortune, Captain']
+          assert p['games'][1]['active_deck_sha256']!=p['games'][0]['active_deck_sha256']
+          assert all(x['engine_status']=='complete' for x in p['games'])
+          print('CHAMPION_SWITCH_ENGINE_PASS',p['score'])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: competitive-alternate-champion-engine-receipt
+          path: results/champion_switch/
+          if-no-files-found: warn
+          retention-days: 30

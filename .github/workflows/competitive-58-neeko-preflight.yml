@@ -1,0 +1,24 @@
+name: Competitive registered Neeko and all-58 candidate integrity preflight
+on:
+  push:
+    branches: ['research/competitive-agent-benchmark-v1-2026-11-23']
+    paths:
+      - '.github/workflows/competitive-58-neeko-preflight.yml'
+      - 'scripts/screen_evolution.py'
+      - 'scripts/test_screen_evolution.py'
+      - 'scripts/competitive_all58_candidates.py'
+      - 'scripts/test_competitive_all58_candidates.py'
+permissions:
+  contents: read
+jobs:
+  registered-neeko-provenance:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile and test special Legends, immutable registered sections and 58-shard scoring
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/screen_evolution.py scripts/competitive_all58_candidates.py scripts/test_competitive_all58_candidates.py scripts/test_screen_evolution.py
+          python3 -m unittest discover -s scripts -p 'test_screen_evolution.py' -v
+          python3 -m unittest discover -s scripts -p 'test_competitive_all58_candidates.py' -v

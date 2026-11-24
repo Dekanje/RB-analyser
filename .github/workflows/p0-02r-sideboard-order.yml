@@ -1,0 +1,56 @@
+name: P0-02R ordered sideboard native regression
+on:
+  push:
+    branches: ['fix/p0-02r-sideboard-order']
+    paths:
+      - '.github/workflows/p0-02r-sideboard-order.yml'
+      - 'scripts/sideboard_order_v2.py'
+      - 'scripts/test_sideboard_order_v2.py'
+      - 'scripts/native_sideboard_order_v2.py'
+permissions:
+  contents: read
+  actions: read
+jobs:
+  regression:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unit tests
+        run: python3 -m unittest discover -s scripts -p 'test_sideboard_order_v2.py' -v
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45181493632
+          github-token: ${{ github.token }}
+          name: expanded-optimized-58-independent-radiance-bo3
+          path: results/p002r/selected
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45259246337
+          github-token: ${{ github.token }}
+          name: worlds-all58-registered-structure-legal-unvalidated-variants
+          path: results/p002r/structural
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45282108093
+          github-token: ${{ github.token }}
+          name: competitive-guidebot-rule407-verified-engine-binary
+          path: results/p002r/engine
+      - name: Repair all 174 registrations without modifying originals
+        run: |
+          python3 scripts/sideboard_order_v2.py --selected results/p002r/selected/selected_decks --structural results/p002r/structural --output results/p002r/corrected
+      - name: Native controlled replay on pinned engine
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends libboost-context1.83.0 libboost-program-options1.83.0
+          chmod +x results/p002r/engine/riftbound
+          python3 scripts/native_sideboard_order_v2.py --engine results/p002r/engine/riftbound --registry results/p002r/engine/registry.json --selected results/p002r/selected/selected_decks --structural results/p002r/structural --corrected results/p002r/corrected --output results/p002r/native_receipt.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p0-02r-ordered-registration-regression
+          path: |
+            results/p002r/corrected/manifest_v2.json
+            results/p002r/native_receipt.json
+          if-no-files-found: warn
+          retention-days: 30

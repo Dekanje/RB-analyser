@@ -1,0 +1,76 @@
+{
+  "schema": 1,
+  "status": "PREREGISTERED_INDEPENDENT_HOLDOUT_NO_ADOPTION",
+  "prior_screen_run": 45232324527,
+  "prior_proposals_run": 45223997723,
+  "prior_ranked_roster_run": 45208732588,
+  "selection_rule": "Include Draven/RekSai/Miss Fortune/LeBlanc leading contenders, plus eight largest positive exploratory changes among remaining 58 Legends; no candidate is automatically adopted",
+  "training_opponents": "First three frozen ranked opponents excluding the target Legend",
+  "holdout_opponents": "Next six frozen ranked opponents excluding the target Legend",
+  "holdout_agent": "ismcts:sims=128",
+  "holdout_repetitions_per_seat": 2,
+  "hypothesis_family_size": 12,
+  "adjustment": "Holm familywise 5 percent over all 12 tested candidate hypotheses",
+  "candidates": [
+    {
+      "legend": "Draven, Glorious Executioner",
+      "candidate_index": 10,
+      "candidate_sha256": "d26e3e528e59f20b4d04d91426811b27fa2092940a13dd32ae9b2600f5a3241e"
+    },
+    {
+      "legend": "Rek'Sai, Void Burrower",
+      "candidate_index": 0,
+      "candidate_sha256": "b287823dc2b8be98cc84cbab45d5a7425b699ed4d9ed06cd0128d919adb1f037"
+    },
+    {
+      "legend": "Miss Fortune, Bounty Hunter",
+      "candidate_index": 0,
+      "candidate_sha256": "101a5e8441b3b7b4ee197685d0dd21b655af30ef48c1e4d0891d3a79dba0dca6"
+    },
+    {
+      "legend": "LeBlanc, Deceiver",
+      "candidate_index": 0,
+      "candidate_sha256": "4cc01a8c225e816c52ff5c246499fb2aaec02938d0566a323382649f63ae9ec8"
+    },
+    {
+      "legend": "Leona, Radiant Dawn",
+      "candidate_index": 0,
+      "candidate_sha256": "0ef3ebb7618393035cf772d9a8bb6ecba8123a28f1866fd60f1d55950fcb67ff"
+    },
+    {
+      "legend": "Riven, The Exile",
+      "candidate_index": 0,
+      "candidate_sha256": "113b1e588353dfe460c81184df802606e343fddfd02ea67cf087e9db51360057"
+    },
+    {
+      "legend": "Lucian, Purifier",
+      "candidate_index": 10,
+      "candidate_sha256": "c79552e36bb6fccbf8dc150123604117c52b5a91ef2a08553c90209cfc0e4216"
+    },
+    {
+      "legend": "Poppy, Keeper of the Hammer",
+      "candidate_index": 10,
+      "candidate_sha256": "4ec534439f3ee606cdc0ddc4ee8138e4f9f207fc7ed158d770940f66f5af6022"
+    },
+    {
+      "legend": "Ekko, Boy Who Shattered Time",
+      "candidate_index": 0,
+      "candidate_sha256": "da1d6c76f79cbf67641545057f3b0837ddf503deda9e72ed134e32d3b1a76574"
+    },
+    {
+      "legend": "K'Sante, Pride of Nazumah",
+      "candidate_index": 30,
+      "candidate_sha256": "0bc28647b16457465ec1c43353f81b3ccd0d07a7788550755b761afd920109c1"
+    },
+    {
+      "legend": "Lux, Lady of Luminosity",
+      "candidate_index": 20,
+      "candidate_sha256": "1e520c7486c1d63c8fb5accb876d3b6c3b69fcf7e2d9bccbf5d578750ea0e528"
+    },
+    {
+      "legend": "Orianna, Lady of Clockwork",
+      "candidate_index": 0,
+      "candidate_sha256": "f4bb83817987ad533e160f1b88113bcc197c213317f3ec9e8eabef46513f8ab2"
+    }
+  ]
+}

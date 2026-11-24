@@ -181,15 +181,29 @@ def benchmark(exe,deck1,deck2,seed,agent,timeout,env):
     except subprocess.TimeoutExpired:
         return dict(status='timeout',winner=None,seconds=round(time.monotonic()-start,3))
     hit=re.search(r'Game over:\s*winner\s*=\s*([012])',p.stdout)
-    status='complete' if p.returncode==0 and hit and int(hit.group(1)) in (1,2) else 'error'
+    forced = env.get('RIFTBOUND_FORCE_STARTING_PLAYER')
+    start_receipt = re.search(r'TOURNAMENT_FORCED_STARTING_PLAYER=([12])', p.stdout)
+    start_verified = (forced is None or (
+        start_receipt is not None and start_receipt.group(1) == forced
+    ))
+    status=('complete' if p.returncode==0 and hit and
+            int(hit.group(1)) in (1,2) and start_verified else 'error')
     detail = p.stderr[-1000:] if status=='error' else ''
+    if forced is not None and not start_verified:
+        detail = ('TOURNAMENT_STARTING_PLAYER_RECEIPT_MISMATCH '
+                  f'expected={forced!r} observed='
+                  f'{start_receipt.group(1) if start_receipt else None!r}; '
+                  f'stdout_tail={p.stdout[-400:]}')
     if status=='error' and not detail.strip():
         reason = (f'signal {-p.returncode}' if p.returncode<0
                   else f'exit {p.returncode}')
         detail = f'Engine exited with {reason}; no stderr; stdout_tail={p.stdout[-200:]}'
     return dict(status=status,winner=int(hit.group(1)) if hit else None,
                 seconds=round(time.monotonic()-start,3),
-                returncode=p.returncode,error=detail)
+                returncode=p.returncode,error=detail,
+                forced_start_verified=start_verified,
+                forced_starting_player=(int(start_receipt.group(1))
+                                       if start_receipt else None))
 
 def benchmark_bo3(exe,deck1,deck2,seed,agent,timeout,env):
     """Actual 2-of-3 fixed-deck series with alternating seats; no sideboard changes."""

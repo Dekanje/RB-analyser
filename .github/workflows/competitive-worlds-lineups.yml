@@ -1,0 +1,54 @@
+name: Competitive six-domain hypothetical Worlds lineup screening (one-shot)
+on:
+  push:
+    branches: ['research/competitive-agent-benchmark-v1-2026-11-23']
+    paths: ['.github/workflows/competitive-worlds-lineups.yml']
+permissions:
+  contents: read
+  actions: read
+jobs:
+  three-deck-six-domain-top-lineups:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test opponent weighting and six-domain construction
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/worlds_lineups.py scripts/test_worlds_lineups.py
+          python3 -m unittest discover -s scripts -p 'test_worlds_lineups.py' -v
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45181493632
+          github-token: ${{ github.token }}
+          name: expanded-optimized-58-independent-radiance-bo3
+          path: results/selected
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45205260187
+          github-token: ${{ github.token }}
+          name: repaired-fullfield-engine-1123
+          path: engine_build
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45222607317
+          github-token: ${{ github.token }}
+          name: elite-58-stronger-agent-rankings-and-evidence
+          path: results/elite_58
+      - name: Evaluate all legal disjoint-domain three-deck lineups using bootstrap
+        timeout-minutes: 8
+        run: |
+          set -euo pipefail
+          python3 scripts/worlds_lineups.py \
+            --field results/elite_58 \
+            --selected results/selected \
+            --registry engine_build/registry.json \
+            --output results/worlds_3_deck_lineups \
+            --bootstrap 500 --seed 202611240404
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: competitive-hypothetical-worlds-three-deck-lineup-rankings
+          path: results/worlds_3_deck_lineups/
+          if-no-files-found: warn
+          retention-days: 30

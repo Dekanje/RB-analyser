@@ -1,0 +1,128 @@
+name: Competitive independent 128-ISMCTS Draven-RekSai holdout (one-shot)
+on:
+  push:
+    branches: ['research/competitive-agent-benchmark-v1-2026-11-23']
+    paths: ['.github/workflows/competitive-independent-holdout.yml']
+permissions:
+  contents: read
+  actions: read
+jobs:
+  independent-holdout-qa:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile selected cards and test train-holdout split
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/evolution_holdout.py scripts/test_evolution_holdout.py
+          python3 -m unittest discover -s scripts -p 'test_evolution_holdout.py' -v
+  candidates-128-ismcts:
+    needs: independent-holdout-qa
+    strategy:
+      fail-fast: false
+      matrix:
+        legend_index: [0,1]
+        candidate_position: [0,1,2,3,4]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 85
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45181493632
+          github-token: ${{ github.token }}
+          name: expanded-optimized-58-independent-radiance-bo3
+          path: results/selected
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45223997723
+          github-token: ${{ github.token }}
+          name: competitive-all58-unvalidated-2320-proposals
+          path: results/proposals
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45208732588
+          github-token: ${{ github.token }}
+          name: all-58-optimized-head-to-head-rankings-and-matchups
+          path: results/previous
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45205260187
+          github-token: ${{ github.token }}
+          name: repaired-fullfield-engine-1123
+          path: engine_build
+      - name: Install exactly pinned compiled engine dependencies
+        timeout-minutes: 12
+        run: |
+          set -euo pipefail
+          if ! sudo env DEBIAN_FRONTEND=noninteractive timeout -k 10s 55s apt-get -o Acquire::Retries=0 update -qq; then
+            echo '::warning::using cached package indexes'
+          fi
+          sudo env DEBIAN_FRONTEND=noninteractive timeout 360s apt-get -o Acquire::Retries=2 install -y -qq --no-install-recommends libboost-program-options1.83.0 libboost-filesystem1.83.0 libboost-system1.83.0 libboost-context1.83.0
+          chmod +x engine_build/riftbound
+          test -f data/competitive_pilot_holdout_selection_2026-11-23.json
+          test -f results/proposals/manifest.json
+          test -f results/previous/all_58_ranked.json
+          if ldd engine_build/riftbound | grep -q 'not found'; then exit 1; fi
+      - name: Compare modified list vs immutable baseline on six independent stronger-agent opponents
+        timeout-minutes: 68
+        run: |
+          python3 -u scripts/evolution_holdout.py \
+            --selected results/selected --proposals results/proposals \
+            --ranked results/previous/all_58_ranked.json \
+            --selection data/competitive_pilot_holdout_selection_2026-11-23.json \
+            --engine engine_build/riftbound \
+            --output results/holdout/${{ matrix.legend_index }}-${{ matrix.candidate_position }} \
+            --legend-index ${{ matrix.legend_index }} \
+            --candidate-position ${{ matrix.candidate_position }} \
+            --repetitions 1 --agent ismcts:sims=128 \
+            --timeout 180 --workers 3 --seed 202611241505
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: competitive-holdout-${{ matrix.legend_index }}-${{ matrix.candidate_position }}
+          path: results/holdout/${{ matrix.legend_index }}-${{ matrix.candidate_position }}/
+          retention-days: 30
+          if-no-files-found: warn
+  release-corrected-holdout-decision:
+    needs: candidates-128-ismcts
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: competitive-holdout-*
+          path: results/shards
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45181493632
+          github-token: ${{ github.token }}
+          name: expanded-optimized-58-independent-radiance-bo3
+          path: results/selected
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45223997723
+          github-token: ${{ github.token }}
+          name: competitive-all58-unvalidated-2320-proposals
+          path: results/proposals
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45208732588
+          github-token: ${{ github.token }}
+          name: all-58-optimized-head-to-head-rankings-and-matchups
+          path: results/previous
+      - name: Reject any missing or altered heldout game then adjust ten candidate hypothesis tests
+        run: |
+          python3 scripts/evolution_holdout.py --aggregate \
+            --selected results/selected --proposals results/proposals \
+            --ranked results/previous/all_58_ranked.json \
+            --selection data/competitive_pilot_holdout_selection_2026-11-23.json \
+            --input results/shards --output results/competitive_128_holdout \
+            --repetitions 1 --agent ismcts:sims=128 --seed 202611241505
+      - uses: actions/upload-artifact@v4
+        with:
+          name: competitive-independent-holdout-confirmation-decisions
+          path: results/competitive_128_holdout/
+          retention-days: 30

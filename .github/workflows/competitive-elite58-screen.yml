@@ -1,0 +1,111 @@
+name: Competitive 58-vs-elite-10 128-ISMCTS BO3 screening (one-shot)
+on:
+  push:
+    branches: ['research/competitive-agent-benchmark-v1-2026-11-23']
+    paths: ['.github/workflows/competitive-elite58-screen.yml']
+permissions:
+  contents: read
+  actions: read
+jobs:
+  qa-schedule-and-aggregation:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - name: No-engine strict coverage/fail-closed tests
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/elite_field_58.py scripts/test_elite_field_58.py
+          python3 -m unittest discover -s scripts -p 'test_elite_field_58.py' -v
+  target-vs-all-elite:
+    needs: qa-schedule-and-aggregation
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45181493632
+          github-token: ${{ github.token }}
+          name: expanded-optimized-58-independent-radiance-bo3
+          path: results/selected
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45208732588
+          github-token: ${{ github.token }}
+          name: all-58-optimized-head-to-head-rankings-and-matchups
+          path: results/previous
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45205260187
+          github-token: ${{ github.token }}
+          name: repaired-fullfield-engine-1123
+          path: engine_build
+      - name: Install engine runtime and verify source files
+        timeout-minutes: 12
+        run: |
+          set -euo pipefail
+          if ! sudo env DEBIAN_FRONTEND=noninteractive timeout -k 10s 55s apt-get -o Acquire::Retries=0 update -qq; then
+            echo '::warning::using cached package indexes'
+          fi
+          sudo env DEBIAN_FRONTEND=noninteractive timeout 360s apt-get -o Acquire::Retries=2 install -y -qq --no-install-recommends libboost-program-options1.83.0 libboost-filesystem1.83.0 libboost-system1.83.0 libboost-context1.83.0
+          chmod +x engine_build/riftbound
+          test -f results/previous/all_58_ranked.json
+          test "$(find results/selected/selected_decks -maxdepth 1 -name '*.txt' | wc -l)" -eq 58
+          if ldd engine_build/riftbound | grep -q 'not found'; then exit 1; fi
+      - name: Screen each assigned independent Legend vs ten elite anchors, paired both seats
+        timeout-minutes: 58
+        run: |
+          python3 -u scripts/elite_field_58.py \
+            --selected results/selected \
+            --ranked results/previous/all_58_ranked.json \
+            --engine engine_build/riftbound \
+            --output results/elite-58/shard-${{ matrix.shard }} \
+            --anchors 10 --shards 29 --shard ${{ matrix.shard }} \
+            --repetitions 1 --workers 2 \
+            --agent ismcts:sims=128 --timeout 240 --seed 202611240102
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: elite-58-shard-${{ matrix.shard }}
+          path: results/elite-58/shard-${{ matrix.shard }}/
+          if-no-files-found: warn
+          retention-days: 30
+  aggregate-full-58-elite-screen:
+    needs: target-vs-all-elite
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: elite-58-shard-*
+          path: results/shards
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45181493632
+          github-token: ${{ github.token }}
+          name: expanded-optimized-58-independent-radiance-bo3
+          path: results/selected
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45208732588
+          github-token: ${{ github.token }}
+          name: all-58-optimized-head-to-head-rankings-and-matchups
+          path: results/previous
+      - name: Require all 1,140 real BO3 series, fixed SHA and no failures
+        run: |
+          python3 scripts/elite_field_58.py --aggregate \
+            --selected results/selected --ranked results/previous/all_58_ranked.json \
+            --input results/shards --output results/elite_58_128 \
+            --anchors 10 --shards 29 --repetitions 1 \
+            --agent ismcts:sims=128 --seed 202611240102
+      - uses: actions/upload-artifact@v4
+        with:
+          name: elite-58-stronger-agent-rankings-and-evidence
+          path: results/elite_58_128/
+          retention-days: 30

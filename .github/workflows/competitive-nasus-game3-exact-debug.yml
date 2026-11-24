@@ -1,0 +1,91 @@
+name: Diagnose exact Nasus Piltovan Guidebot versus RekSai 407 engine Game3 seed 637055508
+on:
+  push:
+    branches: ['research/competitive-agent-benchmark-v1-2026-11-23']
+    paths: ['.github/workflows/competitive-nasus-game3-exact-debug.yml']
+permissions:
+  contents: read
+  actions: read
+jobs:
+  exact-source-native-game3-no-rank:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 23
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45259246337
+          github-token: ${{ github.token }}
+          name: worlds-all58-registered-structure-legal-unvalidated-variants
+          path: results/structure
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45181493632
+          github-token: ${{ github.token }}
+          name: expanded-optimized-58-independent-radiance-bo3
+          path: results/selected
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45244227502
+          github-token: ${{ github.token }}
+          name: competitive-rule407-verified-engine-binary
+          path: engine_build
+      - name: Install accepted original C++ simulator runtime
+        timeout-minutes: 12
+        run: |
+          set -euo pipefail
+          if ! sudo env DEBIAN_FRONTEND=noninteractive timeout -k 10s 55s apt-get -o Acquire::Retries=0 update -qq; then
+            echo '::warning::using cached indexes'
+          fi
+          sudo env DEBIAN_FRONTEND=noninteractive timeout 360s apt-get -o Acquire::Retries=2 install -y -qq --no-install-recommends libboost-program-options1.83.0 libboost-filesystem1.83.0 libboost-system1.83.0 libboost-context1.83.0
+          chmod +x engine_build/riftbound
+      - name: Reconstruct exactly failed G3 deck from frozen registered sideboard and policy
+        run: |
+          set -euo pipefail
+          mkdir -p results/diagnostics
+          python3 - <<'PY'
+          import hashlib,json,sys
+          from pathlib import Path
+          sys.path.insert(0,str(Path('scripts').resolve()))
+          from sideboard_deck import parse_deck,render_deck
+          from tournament_bo3_policy import transition
+          from optimize_58 import registry
+          original=Path('results/structure/nasus_curator_of_the_sands/structural_008.txt')
+          assert hashlib.sha256(original.read_bytes()).hexdigest()=='42faef389e09f80b3a1eb474106da70cab388552cfef2c944e2909471491b163'
+          byname=registry(Path('engine_build/registry.json'))
+          deck=parse_deck(original.read_text())
+          new=transition(deck,{'swaps':[{'main_out':'Bellows Breath','side_in':'Piltovan Guidebot','copies':1}]},byname,game_no=3)
+          p=Path('results/diagnostics/active_nasus_game3.txt')
+          p.write_text(render_deck(new))
+          digest=hashlib.sha256(p.read_bytes()).hexdigest()
+          assert digest=='bffdf8134695f5b7fdf7bffc95c7b42c2cbd57278f17a157d7552912477fab0f',digest
+          opponent=Path('results/selected/selected_decks/rek_sai_void_burrower.txt')
+          assert hashlib.sha256(opponent.read_bytes()).hexdigest()=='a2b11056350d63fca0bcd7783319aa2d34a6f0f305598e7cb567e66e465aa9f6'
+          print('EXACT_FAILED_GAME3_SOURCE_SHA_PASS',digest)
+          PY
+      - name: Replay exact compiled-game seed and actual starting player with TRACE stderr and honest exit
+        timeout-minutes: 9
+        run: |
+          set -u
+          timeout -k 10s 300s env RIFTBOUND_FORCE_STARTING_PLAYER=1 RIFTBOUND_TRACE_STDERR=1 \
+            engine_build/riftbound \
+            --deck1 results/diagnostics/active_nasus_game3.txt \
+            --deck2 results/selected/selected_decks/rek_sai_void_burrower.txt \
+            --agent1 ismcts:sims=24 --agent2 ismcts:sims=24 \
+            --game-mode match --seed 637055508 --web off --render-html off \
+            > results/diagnostics/real_cpp_engine.log 2>&1
+          result=$?
+          printf '%s\n' "$result" > results/diagnostics/native_exit_code.txt
+          echo "NATIVE_REPLAY_EXIT_STATUS=$result"
+          echo '=== Exact trace tail ==='
+          tail -n 140 results/diagnostics/real_cpp_engine.log
+          # This is diagnostic ONLY. An engine exception stays a failing
+          # actual game in the parent fitness study; no invented result.
+          exit 0
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: nasus-guidebot-reksai-exact-seed-native-trace
+          path: results/diagnostics/
+          retention-days: 30
+          if-no-files-found: warn

@@ -39,6 +39,65 @@ TEST_F(RadianceBatch9Test, GuidebotMayDeclineChangingItsBaseMight) {
     playThroughEngine(bigger,&agent);
     EXPECT_EQ(state.getObject(bot).baseMight(),3);
 }
+TEST_F(RadianceBatch9Test, GuidebotDepartedBeforeFinalizationStillClosesChoices) {
+    // Regress the native 407 Nasus v Rek'Sai Game 3 crash: Rocket Barrage
+    // kills a Guidebot while its earlier WhenYouPlayACard trigger is pending.
+    // An optional trigger that cannot act must record "nothing to decide"
+    // and/or reach the end-of-choices marker, NEVER return early.
+    auto bot=addUnit(P1,CardDefId{1025},3,0);
+    withEngine([&](GameEngine& engine) {
+        auto& s=engine.mutableState();
+        ASSERT_TRUE(s.objectExists(bot));
+        s.getObject(bot).location.reset(); // source left the board
+        ChainItem pending;
+        pending.id=s.chain.allocateId();
+        pending.source=bot;
+        pending.card_def_id=CardDefId{1025};
+        pending.controller=P1;
+        pending.is_ability=true;
+        pending.is_activated_ability=false;
+        pending.fired_trigger=TriggerType::WhenYouPlayACard;
+        pending.finalizing=true;
+        pending.triggering_subject=kInvalidId;
+        s.chain.resuming=pending;
+        // The registry's read-only lookup exposes a const Card*, but this
+        // isolated trigger regression must invoke the mutable virtual callback.
+        // Registered card instances are allocated as mutable concrete Cards.
+        auto* printed=const_cast<Card*>(card_registry.get(CardDefId{1025}));
+        ASSERT_NE(printed,nullptr);
+        CardContext ctx{s,events,engine.testHook_executor(),P1,bot};
+        ctx.registry=&card_registry;
+        printed->onTrigger(ctx,{});
+        ASSERT_TRUE(s.chain.resuming.has_value());
+        EXPECT_EQ(s.chain.resuming->may_answer,0);
+        EXPECT_NE(s.chain.resuming->finalize_checked & 64,0)
+            << "A Guidebot with no location must still finish its choices";
+        s.chain.resuming.reset();
+    });
+}
+TEST_F(RadianceBatch9Test, GuidebotWithNoSourceObjectFinalizesWithoutPrompt) {
+    withEngine([&](GameEngine& engine) {
+        auto& s=engine.mutableState();
+        ChainItem pending;
+        pending.id=s.chain.allocateId();
+        pending.source=kInvalidId;
+        pending.card_def_id=CardDefId{1025};
+        pending.controller=P1;
+        pending.is_ability=true;
+        pending.fired_trigger=TriggerType::WhenYouPlayACard;
+        pending.finalizing=true;
+        pending.triggering_subject=kInvalidId;
+        s.chain.resuming=pending;
+        auto* printed=const_cast<Card*>(card_registry.get(CardDefId{1025}));
+        ASSERT_NE(printed,nullptr);
+        CardContext ctx{s,events,engine.testHook_executor(),P1,kInvalidId};
+        printed->onTrigger(ctx,{});
+        ASSERT_TRUE(s.chain.resuming.has_value());
+        EXPECT_EQ(s.chain.resuming->may_answer,0);
+        EXPECT_NE(s.chain.resuming->finalize_checked & 64,0);
+        s.chain.resuming.reset();
+    });
+}
 TEST_F(RadianceBatch9Test, MournfulSpiritDeathknellCanKillEnemyUnitAtItsLocation) {
     auto spirit=addUnit(P1,CardDefId{1026},1,0);
     auto enemy=addUnit(P2,kInvalidId,3,0);

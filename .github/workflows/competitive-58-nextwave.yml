@@ -1,0 +1,179 @@
+name: Competitive phase5 all-58 eight-candidate Neeko-legal paired discovery
+on:
+  push:
+    branches: ['research/competitive-agent-benchmark-v1-2026-11-23']
+    paths: ['data/launch_all58_wave2_eight_candidates.txt']
+permissions:
+  contents: read
+  actions: read
+jobs:
+  pin-and-validate-all58-candidates:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate code and protocol preflight
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/screen_evolution.py scripts/competitive_all58_candidates.py
+          python3 -m unittest discover -s scripts -p 'test_screen_evolution.py' -v
+          python3 -m unittest discover -s scripts -p 'test_competitive_all58_candidates.py' -v
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45233936357
+          github-token: ${{ github.token }}
+          name: competitive-all58-unvalidated-2320-proposals
+          path: results/proposals
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45181493632
+          github-token: ${{ github.token }}
+          name: expanded-optimized-58-independent-radiance-bo3
+          path: results/selected
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45208732588
+          github-token: ${{ github.token }}
+          name: all-58-optimized-head-to-head-rankings-and-matchups
+          path: results/previous
+      - name: Prove exactly 2,320 source-hashed files and every Neeko registration
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          from scripts.screen_evolution import load_search_sources,validate_candidate_text
+          from scripts.competitive_all58_candidates import has_valid_neeko_registration
+          original,manifest,ranked=load_search_sources(
+              Path('results/selected'),Path('results/proposals'),
+              Path('results/previous/all_58_ranked.json'),10)
+          verified=0
+          special=0
+          for name in sorted(original):
+              for c in manifest[name]['candidates']:
+                  file=Path('results/proposals')/c['path']
+                  validate_candidate_text(original[name],file,c['sha256'])
+                  if not has_valid_neeko_registration(c,file):
+                      raise RuntimeError('Missing special Neeko registration')
+                  special+=bool(c.get('neeko_additional_legends'))
+                  verified+=1
+          assert verified==2320
+          assert special>=10
+          print('ALL_58_REGISTERED_NEEKO_PROPOSALS_PASS',verified,special)
+          PY
+  evaluate-independent-mutants:
+    needs: pin-and-validate-all58-candidates
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 85
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45233936357
+          github-token: ${{ github.token }}
+          name: competitive-all58-unvalidated-2320-proposals
+          path: results/proposals
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45181493632
+          github-token: ${{ github.token }}
+          name: expanded-optimized-58-independent-radiance-bo3
+          path: results/selected
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45208732588
+          github-token: ${{ github.token }}
+          name: all-58-optimized-head-to-head-rankings-and-matchups
+          path: results/previous
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45244227502
+          github-token: ${{ github.token }}
+          name: competitive-rule407-verified-engine-binary
+          path: engine_build
+      - name: Install pinned native C++ runtime
+        timeout-minutes: 12
+        run: |
+          set -euo pipefail
+          if ! sudo env DEBIAN_FRONTEND=noninteractive timeout -k 10s 55s apt-get -o Acquire::Retries=0 update -qq; then
+            echo '::warning::using cached package indexes'
+          fi
+          sudo env DEBIAN_FRONTEND=noninteractive timeout 360s apt-get -o Acquire::Retries=2 install -y -qq --no-install-recommends libboost-program-options1.83.0 libboost-filesystem1.83.0 libboost-system1.83.0 libboost-context1.83.0
+          chmod +x engine_build/riftbound
+          if ldd engine_build/riftbound | grep -q 'not found'; then exit 1; fi
+      - name: Paired low-budget fitness for eight structurally distinct proposals per Legend
+        timeout-minutes: 68
+        run: |
+          python3 -u scripts/competitive_all58_candidates.py \
+            --selected results/selected \
+            --proposals results/proposals \
+            --ranked results/previous/all_58_ranked.json \
+            --engine engine_build/riftbound \
+            --output results/all58-mutation/${{ matrix.shard }} \
+            --shards 29 --shard ${{ matrix.shard }} \
+            --candidates 8 --opponents 3 --workers 2 \
+            --agent ismcts:sims=24 --timeout 150 --seed 202611250800
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: all58-mutation-${{ matrix.shard }}
+          path: results/all58-mutation/${{ matrix.shard }}/
+          retention-days: 30
+          if-no-files-found: warn
+  aggregate-all58-eight-mutants:
+    needs: evaluate-independent-mutants
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: all58-mutation-*
+          path: results/shards
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45233936357
+          github-token: ${{ github.token }}
+          name: competitive-all58-unvalidated-2320-proposals
+          path: results/proposals
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45181493632
+          github-token: ${{ github.token }}
+          name: expanded-optimized-58-independent-radiance-bo3
+          path: results/selected
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45208732588
+          github-token: ${{ github.token }}
+          name: all-58-optimized-head-to-head-rankings-and-matchups
+          path: results/previous
+      - name: Recompute 58 x 8 paired comparisons, reject unsupported or missing outcomes
+        run: |
+          python3 scripts/competitive_all58_candidates.py --aggregate \
+            --selected results/selected \
+            --proposals results/proposals \
+            --ranked results/previous/all_58_ranked.json \
+            --input results/shards --output results/full58_wave2 \
+            --shards 29 --candidates 8 --opponents 3 \
+            --agent ismcts:sims=24 --seed 202611250800
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('results/full58_wave2/all58_candidate_screening.json')
+          x=json.loads(p.read_text())
+          assert x['legends']==58
+          assert x['total_candidate_slots']==464
+          assert x['every_candidate_attempt_accounted_for']
+          assert x['all_58_baselines_retained']
+          assert not x['any_confirmed']
+          assert x['sideboarding'] is False
+          print('WAVE2_FROZEN_58_CANDIDATES_QA_PASS',x['completed_candidate_comparisons'],x['engine_incomplete_excluded'])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: competitive-58-wave2-eight-proposal-exploratory-fitness
+          path: results/full58_wave2/
+          retention-days: 30

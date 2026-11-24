@@ -1,0 +1,112 @@
+name: Competitive top-10 128-ISMCTS mirrored BO3 screening (one-shot)
+on:
+  push:
+    branches: ['research/competitive-agent-benchmark-v1-2026-11-23']
+    paths: ['.github/workflows/competitive-top10-strong-screen.yml']
+permissions:
+  contents: read
+  actions: read
+jobs:
+  test-topk-provenance:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fail-closed harness unit tests
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/competitive_topk.py scripts/test_competitive_topk.py
+          python3 -m unittest discover -s scripts -p 'test_competitive_topk.py' -v
+  stronger-agent-pairings:
+    needs: test-topk-provenance
+    runs-on: ubuntu-24.04
+    timeout-minutes: 70
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0,1,2,3,4,5,6,7,8,9]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download immutable 58 candidate decks and exploratory ranking
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 45181493632
+          github-token: ${{ github.token }}
+          name: expanded-optimized-58-independent-radiance-bo3
+          path: results/selected
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45208732588
+          github-token: ${{ github.token }}
+          name: all-58-optimized-head-to-head-rankings-and-matchups
+          path: results/previous
+      - name: Download same repaired C++ engine used in proven full field
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 45205260187
+          github-token: ${{ github.token }}
+          name: repaired-fullfield-engine-1123
+          path: engine_build
+      - name: Install pinned C++ runtime libraries
+        timeout-minutes: 12
+        run: |
+          set -euo pipefail
+          if ! sudo env DEBIAN_FRONTEND=noninteractive timeout -k 10s 55s apt-get -o Acquire::Retries=0 update -qq; then
+            echo '::warning::using cached package indexes'
+          fi
+          sudo env DEBIAN_FRONTEND=noninteractive timeout 360s apt-get -o Acquire::Retries=2 install -y -qq --no-install-recommends libboost-program-options1.83.0 libboost-filesystem1.83.0 libboost-system1.83.0 libboost-context1.83.0
+          chmod +x engine_build/riftbound
+          test -f results/previous/all_58_ranked.json
+          test "$(find results/selected/selected_decks -maxdepth 1 -name '*.txt' | wc -l)" -eq 58
+          if ldd engine_build/riftbound | grep -q 'not found'; then exit 1; fi
+      - name: Evaluate every assigned elite pairing and mirrored seat
+        timeout-minutes: 52
+        run: |
+          python3 -u scripts/competitive_topk.py \
+            --selected results/selected --ranked results/previous/all_58_ranked.json \
+            --engine engine_build/riftbound --top 10 \
+            --output results/topk/shard-${{ matrix.shard }} \
+            --shards 10 --shard ${{ matrix.shard }} --repetitions 2 \
+            --agent ismcts:sims=128 --workers 2 --timeout 180 \
+            --seed 202611240001
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: competitive-topk-shard-${{ matrix.shard }}
+          path: results/topk/shard-${{ matrix.shard }}/
+          if-no-files-found: warn
+          retention-days: 30
+  rank-elite-128-search:
+    needs: stronger-agent-pairings
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: competitive-topk-shard-*
+          path: results/shards
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45181493632
+          github-token: ${{ github.token }}
+          name: expanded-optimized-58-independent-radiance-bo3
+          path: results/selected
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45208732588
+          github-token: ${{ github.token }}
+          name: all-58-optimized-head-to-head-rankings-and-matchups
+          path: results/previous
+      - name: Require all 180 completed BO3 series and consistent source SHA
+        run: |
+          python3 scripts/competitive_topk.py --aggregate \
+            --selected results/selected --ranked results/previous/all_58_ranked.json \
+            --input results/shards --output results/elite_128_screen \
+            --top 10 --shards 10 --repetitions 2 \
+            --agent ismcts:sims=128 --seed 202611240001
+      - uses: actions/upload-artifact@v4
+        with:
+          name: competitive-top10-128-ismcts-standings-and-raw-games
+          path: results/elite_128_screen/
+          retention-days: 30

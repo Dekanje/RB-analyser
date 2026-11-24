@@ -1,0 +1,7 @@
+GATE: ACCEPTED
+BO3_MULTISWAP_SOURCE_RUN: 45247195570
+STATUS: SUCCESS
+SHARDS: draven-vs-miss-fortune; leblanc-vs-reksai; masteryi-vs-ambessa
+REGISTRY: pinned 407 engine artifact from run 45244227502
+CHECKS: all three actual 407 BO3 candidate jobs completed successfully
+PURPOSE: fail-closed exploratory policy aggregation; never auto-adopt changes

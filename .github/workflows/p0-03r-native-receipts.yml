@@ -1,0 +1,46 @@
+name: P0-03R native identity receipts and declared BO3
+on:
+  push:
+    branches: ['feature/p0-03r-native-receipts']
+    paths:
+      - 'scripts/format_match_v2.py'
+      - 'scripts/test_format_match_v2.py'
+      - 'scripts/native_format_match_v2_check.py'
+      - '.github/workflows/p0-03r-native-receipts.yml'
+permissions:
+  contents: read
+  actions: read
+jobs:
+  gate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unit tests
+        run: |
+          python3 -m unittest discover -s scripts -p 'test_format_gateway.py' -v
+          python3 -m unittest discover -s scripts -p 'test_format_match_v2.py' -v
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45282108093
+          github-token: ${{ github.token }}
+          name: competitive-guidebot-rule407-verified-engine-binary
+          path: results/p003rv2/engine
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45181493632
+          github-token: ${{ github.token }}
+          name: expanded-optimized-58-independent-radiance-bo3
+          path: results/p003rv2/selected
+      - name: Native resolved identity and sideboard checks
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends libboost-context1.83.0 libboost-program-options1.83.0
+          chmod +x results/p003rv2/engine/riftbound
+          python3 scripts/native_format_match_v2_check.py --engine results/p003rv2/engine/riftbound --registry results/p003rv2/engine/registry.json --profile rulesets/standard-global-2026-11-23.json --selected results/p003rv2/selected/selected_decks --output results/p003rv2/report.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: p0-03r-native-receipts
+          path: results/p003rv2/report.json
+          if-no-files-found: error
+          retention-days: 30

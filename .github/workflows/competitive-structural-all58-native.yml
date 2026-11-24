@@ -1,0 +1,120 @@
+name: Worlds all 58 registered-structure native compatibility by card family
+on:
+  push:
+    branches: ['research/competitive-agent-benchmark-v1-2026-11-23']
+    paths: ['.github/workflows/competitive-structural-all58-native.yml']
+permissions:
+  contents: read
+  actions: read
+jobs:
+  native-smoke-shards:
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile and check immutable Constructed card registration
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/native_structural_smoke.py scripts/aggregate_all58_native_structures.py
+          python3 -m unittest discover -s scripts -p 'test_structural_deck_population.py' -v
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45259246337
+          github-token: ${{ github.token }}
+          name: worlds-all58-registered-structure-legal-unvalidated-variants
+          path: results/structural
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45181493632
+          github-token: ${{ github.token }}
+          name: expanded-optimized-58-independent-radiance-bo3
+          path: results/selected
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45244227502
+          github-token: ${{ github.token }}
+          name: competitive-rule407-verified-engine-binary
+          path: engine_build
+      - name: Load exact native 407 C++ binary shared libraries
+        timeout-minutes: 12
+        run: |
+          set -euo pipefail
+          if ! sudo env DEBIAN_FRONTEND=noninteractive timeout -k 10s 55s apt-get -o Acquire::Retries=0 update -qq; then
+            echo '::warning::using cached package indexes'
+          fi
+          sudo env DEBIAN_FRONTEND=noninteractive timeout 360s apt-get -o Acquire::Retries=2 install -y -qq --no-install-recommends libboost-program-options1.83.0 libboost-filesystem1.83.0 libboost-system1.83.0 libboost-context1.83.0
+          chmod +x engine_build/riftbound
+          if ldd engine_build/riftbound | grep -q 'not found'; then exit 1; fi
+      - name: One actual C++ game per existing registered structural family for two Legends
+        timeout-minutes: 18
+        run: |
+          python3 -u scripts/native_structural_smoke.py \
+            --selected results/selected \
+            --variants results/structural \
+            --registry engine_build/registry.json \
+            --engine engine_build/riftbound \
+            --all58 --shards 29 --shard ${{ matrix.shard }} \
+            --seed 202611251810 --timeout 120 \
+            --output results/registered_native/${{ matrix.shard }}/smoke.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: structural-native-${{ matrix.shard }}
+          path: results/registered_native/${{ matrix.shard }}/
+          retention-days: 30
+          if-no-files-found: warn
+  verify-all58-registered-structural-native-receipts:
+    needs: native-smoke-shards
+    runs-on: ubuntu-24.04
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: structural-native-*
+          path: results/shards
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45259246337
+          github-token: ${{ github.token }}
+          name: worlds-all58-registered-structure-legal-unvalidated-variants
+          path: results/structural
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45181493632
+          github-token: ${{ github.token }}
+          name: expanded-optimized-58-independent-radiance-bo3
+          path: results/selected
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45244227502
+          github-token: ${{ github.token }}
+          name: competitive-rule407-verified-engine-binary
+          path: engine_build
+      - name: Verify 58 complete shard IDs, all families and exact candidate hashes
+        run: |
+          python3 scripts/aggregate_all58_native_structures.py \
+            --input results/shards \
+            --variants results/structural \
+            --selected results/selected \
+            --registry engine_build/registry.json \
+            --shards 29 \
+            --output results/structural_native_complete/acceptance.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          x=json.loads(Path('results/structural_native_complete/acceptance.json').read_text())
+          assert x['legends']==58 and x['native_games_completed']==x['native_games_expected']
+          assert x['fitness_comparisons']==0 and not x['complete_full_580_native_certification']
+          assert not x['registered_decks_modified']
+          print('FULL58_STRUCTURAL_NATIVE_COMPATIBILITY_PASS',x['native_games_completed'])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: competitive-all58-registered-structure-native-qa
+          path: results/structural_native_complete/
+          retention-days: 30

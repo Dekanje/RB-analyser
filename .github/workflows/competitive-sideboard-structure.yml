@@ -1,0 +1,21 @@
+name: Competitive BO3 sideboard structural safety (one-shot)
+on:
+  push:
+    branches: ['research/competitive-agent-benchmark-v1-2026-11-23']
+    paths: ['.github/workflows/competitive-sideboard-structure.yml']
+permissions:
+  contents: read
+jobs:
+  test-sideboard-structural-rules:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile and run deterministic sideboard invariants
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/sideboard_deck.py scripts/test_sideboard_deck.py
+          python3 -m unittest discover -s scripts -p 'test_sideboard_deck.py' -v
+      - name: Verify no engine/deck outputs are overwritten
+        run: |
+          test ! -d results/tournament_sideboard

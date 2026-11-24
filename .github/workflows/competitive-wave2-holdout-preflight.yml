@@ -1,0 +1,22 @@
+name: Competitive 58-Legend wave2 holdout source and selection tests
+on:
+  push:
+    branches: ['research/competitive-agent-benchmark-v1-2026-11-23']
+    paths:
+      - '.github/workflows/competitive-wave2-holdout-preflight.yml'
+      - 'scripts/select_wave2_holdouts.py'
+      - 'scripts/competitive_wave2_holdout.py'
+      - 'scripts/test_select_wave2_holdouts.py'
+permissions:
+  contents: read
+jobs:
+  shortlist-and-scoring-contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test positive-only per-Legend shortlist, held-out opponents and source provenance
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/select_wave2_holdouts.py scripts/competitive_wave2_holdout.py scripts/test_select_wave2_holdouts.py
+          python3 -m unittest discover -s scripts -p 'test_select_wave2_holdouts.py' -v

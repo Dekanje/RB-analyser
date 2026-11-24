@@ -1,0 +1,79 @@
+# P0-04 — historical interaction evidence
+
+## P0-04 initiated — historical interaction evidence
+2026-11-24: isolated implementation e0774ada633727945357c36786df47305173a84a on feature/p0-04-edge-evidence. Read-only audit/edge_case_inventory.py pins historical ledger SHA 3a02ed25f358642f7287b90f1fd7a17874d0d757173a51d600f4687b00a1b7ea and latest core XML SHA 27a2b0fdf15dbde33b38b4a2af0438e9676101ab1e0ecd5f5d893938a3c11e53. Enumerates 37 questions, attaches historical, explicit mapping and Radiance test-name leads with actual XML outcome, rejects duplicate test IDs, never closes a question based on names. Three Python tests written. CI 45461392357 observed in_progress/pending. No new C++ or gameplay. All 37 questions remain open pending body-level review, not necessarily defective cards.
+Disabled Baron source audit: pinned upstream ec90f0fed002aed374d06249fa95e83e3cfbd386 tests/cards/test_baron_nashor.cpp blob 0a88addfae861a8b002f2e62fd1e86081bc559e3 lines550–561 is GTEST_SKIP-only deferred placeholder, not a failing assertion; upstream tests/test_review_fix_auras_costs.cpp blob 2de935c242fa08d9d5a0187b0ddad321a232c831 lines317–325 enabled AurasCostsTest.BaronNashor_OtherFriendlyUnitsPlusTwo invokes engine-backed cleanup and asserts allied Might2->4, Baron remains12, enemy remains2. Fixture constructs actual GameEngine. Latest XML confirms enabled passing test, disabled placeholder suppressed; both QABaronNashorAuraAffectsOtherFriendlyUnits and QABaronNashorAuraStacksWithHeimerMechReplacement also enabled passing (bodies not reviewed this session). Classification: disabled historical placeholder has direct alternate evidence for intended basic aura behavior, no unexplained failure from disabled count. Keep disabled test intact; no claim of comprehensive Baron coverage or full raw aura field equivalence. Review exact overlay modifications and broader Baron interactions in Phase2.
+Next: actual test body review for 37 questions; no name-only acceptance.
+
+## Independent triage receipt and first body-level pass
+2026-11-24: P0-04 triage CI 45461392357 completed/success at e0774ada633727945357c36786df47305173a84a. Artifact 14952707499 ZIP SHA-256 4846a7257a179b7c1e56defbda02076f0179fcd4db03eb7d2347d031014460eb; edge_cases.json SHA-256 5c48f5877c6b2658d8d2ea3979946707c3782c720a2f99d3ce326801c1a33e26. Independently re-read artifacts 14879939071 and 14950771953, reconstructed 37 exact historical questions, 91 enabled-pass lead associations (including repeated metadata tests), all 3933 unique XML outcomes and Baron placeholder status. Three Python tests and inventory step passed in CI. Reviewed named behavioral test bodies for all 37 cards at candidate e1123124e0d20164a3a063d73363d200c59cb5fb; no full historical question closed, Avian exhaustion and Outrider friendly gear counting directly evidenced as subcases. Consult Predict name lacks an outcome assertion. No confirmed engine defect from these test bodies alone. Detailed residual matrix in docs/P0_04_EDGE_CASE_EVIDENCE.md. All remaining interaction work assigned Phase 2; private-information work Phase 4. P0-04 still open for overlay/fixture provenance and baseline-critical source/ruling checks, not a new native run or production approval.
+
+Source pin: [candidate e1123124](https://github.com/Dekanje/RB-analyser/commit/e1123124e0d20164a3a063d73363d200c59cb5fb). Each source alias below is relative to `radiance/engine_overlay/source/tests/cards/`; line numbers are TEST_F starts in the pinned source files, not final generated files. Shared metadata-only tests do not count as interaction evidence. Upstream `tests/cards/card_test_fixture.h` blob 46127edac7ef26b29478a9445536928cbf6f0222 lines 823–927 declares hand-play helper executing testHook_executeIntent and settling, direct-trigger and executor helpers; generated overlay alterations still need review. Hand play here is fixture-backed, not a full competitive match or necessarily legal-action enumeration.
+
+| Alias | File | Git blob SHA |
+|---|---|---|
+| W1 | test_radiance_wave1.cpp | 1bfa61da1b8ce51c13dcfb83c91362b0063d6b0b |
+| W2 | test_radiance_wave2.cpp | fba7514a1405a91f33a8c828844e00eb7b25d15f |
+| W3 | test_radiance_wave3.cpp | b5834494ab3e7396717cea617b832951bc41d884 |
+| W4 | test_radiance_wave4.cpp | 45bbfc7bf4763b1220fea13cb682bd0a776ae6a0 |
+| B6 | test_radiance_batch6.cpp | 60f908961068bb60c7add3710a9fbb170fee7e44 |
+| B7 | test_radiance_batch7.cpp | 57a67975b0b7dedf8afd46e0953908f706772b57 |
+| B8 | test_radiance_batch8.cpp | 81a1bd63e535cc2d67d6824c7eb7c0fd3b5003fa |
+| B9 | test_radiance_batch9.cpp | e7209f63db14004399085ad7ac30821d5a050d0d |
+
+All rows are **OPEN, Phase 2**. Classification is partial coverage or metadata-only (RAD-071/088/122); the original historical gap is preserved. A residual not found in these bodies is unknown, not proof that no other test covers it. No production engine authorization or card/deck changes.
+
+| RAD code | Source | Actual assertions / scope | Residual question |
+|---|---|---|---|
+| RAD-002 | B8:24 | Play banner, aura recalc, direct kill then recalc removes Assault; friendly/other field/enemy controls. | Actual combat/scoring and reactive removal/counter timing |
+| RAD-003 | W4:60,74,93 | Decline all, two selected units (third unaffected), ordinary lethal damage. | Deflect, invalid choice, prior damage and death replacement |
+| RAD-004 | W2:16,26 | Hand play asserts temporary Assault 4/3 on own/enemy targets. | Turn expiry, combat, counter, invalid target |
+| RAD-007 | B8:104 | One occupied enemy field, three friendly Recruit tokens. | Multiple eligible fields, combat aftermath |
+| RAD-008 | W3:9,20,29 | Printed Accelerate; hand play raises chosen own/enemy Might by two. | Accelerate payment/ready state, expiration, counter, invalid target |
+| RAD-009 | B6:39,51 | Hand play creates ready 3-Might Mech at base or field. | Replacement and removal before trigger, Mech interaction |
+| RAD-024 | B8:116 | Injects CombatResultEvent at different/own field; draw only own field. | Actual combat dispatch and intervening removal |
+| RAD-025 | B8:38 | Hand play asserts Shield only; Predict in test name but no deck/choice assertion. | Predict outcome including recycle, Shield expiry and counter |
+| RAD-026 | B8:76,239 | Default exhausted vs accepted ready and cant_move_this_turn flag. | Actual move rejection and alternate ready effects |
+| RAD-027 | B8:132,256 | Direct onActivate twice checks buff/Might; constructed ActivateAbility intent exhausts source and buffs target. | Legal-intent enumeration, invalid targets/Deflect, full payment; exhaustion assertion now directly evidenced |
+| RAD-030 | B8:153 | Plays seven-Energy Direwing and checks exhausted Conservator readies. | Spell resolution timing, discounts vs printed Energy |
+| RAD-034 | B8:46 | Hand play readies ally, leaves enemy exhausted, sets movement restriction, hand-count unchanged after spell. | Reaction priority, replacement, illegal target |
+| RAD-036 | B8:162,271 | Executor directly kills stunned/unstunned enemy; draw only stunned. | Simultaneous lethal and stun replacements |
+| RAD-037 | B7:126 | Friendly token gear gains Deflect; enemy does not; source killed and aura removed. | Actual Deflect payment, stacking, counter |
+| RAD-039 | B8:171 | Own units gain two Might; ordinary unit play sends Ward to trash; aura removed. | Counterplay and multiple Wards |
+| RAD-048 | B7:45 | Two exhausted allies, exhausted enemy excluded; target Might 6 to 4. | Reactive priority, zero count, invalid target, expiry |
+| RAD-049 | W4:34,47; B9:176 | Hand play creates friendly 3-Might Mech at base/field; base exhaustion asserted. | Source removed before resolution, replacements and token interactions |
+| RAD-052 | B8:187 | Explicit fireTriggerThroughEngine after setting controller produces one exhausted Gold. | Real end-turn dispatch and control lost in response |
+| RAD-056 | B8:203 | Single friendly gear and enemy target; asserts four damage. | Deflect on both choices, mistargeting and counter |
+| RAD-058 | B7:35 | Hand play reduces enemy Might 6 to 3; ally unchanged. | Accelerate payment, invalid target, Deflect |
+| RAD-059 | W1:51 | One chosen victim killed, hand size two; does not measure ten damage on survivor. | Illegal target, counter, exact nonlethal damage amount |
+| RAD-071 | B7:59 | Direct equipCost valid 1 Energy/0 Power and equipped Shield 2; no attachment. | Paid Equip, Shield combat, death/re-equip |
+| RAD-072 | B7:85; B9:206 | Friendly Deploy gear base/attached and actual Banner field play; direct gear kill removes aura. | Replacement, enemy gear condition, source movement |
+| RAD-076 | B7:143; B9:216 | Direct onTrigger and explicit fireTriggerThroughEngine increase universal power. | Actual conquer/point dispatch and timing |
+| RAD-077 | W1:31 | Printed Shield 3 and hand play enters ready. | Shield defender combat calculation |
+| RAD-079 | W1:65 | Both base units die, battlefield unit stays. | Shield and replacement interactions |
+| RAD-083 | B6:82,97,107; B9:224 | Decline, kill affordable own gear, no target; real Banner kill and Shield value 2. | Shield combat, enemy Deflect, gear death replacement |
+| RAD-088 | W1:42 | Printed stats and costs only; no gameplay assertion. | Assault/Shield combat |
+| RAD-095 | B8:70,247 | Normal play lacks Temporary; synthetic off-turn flag and explicit trigger add Temporary. | Actual off-turn hand play and beginning-phase death |
+| RAD-099 | W1:76; B9:248 | Both players draw on ordinary hand play. | Suppression, empty deck, counter |
+| RAD-100 | B8:211,221 | Normal hand play one exhausted Gold; synthetic facedown counters plus direct onResolve three ready Gold. | Actual Hidden reveal-play and Gold replacement/ready |
+| RAD-101 | B7:173 | Own gear sent to trash; one exhausted friendly canonical Gold. | Opponent-owned gear, replacement/death trigger, Deflect |
+| RAD-117 | B7:158; B9:258 | Selects field zero; own unit Shield 2; other field/enemy excluded. | Alternative field choice, Shield combat/expiry, reaction/counter |
+| RAD-118 | B8:61 | Hand play leaves printed base 2, effective base/current 5. | Simultaneous base alterations and expiration |
+| RAD-119 | B6:63,69; B9:269 | No Bird on play; direct executor kill creates one friendly 1-Might Deflect Bird at base. | Replacement, countered Deathknell, actual Deflect payment |
+| RAD-122 | B7:71 | Direct selfCostReduction 2 then 1 as ally readies; enemy excluded. | Paid Energy after discounts, Tank combat, payment |
+| RAD-128 | B7:112; B9:282 | Two allied units or one unit plus played friendly Deploy gear grant +2; direct removal reverts. | Friendly gear counting now directly evidenced; movement, Tank combat, replacement |
+
+Next: inspect candidate overlay transformation of these fixtures and common mechanics/ruling coverage (especially actual legal actions/priority and Shield/Assault combat); review Baron overlay bodies. Distinguish baseline-critical confirmed implementation bugs from test-only gaps; add targeted regressions if warranted. No mass optimization.
+
+## Reconstructed overlay provenance and shared-mechanics review
+2026-11-24: isolated read-only provenance implementation [39cc94bf](https://github.com/Dekanje/RB-analyser/commit/39cc94bf866d61b3638b216fe6c4e45f0b77204d) on feature/p0-04-overlay-provenance; [CI 45463414756](https://github.com/Dekanje/RB-analyser/actions/runs/45463414756) completed/success. Four new Python tests passed. Reconstructed upstream ec90f0fed002aed374d06249fa95e83e3cfbd386 and all 23 exact candidate overlay scripts without compilation; verified eight wave/batch test sources byte-identical to reviewed pinned blobs, four upstream source files unchanged, two Final64 Baron test bodies identical, and exact suite declarations against historical XML. Artifact 14953186999 ZIP SHA-256 b504f199690b7713d45ddb0e48a257c608c6752abaea6a7485cc85b86f270bb0; overlay_provenance.json SHA-256 c54d55f2facf9a1b9eb7fe9c0f4001d1db2725bae9d5d6a04c2a4240008134b6. Independently checked archive and JSON hashes, all 96 distinct listed enabled historical test IDs against artifact14950771953 XML SHA-256 27a2b0fdf15dbde33b38b4a2af0438e9676101ab1e0ecd5f5d893938a3c11e53 and the suppressed disabled Baron placeholder. Breakdown: 88 wave/batch declarations, 2 Final64 Baron scenarios and 6 shared tests. This is reconstructed source provenance bound to historical results, not a fresh native run or a binary equivalence proof.
+
+### Fixture and common-mechanic findings
+- Pinned upstream fixture `tests/cards/card_test_fixture.h` lines 823–927: constructs real engine and settles chain/cleanup, but the hand-play helper directly supplies an intent and the default funding helper adds resources. `src/engine/game_engine.h` lines 325–337 explicitly says `testHook_executeIntent` bypasses askAgent/legal-list validation; activation still has internal checks. `game_engine.cpp` lines 1330–1371 show actual main-phase decision generation/query/resolve separation; lines 3132–3193 dispatch supplied intents; lines 5496–5568 enumerate by phase/priority and reject standard move destinations for exhausted or cant_move_this_turn units. Upstream blobs reviewed: header 7dfd441a608921fcd1bc8f4ed2a693f7d6aea7b5, cpp 4df0e69952e611f2c73b73174e42b81f8301e60a. These are upstream source-path observations, not a byte-equivalence claim for generated engine source.
+- Four unchanged upstream files in reconstructed candidate include the fixture and two common-mechanics suites. Reviewed `AurasCostsTest.EquippedAssaultAndShield_AddMightInCombat` (attacker/defender context), `AuraKeywordHelper_AssaultCountedOnce` and `AuraKeywordHelper_ShieldCountedOnce` (once-only additions) and `ExecutorReviewFixTest.Predict_RecyclingFiresWhenYouRecycle` / `Predict_KeepingEveryCardRecyclesNothing` (recycle trigger vs keep). Their prior enabled pass outcomes were reconciled. Shared mechanics evidence does not close card-specific cost, target, response, expiry or Predict assertions.
+- Both Final64 Baron bodies reviewed and matched unchanged after overlays. `QABaronNashorAuraAffectsOtherFriendlyUnits` asserts aura excluding Baron and opponent, ally gains two; `QABaronNashorAuraStacksWithHeimerMechReplacement` asserts replacement token and Might interaction. Body SHA-256 respectively 87ed8266f5e598c58068be95965fd83277b8abebfa74b393c4a870abc1cf60ff and 7ffb9145731af38451264b7a94b4becf1f3e8f362cba2e1263789019113b2ba8. Original suppressed test remains a skip-only placeholder.
+- Phase 2 backlog: use actual generated legal intents and negative controls for invalid plays, targets and payments; test real priority/response/counter, combat/scoring, turn expiry, trigger dispatch and replacement pathways. Preserve every per-card residual row above. Phase 4: private observations, continuation and hidden-information checks. No exhaustive rule comparison performed at this baseline step.
+
+P0-04 scoped baseline inventory ACCEPTED: 37/37 historical questions classified with actual assertions and residuals; all 37 remain OPEN for Phase 2 interaction verification. Disabled Baron is accounted for by alternate historical aura tests (including Heimer replacement), not silently enabled or deleted. No new critical implementation defect confirmed from this bounded review; missing assertions and fixture bypasses are coverage limitations, not proof of correct/incorrect card behavior. No engine binary, gameplay code, deck, approval or production ranking changed. Phase 0 and later rule/agent gates remain open.
+
+Next: remaining Phase 0 baseline work, prioritizing the explicit P0-09 clean local toolchain/dependency lock and reproducibility gate (including compiler/dependency versions and native replay), then reconcile remaining agent/performance/optimizer evidence and ancestry/licensing blockers before full Phase 0 acceptance. Do not start mass optimization.

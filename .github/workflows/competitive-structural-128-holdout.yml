@@ -1,0 +1,248 @@
+name: Worlds structural 12-candidate independent 128-ISMCTS 407 BO3 holdout
+on:
+  push:
+    branches: ['research/competitive-agent-benchmark-v1-2026-11-23']
+    paths:
+      - 'data/launch_structural_128_retest.txt'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  preregister-frozen-hypotheses:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify structural optimizer selection arithmetic, alternate opponent panels and SHA-gates
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/structural_128_holdout.py scripts/test_structural_128_holdout.py
+          python3 -m unittest discover -s scripts -p 'test_structural_128_holdout.py' -v
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45259246337
+          github-token: ${{ github.token }}
+          name: worlds-all58-registered-structure-legal-unvalidated-variants
+          path: results/structure
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45270672340
+          github-token: ${{ github.token }}
+          name: competitive-all580-registered-structure-native-evidence
+          path: results/native_certified
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45271249469
+          github-token: ${{ github.token }}
+          name: competitive-406-structural-fitness-unconfirmed-results
+          path: results/fitness
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45181493632
+          github-token: ${{ github.token }}
+          name: expanded-optimized-58-independent-radiance-bo3
+          path: results/selected
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45208732588
+          github-token: ${{ github.token }}
+          name: all-58-optimized-head-to-head-rankings-and-matchups
+          path: results/ranked
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45244227502
+          github-token: ${{ github.token }}
+          name: competitive-rule407-verified-engine-binary
+          path: engine_build
+      - name: Preregister 12 different Legends from verified 406/580 sources BEFORE gameplay
+        run: |
+          set -euo pipefail
+          python3 scripts/structural_128_holdout.py \
+            --select \
+            --selected results/selected \
+            --variants results/structure \
+            --registry engine_build/registry.json \
+            --screen results/fitness/summary.json \
+            --certification results/native_certified/acceptance.json \
+            --ranked results/ranked/all_58_ranked.json \
+            --output results/structural_128_selection/selection.json \
+            --agent ismcts:sims=128 --repetitions 2 --seed 202611261230
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          s=json.loads(Path('results/structural_128_selection/selection.json').read_text())
+          assert s['schema']==1 and s['status']=='STRUCTURE_HOLDOUT_FROZEN_12'
+          assert s['hypotheses']==12 and len(s['selected'])==12
+          assert s['no_candidate_accepted'] is True
+          assert len({r['legend'] for r in s['selected']})==12
+          assert all(r['screen_delta']>0 for r in s['selected'])
+          print('STRUCTURAL_HOLDOUT_PREREGISTERED',[(x['legend'],x['kind']) for x in s['selected']])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: structure-holdout-frozen-12-preregistration
+          path: results/structural_128_selection/
+          retention-days: 30
+  actual-independent-128-agent-407-games:
+    needs: preregister-frozen-hypotheses
+    runs-on: ubuntu-24.04
+    timeout-minutes: 115
+    strategy:
+      fail-fast: false
+      matrix:
+        index: [0,1,2,3,4,5,6,7,8,9,10,11]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: structure-holdout-frozen-12-preregistration
+          path: results/selection
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45259246337
+          github-token: ${{ github.token }}
+          name: worlds-all58-registered-structure-legal-unvalidated-variants
+          path: results/structure
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45270672340
+          github-token: ${{ github.token }}
+          name: competitive-all580-registered-structure-native-evidence
+          path: results/native_certified
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45271249469
+          github-token: ${{ github.token }}
+          name: competitive-406-structural-fitness-unconfirmed-results
+          path: results/fitness
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45181493632
+          github-token: ${{ github.token }}
+          name: expanded-optimized-58-independent-radiance-bo3
+          path: results/selected
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45208732588
+          github-token: ${{ github.token }}
+          name: all-58-optimized-head-to-head-rankings-and-matchups
+          path: results/ranked
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45244227502
+          github-token: ${{ github.token }}
+          name: competitive-rule407-verified-engine-binary
+          path: engine_build
+      - name: Install pinned verified 407 native simulator runtime
+        timeout-minutes: 12
+        run: |
+          set -euo pipefail
+          if ! sudo env DEBIAN_FRONTEND=noninteractive timeout -k 10s 55s apt-get -o Acquire::Retries=0 update -qq; then
+            echo '::warning::using cached apt indexes'
+          fi
+          sudo env DEBIAN_FRONTEND=noninteractive timeout 360s apt-get -o Acquire::Retries=2 install -y -qq --no-install-recommends libboost-program-options1.83.0 libboost-filesystem1.83.0 libboost-system1.83.0 libboost-context1.83.0
+          chmod +x engine_build/riftbound
+          if ldd engine_build/riftbound | grep -q 'not found'; then exit 1; fi
+      - name: Hold out six unseen elite opponents, mirrored seats, two repetitions at 128 ISMCTS
+        timeout-minutes: 98
+        run: |
+          set -euo pipefail
+          python3 -u scripts/structural_128_holdout.py \
+            --selected results/selected \
+            --variants results/structure \
+            --registry engine_build/registry.json \
+            --screen results/fitness/summary.json \
+            --certification results/native_certified/acceptance.json \
+            --ranked results/ranked/all_58_ranked.json \
+            --selection results/selection/selection.json \
+            --engine engine_build/riftbound \
+            --index ${{ matrix.index }} --agent ismcts:sims=128 \
+            --repetitions 2 --seed 202611261230 --workers 3 --timeout 240 \
+            --output results/structure-holdout-${{ matrix.index }}/holdout.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: structure-holdout-${{ matrix.index }}
+          path: results/structure-holdout-${{ matrix.index }}/
+          retention-days: 30
+          if-no-files-found: warn
+  correct-entire-independent-hypothesis-family:
+    needs: actual-independent-128-agent-407-games
+    runs-on: ubuntu-24.04
+    timeout-minutes: 13
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: structure-holdout-frozen-12-preregistration
+          path: results/selection
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: structure-holdout-[0-9]*
+          path: results/all_hypotheses
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45259246337
+          github-token: ${{ github.token }}
+          name: worlds-all58-registered-structure-legal-unvalidated-variants
+          path: results/structure
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45270672340
+          github-token: ${{ github.token }}
+          name: competitive-all580-registered-structure-native-evidence
+          path: results/native_certified
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45271249469
+          github-token: ${{ github.token }}
+          name: competitive-406-structural-fitness-unconfirmed-results
+          path: results/fitness
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45181493632
+          github-token: ${{ github.token }}
+          name: expanded-optimized-58-independent-radiance-bo3
+          path: results/selected
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45208732588
+          github-token: ${{ github.token }}
+          name: all-58-optimized-head-to-head-rankings-and-matchups
+          path: results/ranked
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45244227502
+          github-token: ${{ github.token }}
+          name: competitive-rule407-verified-engine-binary
+          path: engine_build
+      - name: Recompute all 288 paired real BO3 outcomes, Holm-adjust 12 hypotheses, no auto-adoption
+        run: |
+          set -euo pipefail
+          python3 scripts/structural_128_holdout.py \
+            --aggregate --selected results/selected \
+            --variants results/structure \
+            --registry engine_build/registry.json \
+            --screen results/fitness/summary.json \
+            --certification results/native_certified/acceptance.json \
+            --ranked results/ranked/all_58_ranked.json \
+            --selection results/selection/selection.json \
+            --input results/all_hypotheses \
+            --output results/holdout_corrected/summary.json \
+            --agent ismcts:sims=128 --repetitions 2 --seed 202611261230
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path('results/holdout_corrected/summary.json').read_text())
+          assert d['status']=='TWELVE_STRUCTURE_128_ISMCTS_407_HOLDOUT_COMPLETE'
+          assert d['hypotheses']==12 and d['completed_paired_BO3']==288
+          assert d['original_58_decks_modified'] is False
+          assert d['no_unconfirmed_deck_adopted'] is True
+          print('ALL12_STRUCTURE_128_407_HOLDOUT_FINAL',d['confirmed'])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: competitive-worlds-structure-12-independent-407-decisions
+          path: results/holdout_corrected/
+          retention-days: 30

@@ -1,0 +1,44 @@
+name: P0-03R explicit format gateway
+on:
+  push:
+    branches: ['feature/p0-03r-format-gateway']
+    paths:
+      - 'scripts/format_gateway.py'
+      - 'scripts/test_format_gateway.py'
+      - 'scripts/native_format_gateway_check.py'
+      - '.github/workflows/p0-03r-format-gateway.yml'
+permissions:
+  contents: read
+  actions: read
+jobs:
+  gate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unit tests
+        run: python3 -m unittest discover -s scripts -p 'test_format_gateway.py' -v
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45282108093
+          github-token: ${{ github.token }}
+          name: competitive-guidebot-rule407-verified-engine-binary
+          path: results/p003r/engine
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45181493632
+          github-token: ${{ github.token }}
+          name: expanded-optimized-58-independent-radiance-bo3
+          path: results/p003r/selected
+      - name: Native positive controls and ban rejection tests
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends libboost-context1.83.0 libboost-program-options1.83.0
+          chmod +x results/p003r/engine/riftbound
+          python3 scripts/native_format_gateway_check.py --engine results/p003r/engine/riftbound --registry results/p003r/engine/registry.json --profile rulesets/standard-global-2026-11-23.json --selected results/p003r/selected/selected_decks --output results/p003r/report.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: p0-03r-format-gateway
+          path: results/p003r/report.json
+          if-no-files-found: error
+          retention-days: 30
