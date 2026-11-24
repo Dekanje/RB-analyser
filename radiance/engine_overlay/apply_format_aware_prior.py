@@ -60,7 +60,8 @@ DeckModel::DeckModel(const CardDB& db) : db_(db), builder_(db) {
     return it == pools_.end() ? any_ : it->second;""")
     p.write_text(s)
     p=root/"src/agents/determinizer.cpp"
-    s=once(p.read_text(),"            const std::vector<CardDefId>& list = from.empty() ? model_.any().cards : from;","""            if(model_.formatRestricted() && from.empty())
+    s=once(p.read_text(),"#include <tuple>","#include <tuple>\n#include <stdexcept>")
+    s=once(s,"            const std::vector<CardDefId>& list = from.empty() ? model_.any().cards : from;","""            if(model_.formatRestricted() && from.empty())
                 throw std::logic_error("no eligible public-format cards for hidden slot");
             const std::vector<CardDefId>& list = from.empty() ? model_.any().cards : from;""")
     s=once(s,"        const auto& rune_lists = pool.runes.empty() ? model_.any().runes : pool.runes;","""        if(model_.formatRestricted() && pool.runes.empty() && !opp_state.rune_deck.empty())
@@ -147,7 +148,7 @@ TEST(NeekoFormatPriorTest, PublicPoolAndActualSampledWorlds){
         EXPECT_THROW(model.poolFor(CardDefId{315}),std::logic_error);
         for(uint32_t id=299;id<=322;++id)EXPECT_FALSE(model.permits(CardDefId{id}));
     }
-    for(const auto& bad:{"","0","249,","249,249","254,249"," 249","249x","4294967296","999999999","326","26"})
+    for(const auto& bad:{"","0","249,","249,249","254,249"," 249","249x","4294967296","999999999","326","110"})
         EXPECT_THROW(DeckModel::parseFormatIds(db,bad),std::invalid_argument)<<bad;
     EXPECT_EQ(DeckModel::parseFormatIds(db,"249,254").size(),2u);
     EventBus bus;GameEngine engine(db,bus,rg.cardRegistry());
