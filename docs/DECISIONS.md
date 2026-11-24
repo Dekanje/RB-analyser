@@ -57,3 +57,5 @@ P0-05 scoped baseline accepted without agent promotion; retain Phase 4 requireme
 P0-06: distinguish actual historical CLI min-gain 1 from README threshold 2, do not retroactively change experiment or lower current promotion requirements. Preserve failed initial audit.
 
 P0-06: close inventory scope after reconciling historical lineage and diversity. Preserve all source versions; distinguish name multisets from functional identities and reported paired BO3 observations from independent game execution. Do not certify original acquisition as blind; defer autonomous discovery and optimization to their master-plan phases. Proceed P0-07.
+
+P0-07: keep existing historical gateways unchanged, isolate new points-only diagnostic on current format-aware candidate, fail closed on non-points terminal rather than invent draw/concession handling; freeze all registrations and plans. No production migration or generalized tournament claims.

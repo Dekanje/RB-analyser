@@ -142,3 +142,5 @@ The reviewed competitive workflow definitions explicitly reference the current r
 
 - [P0-06 shard lineage and diversity](https://github.com/Dekanje/RB-analyser/blob/3c0d64b5ef8587048ea9fa26ab43a394827969df/.github/workflows/p0-06-shard-diversity.yml) — read-only historical evidence.
 - [P0-06 broad population and holdout audit](https://github.com/Dekanje/RB-analyser/blob/b9f4d72cda587df96c73f90b230e0951a0a0d49d/.github/workflows/p0-06-broad-evidence.yml) — read-only historical evidence.
+
+- [P0-07 guarded current declared BO3](https://github.com/Dekanje/RB-analyser/blob/0a3068f94261ed67929a9f88b40762c8da65af2e/.github/workflows/p0-07-guarded-bo3.yml) — four research-only native series.

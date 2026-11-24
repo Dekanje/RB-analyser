@@ -26,3 +26,5 @@ Historical documents are indexed in [Evidence index](EVIDENCE_INDEX.md), rather 
 - [P0-05 historical agent evidence](P0_05_AGENT_EVIDENCE.md)
 
 - [P0-06 optimizer evidence](P0_06_OPTIMIZER_EVIDENCE.md)
+
+- [P0-07 BO3 and sideboard evidence](P0_07_BO3_EVIDENCE.md)
