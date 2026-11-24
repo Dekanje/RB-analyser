@@ -1,0 +1,46 @@
+name: P0-03R fresh format-aware 58 legend certification
+on:
+  push:
+    branches: [feature/p0-03-format-prior-roster]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  roster:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - name: Targeted tests
+        run: |
+          python3 -m unittest discover -s scripts -p 'test_format_prior_gateway.py' -v
+          python3 -m unittest discover -s scripts -p 'test_format_prior_roster.py' -v
+      - name: Install cached binary runtime only
+        run: sudo apt-get install -y -qq --no-install-recommends libboost-context1.83.0 libboost-program-options1.83.0
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45454720801
+          github-token: ${{ github.token }}
+          name: format-aware-prior-binary
+          path: results/engine
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45181493632
+          github-token: ${{ github.token }}
+          name: expanded-optimized-58-independent-radiance-bo3
+          path: results/selected
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45306837115
+          github-token: ${{ github.token }}
+          name: p0-03r-native-receipts
+          path: results/prior
+      - name: Direct native format negatives and all 58 legends in both seats
+        run: |
+          chmod +x results/engine/riftbound
+          python3 scripts/check_format_prior_roster.py --engine results/engine/riftbound --registry results/engine/registry.json --profile rulesets/standard-global-2026-11-23.json --selected results/selected/selected_decks --prior results/prior/report.json --output results/format_prior_roster.json --workers 2
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: format-prior-roster
+          path: results/format_prior_roster.json
