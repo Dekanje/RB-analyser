@@ -1,9 +1,8 @@
 # Handover — 2026-11-24
 Active branch: `research/competitive-agent-benchmark-v1-2026-11-23`; native engine baseline 0b9739bb6c20e8ed5a805a78239d5faa09b226ad. Read AGENTS, MASTER_PLAN, status, limitations, latest refs/CI.
-P0-01/P0-02 source audit and scoped P0-02R accepted. P0-02R integration commit 7fe8aa92dd1f7a313ef37fe3a1564db7af9af232, CI 45304720496 artifact 14880102318; 32 native games and eight corrected trace comparisons pass. No adoption.
-P0-03 historical identity inventory subgate passed: feature commit ed286c34b520e4d010d4077c08119346252a6a0b, CI 45305366242, artifact 14879939071 independently inspected; 1123 registered definitions, 64 explicitly mapped cards, 144 passing links. Official pool/variant reconciliation remains open.
+P0-01/P0-02 and scoped P0-02R accepted. P0-03 historical inventory integrated at d9f137baf6dd6e34e8044ce076c813095e73259e, CI 45305366242 artifact 14879939071 independently reconciled, 1123 definitions/64 mapped cards/144 passing links.
 ## Next tasks
-1. P0-03: compare dated official all-set catalog, legality and bans, resolve 52 nonbase Radiance printings and 20 duplicate-name groups. Do not equate raw hash or name with functional identity. Preserve explicit unknowns.
-2. P0-04: review all 37 known edge-case questions against enabled XML and actual test bodies; record exact scenarios and remaining gaps. Investigate disabled Baron test and add targeted tests in isolated work.
-3. Expand explicit per-card evidence beyond Final64, clean local installation/toolchain lock P0-09. No mass optimization; future sideboard screening must enforce v2 ordering and new native certification.
-Update status, limitations, changelog and handover after each milestone.
+1. P0-03 Standard ban profile audit: feature commit e219c6e7da53891856ecfe1253c7b302df7761e4 on feature/p0-03-standard-ban-profile. CI run 45305777127 observed completed/success at commit e219c6e7da53891856ecfe1253c7b302df7761e4; artifact receipt acceptance pending. Verify exact report artifact checksum, 22 official mappings, 12 native flags, 10 missing, 0 extra, 58+580 scan counts and any hits. On failure correct branch and rerun; on pass integrate exact tested files. Source and discrepancy in P0_03_STANDARD_BANS.md.
+2. Implement explicit versioned format enforcement in future native/orchestration paths (battlefields, chosen champion, main, sideboard, aliases, current vs historical profile). Preserve old evidence, require focused tests/native receipts. No broad campaign before acceptance.
+3. P0-03 authoritative dated all-set catalog and legality, 52 nonbase RAD printings/20 duplicate-name groups; P0-04 reconcile 37 edge-case questions and disabled Baron test against test bodies/XML, add missing scenarios; P0-09 local build/toolchain lock.
+No adoption or mass optimization. Update status, limitations, changelog and handover after each milestone.

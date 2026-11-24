@@ -68,5 +68,20 @@
     "artifact_url": "https://github.com/Dekanje/RB-analyser/actions/runs/45305366242/artifacts/14879939071",
     "generator": "audit/card_evidence_inventory.py",
     "note": "Full 1123-row ledger and 52 unresolved printing rows stored in versioned CI artifact, reproducible from pinned source artifacts; preserve authorized local copy before expiration. Explicit scenario_verified is scoped to mapped tests only; 1059 unverified entries may have other tests not yet mapped. No card legality is inferred from registration."
+  },
+  "standard_ban_audit": {
+    "profile_id": "standard-global-2026-11-23",
+    "official_bans": 22,
+    "compiled_bans": 12,
+    "missing_native_bans": 10,
+    "extra_native_bans": 0,
+    "official_pool_verified": false,
+    "feature_commit": "e219c6e7da53891856ecfe1253c7b302df7761e4",
+    "run_id": 45305777127,
+    "acceptance": "pending",
+    "source_urls": [
+      "https://playriftbound.com/en-us/rules-hub/",
+      "https://playriftbound.com/en-us/news/announcements/radiance-ban-list-updates-effective-november-23-2026/"
+    ]
   }
 }

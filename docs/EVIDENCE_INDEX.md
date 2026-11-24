@@ -49,3 +49,5 @@ See [P0-01 historical artifact audit](P0_01_ARTIFACT_AUDIT.md) for hashes, recom
 P0-02R native acceptance: [run 45304720496](https://github.com/Dekanje/RB-analyser/actions/runs/45304720496), artifact 14880102318; independently verified hashes and receipts in [correction report](P0_02R_CORRECTION.md).
 
 [P0-03 historical card evidence](P0_03_CARD_EVIDENCE.md): CI 45305366242 artifact 14879939071, registry and XML independently reconciled; full evidence hashes in CARD_COVERAGE.json.
+
+[P0-03 Standard ban audit](P0_03_STANDARD_BANS.md): dated official sources and native discrepancy, scoped audit CI 45305777127; acceptance pending.
