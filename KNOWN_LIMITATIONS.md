@@ -61,3 +61,5 @@
 - RAD-167 candidate native correction written; additional legend cardinality, sideboard registration, shared active pool and resolve-time choice addressed in source. Full legal registrations, guarded BO3, ban/set gate, private observation and prompt leakage remain open; native CI acceptance pending.
 
 - RAD-167 scoped native correction accepted (6/6 focused, 3928 enabled full suite); full legal registration, BO3 and ordered receipt including extra legends, set/ban checks and privacy remain open. Old approved engine unchanged.
+
+- Candidate-only Neeko registration/receipt adapter implemented; CI acceptance pending. Native debug receipts contain private registration identities and must not be agent observations. Actual privacy and determinization audits, native direct negatives, updated engine approval and full roster revalidation remain open. Existing approved gateway remains unchanged.

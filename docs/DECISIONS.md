@@ -23,3 +23,5 @@ D012: raw gallery hash equality requires non-null hashes, never authorizes alias
 RAD-081: accept scoped native source correction separately from approval of candidate binary for match execution; preserve historical pins and artifacts.
 
 RAD-167: explicit October 9 card errata permits up to three; October 16 rules notes specify registration includes sideboard and shared distinct active pool. Use card erratum cardinality and resolution-time available-mask decision. Keep historical random builder's three-choice policy, separate from future optimized selection.
+
+RAD-167 guarded registration: keep old approved six-zone gateway intact; candidate-only seven-zone execution and explicit private native debug receipts until independent acceptance, privacy checks and new hash authorization.

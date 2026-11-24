@@ -60,3 +60,5 @@
 2026-11-24 — Native Neeko errata corrective candidate and six targeted regression tests implemented in isolation; acceptance pending.
 
 2026-11-24 — Scoped RAD-167 native correction accepted: six focused and 3928 enabled tests pass.
+
+2026-11-24 — Guarded Neeko candidate registration and native ordered receipts implemented; validation pending.
