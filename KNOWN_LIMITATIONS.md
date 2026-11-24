@@ -25,3 +25,5 @@
 - P0-03R first slice implemented on isolated branch: explicit format gateway for new native single games/fixed BO3. Scoped receipt accepted (56/58 preflight, 22 ban controls and four native games); tournament sideboarding and legacy entry-point migration not implemented. Direct historical binary still has only 12 native bans. Ambiguous names must be resolved explicitly; no roster exclusions permitted for production optimization. See docs/P0_03R_FORMAT_GATEWAY.md.
 
 - Ahri, Inquisitive (119/539) and Yasuo, Windrider (205/546) have ambiguous compiled names and different tags. Resolve explicit identities with native receipts; no silent legend exclusion or assumed printing equivalence.
+
+- P0-03R slice 2 implemented on isolated branch: native resolved vectors and declared BO3 validation pending receipt. Only one approved ban profile pinned; additional format approvals, direct native enforcement, full official catalog, wider optimizer/tournament integration and broad native roster certification remain outstanding.

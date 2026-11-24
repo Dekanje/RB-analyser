@@ -57,3 +57,5 @@ P0-03 Standard ban audit accepted: artifact 14881450395; archive/report/profile 
 [P0-03R format gateway](P0_03R_FORMAT_GATEWAY.md): first scoped implementation, CI 45306245276, receipt acceptance pending.
 
 P0-03R first slice: CI 45306245276 artifact 14881506274, independently inspected; hashes in [gateway report](P0_03R_FORMAT_GATEWAY.md).
+
+P0-03R slice 2 CI 45306837115, native identity/declared BO3 evidence pending; see gateway report.

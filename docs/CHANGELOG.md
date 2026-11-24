@@ -20,3 +20,5 @@
 2026-11-24 — P0-03R first isolated format gateway slice implemented; targeted CI started. Native receipt acceptance and tournament sideboard integration pending. Historical binary unchanged.
 
 2026-11-24 — P0-03R slice 1 scoped gateway accepted and integrated after native receipt inspection. 56 of 58 preflight, 22 ban controls, 4 native games. Two ambiguous identities remain explicit blockers.
+
+2026-11-24 — P0-03R slice 2 implemented in isolation: approved profile pin, frozen match, native ordered ID receipts and declared BO3. Targeted CI launched; native acceptance pending.
