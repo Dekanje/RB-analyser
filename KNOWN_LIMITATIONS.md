@@ -73,3 +73,5 @@
 - Scoped Neeko privacy correction accepted: four native privacy tests, full 3932 enabled regression tests, seven guarded games. Actual ISMCTS action-level invariance, broader observation/continuation privacy, format-aware sampling prior and cross-game knowledge remain open; no candidate authorization.
 
 - Cached native agent noninterference screen implemented, results pending; partial trace-level comparison only, not internal search-state proof. Format-aware sampling, other observation consumers and production approval remain open.
+
+- Native agent behavioral screen initially failed on invalid fixture identity before any gameplay; corrected ID verified against compiled registry, cached rerun pending. Prior native sampler own-pool preservation fixture used nonlegend sentinel ID258; it does not establish legality of that own registration. Replace with valid legend during next rebuild. No change to old approvals.

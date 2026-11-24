@@ -107,3 +107,5 @@ Direct negatives CI 45421973379 artifact 14936175066 accepted; privacy CI 454218
 RAD-167 privacy acceptance CI 45424993677 artifacts 14936863216/14937080994; hashes in P0_03_ERRATA.md.
 
 Native ISMCTS noninterference candidate dba55104ccd19af7bc9575848d6e5d26facee9a3; CI 45427634377 observed in_progress/pending.
+
+ISMCTS screen CI 45427634377 failed before gameplay; no artifact. Corrective run 45433336373, pending.

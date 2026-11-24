@@ -72,3 +72,5 @@
 2026-11-24 — Scoped privacy corrective candidate accepted: four focused native tests, 3932 enabled full suite and seven guarded games.
 
 2026-11-24 — Scoped Neeko privacy correction accepted; added cached 18-game behavioral noninterference screen, pending validation.
+
+2026-11-24 — Corrected illegal private-registration test fixture after preflight failure; reran cached native behavioral screen.
