@@ -40,3 +40,5 @@
 2026-11-24 — P0-03 official source acquisition accepted in bounded scope: 1408 visible gallery records, 1121 exact compiled matches, explicit eight-row deficit and unresolved printings. No gameplay changes.
 
 2026-11-24 — Alternate pagination cross-check implemented at 1f40e3775883edb42f26fafc7a2ee6bf948c848e (feature/p0-03-gallery-crosscheck), CI 45382955404 observed in_progress/pending. Compares page sizes 100 and 150 against pinned prior report, reports identity additions/removals, metadata changes and unmatched UNL controls. Two targeted tests added. Acceptance requires actual CI and artifact inspection; no equivalence or legality promotion.
+
+2026-11-24 — Alternate pagination crosscheck accepted. Source deficit reproduced; token metadata confirmed.

@@ -75,3 +75,5 @@ P0-03R slice 4 accepted: CI 45343759670 artifact 14896454760; hashes and scope i
 [P0-03 official gallery](P0_03_OFFICIAL_GALLERY.md): direct registry duplicate-name inspection and isolated direct-source inventory; CI 45374674457 pending artifact acceptance.
 
 P0-03 direct gallery: CI 45374674457, artifact 14909474273, exact hashes and bounded acceptance in P0_03_OFFICIAL_GALLERY.md.
+
+P0-03 crosscheck CI 45382955404 artifact 14915052140; hashes and scope in gallery report.

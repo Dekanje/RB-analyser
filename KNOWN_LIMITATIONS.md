@@ -41,3 +41,5 @@
 - Direct official gallery acquisition succeeded, but source count mismatch (1408/1416) remains unresolved. 1121/1123 compiled IDs exact-code matched; two gameplay tokens absent. 285 candidate-only printings, two unmatched UNL gallery records (Buff/XP Tracker), and 52 RAD nonbase printings within candidate-only remain unresolved. All numbered main-set ranges present, OGS 24 exact codes. Gallery metadata is not complete official legality or mechanical equivalence.
 
 2026-11-24 — Alternate pagination cross-check implemented at 1f40e3775883edb42f26fafc7a2ee6bf948c848e (feature/p0-03-gallery-crosscheck), CI 45382955404 observed in_progress/pending. Compares page sizes 100 and 150 against pinned prior report, reports identity additions/removals, metadata changes and unmatched UNL controls. Two targeted tests added. Acceptance requires actual CI and artifact inspection; no equivalence or legality promotion.
+
+- Alternate pagination reproduces 1408/1416 at all three sizes; source completeness open. Buff and XP Tracker gallery Token supertype confirmed; behavioral evidence remains open.

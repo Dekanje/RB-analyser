@@ -117,5 +117,23 @@
     "engine_without_exact_code": 2,
     "candidate_only": 285,
     "unmatched": 2
+  },
+  "gallery_crosscheck": {
+    "run_id": 45382955404,
+    "artifact_id": 14915052140,
+    "archive_sha256": "ec7a84125647bb970d6f377eb61ae72d34903561b12eb8f1ea80070ab3a25be5",
+    "report_sha256": "13fb9057483ebf2fe98127cb0602826dea25582096ac2f66f4f826db0fd969ec",
+    "page_sizes": [
+      100,
+      150,
+      200
+    ],
+    "observed": 1408,
+    "advertised": 1416,
+    "source_completeness_verified": false,
+    "unmatched_token_metadata": [
+      "UNL-T04",
+      "UNL-T08"
+    ]
   }
 }
