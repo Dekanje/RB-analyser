@@ -49,3 +49,5 @@ P0-09: distinguish recorded observed package lock from archived installable snap
 P0-09: use separate read-only package preflight while the uncached native build runs. Record actual executable versions separately from apt versions; keep full observed lock check strict and never automatically modify local host or treat selected package plan as complete lock. No duplicate builds.
 
 P0-05: audit historical agent evidence while physical-host P0-09 work remains open; no duplicate native build. Separate engines and overlapping pilot/panel conditions, use seed pairs as the initial statistical unit and disclose dependence/selection; no promotion. Retain all remaining Phase 0 gates.
+
+P0-05: current candidate calibration uses explicit sampled-world checks, fixed six-legend panel, identical ordered registrations, mirrored policy seats and 12 precommitted seed pairs. Treat any world-check failure, timeout or non-points terminal as an incomplete diagnostic, not a loss; do not relax guards or claim general strength from this sample. Keep tactical evaluator development for Phase 4.

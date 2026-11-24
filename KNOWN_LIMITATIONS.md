@@ -106,3 +106,5 @@
 
 - P0-09 native clean-build and 12 bounded replay games accepted, physical host/complete package availability and durable lock retention still open. No bitwise binary equality or general determinism claim.
 - P0-05 historical agent evidence: 126 game records, two overlapping pilot/panel conditions, different engines across budgets, no current candidate strength certification; conditional pair-sign calculations not independent population proof. New read-only audit CI pending.
+
+- P0-05 source inventory: sampled ISMCTS score-only leaf evaluator; UCT ignores evaluator tactical priors; random setup/unsearched fallbacks, root unmatched-world telemetry absent, heuristic sampling/copy-limit/floating-known constraints and privacy gaps remain. New 24-game candidate diagnostic pending; checking enabled does not establish general privacy. Points-only terminal policy is diagnostic, not tournament adjudication.

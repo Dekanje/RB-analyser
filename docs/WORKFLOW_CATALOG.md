@@ -137,3 +137,5 @@ The reviewed competitive workflow definitions explicitly reference the current r
 ### P0-09 local reproducibility (isolated candidate branches)
 - [Clean native build](https://github.com/Dekanje/RB-analyser/blob/6432f9832b147903ec82eaa3e61e278e77c3e5df/.github/workflows/p0-09-local-reproducibility.yml) — run 45464883262.
 - [Independent package preflight](https://github.com/Dekanje/RB-analyser/blob/6dee53a2249b06216bc3da07c0628e61b092c8df/.github/workflows/p0-09-package-preflight.yml) — run 45465382677, no compilation.
+
+- [P0-05 guarded current agent calibration](https://github.com/Dekanje/RB-analyser/blob/a1a753648227b134c0a06a8583c53546acb7c70b/.github/workflows/p0-05-current-agent-calibration.yml) — 24 planned native games, research only.
