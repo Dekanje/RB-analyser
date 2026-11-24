@@ -105,3 +105,5 @@ RAD-167 privacy candidate CI 45421861900 and cached native negatives CI 45421973
 Direct negatives CI 45421973379 artifact 14936175066 accepted; privacy CI 45421861900 failed prebuild, corrective Corrective CI 45424993677 observed in_progress/pending.
 
 RAD-167 privacy acceptance CI 45424993677 artifacts 14936863216/14937080994; hashes in P0_03_ERRATA.md.
+
+Native ISMCTS noninterference candidate dba55104ccd19af7bc9575848d6e5d26facee9a3; CI 45427634377 observed in_progress/pending.

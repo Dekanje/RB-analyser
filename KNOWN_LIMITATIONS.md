@@ -71,3 +71,5 @@
 - Direct native negatives accepted (5/5). Initial privacy workflow failed at exact-source anchor before build; corrected anchor and added both-seat LogEvent regression. New CI pending; no engine authorization.
 
 - Scoped Neeko privacy correction accepted: four native privacy tests, full 3932 enabled regression tests, seven guarded games. Actual ISMCTS action-level invariance, broader observation/continuation privacy, format-aware sampling prior and cross-game knowledge remain open; no candidate authorization.
+
+- Cached native agent noninterference screen implemented, results pending; partial trace-level comparison only, not internal search-state proof. Format-aware sampling, other observation consumers and production approval remain open.
