@@ -41,3 +41,5 @@ The historical QA report is not independent current certification. Native game c
 
 ## Independently inspected priority evidence
 See [P0-01 historical artifact audit](P0_01_ARTIFACT_AUDIT.md) for hashes, recomputed receipts/statistics, limitations and disposition. No new native simulation.
+
+[P0-02 architecture and order audit](P0_02_ARCHITECTURE_AUDIT.md): source trace and reproducible historical candidate-order cross-tab, not a new native simulation.
