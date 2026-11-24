@@ -1,0 +1,27 @@
+name: P0-08 historical tournament projection evidence
+on:
+  push:
+    branches: [feature/p0-08-tournament-evidence]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m unittest discover -s audit -p 'test_p0_08_tournament_evidence.py' -v
+      - name: Reconcile archived game scores and replay projections
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p results/p0_08/archives
+          for id in 14841669639 14823477036 14833662301 14854411637 14843520123 14853402315 14858215856; do
+            curl --fail --silent --show-error --location --retry 2 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/artifacts/$id/zip" -o "results/p0_08/archives/$id.zip"
+          done
+          python3 audit/p0_08_tournament_evidence.py --archives results/p0_08/archives --output results/p0_08/report.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: p0-08-tournament-evidence
+          path: results/p0_08/report.json
