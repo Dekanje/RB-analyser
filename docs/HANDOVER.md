@@ -6,3 +6,7 @@ P0-03 official gallery acquisition subgate accepted at feature e18b39d2f45b68034
 2. P0-04 reconcile all 37 historical edge-case questions and disabled Baron test with actual test source/XML; add missing focused scenarios.
 3. P0-03R production migration/additional format approvals, P0-09 local installation/toolchain lock and remaining baseline gates. No mass optimization or adoption before baseline acceptance.
 Update docs after each milestone.
+
+2026-11-24 — Alternate pagination cross-check implemented at 1f40e3775883edb42f26fafc7a2ee6bf948c848e (feature/p0-03-gallery-crosscheck), CI 45382955404 observed in_progress/pending. Compares page sizes 100 and 150 against pinned prior report, reports identity additions/removals, metadata changes and unmatched UNL controls. Two targeted tests added. Acceptance requires actual CI and artifact inspection; no equivalence or legality promotion.
+
+Immediate next action: inspect CI 45382955404 and its artifact, correct failures if any, integrate exact tested files only after acceptance. Then continue printing and token reconciliation and P0-04.
