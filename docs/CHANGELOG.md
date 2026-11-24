@@ -18,3 +18,5 @@
 2026-11-24 — P0-03 Standard ban audit accepted and integrated after CI and independent artifact verification. 638 registrations scanned, zero banned-name hits; native enforcement correction remains open.
 
 2026-11-24 — P0-03R first isolated format gateway slice implemented; targeted CI started. Native receipt acceptance and tournament sideboard integration pending. Historical binary unchanged.
+
+2026-11-24 — P0-03R slice 1 scoped gateway accepted and integrated after native receipt inspection. 56 of 58 preflight, 22 ban controls, 4 native games. Two ambiguous identities remain explicit blockers.

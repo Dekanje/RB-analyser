@@ -55,3 +55,5 @@ P0-02R native acceptance: [run 45304720496](https://github.com/Dekanje/RB-analys
 P0-03 Standard ban audit accepted: artifact 14881450395; archive/report/profile hashes and limitations in [report](P0_03_STANDARD_BANS.md).
 
 [P0-03R format gateway](P0_03R_FORMAT_GATEWAY.md): first scoped implementation, CI 45306245276, receipt acceptance pending.
+
+P0-03R first slice: CI 45306245276 artifact 14881506274, independently inspected; hashes in [gateway report](P0_03R_FORMAT_GATEWAY.md).

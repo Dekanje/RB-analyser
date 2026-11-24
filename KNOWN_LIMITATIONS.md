@@ -22,4 +22,6 @@
 
 - Current Standard native legality mismatch: archived compiled registry has 12 of 22 official bans effective 2026-11-23. Python optimizer knows all 22 but BO3 pool validator does not include battlefield bans and other entry points need audit. Versioned profile/auditor accepted; no production enforcement correction yet. See docs/P0_03_STANDARD_BANS.md.
 
-- P0-03R first slice implemented on isolated branch: explicit format gateway for new native single games/fixed BO3. Acceptance pending receipt; tournament sideboarding and legacy entry-point migration not implemented. Direct historical binary still has only 12 native bans. Ambiguous names must be resolved explicitly; no roster exclusions permitted for production optimization. See docs/P0_03R_FORMAT_GATEWAY.md.
+- P0-03R first slice implemented on isolated branch: explicit format gateway for new native single games/fixed BO3. Scoped receipt accepted (56/58 preflight, 22 ban controls and four native games); tournament sideboarding and legacy entry-point migration not implemented. Direct historical binary still has only 12 native bans. Ambiguous names must be resolved explicitly; no roster exclusions permitted for production optimization. See docs/P0_03R_FORMAT_GATEWAY.md.
+
+- Ahri, Inquisitive (119/539) and Yasuo, Windrider (205/546) have ambiguous compiled names and different tags. Resolve explicit identities with native receipts; no silent legend exclusion or assumed printing equivalence.
