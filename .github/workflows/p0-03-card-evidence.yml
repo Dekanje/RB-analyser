@@ -1,0 +1,40 @@
+name: P0-03 historical card evidence inventory
+on:
+  push:
+    branches: ['feature/p0-03-card-evidence']
+    paths:
+      - 'audit/card_evidence_inventory.py'
+      - 'audit/test_card_evidence_inventory.py'
+      - '.github/workflows/p0-03-card-evidence.yml'
+permissions:
+  contents: read
+  actions: read
+jobs:
+  inventory:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unit tests
+        run: python3 -m unittest discover -s audit -p 'test_card_evidence_inventory.py' -v
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45282108093
+          github-token: ${{ github.token }}
+          name: competitive-guidebot-rule407-verified-engine-binary
+          path: results/p003/engine
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45282108093
+          github-token: ${{ github.token }}
+          name: competitive-guidebot-rule407-compiled-qa-evidence
+          path: results/p003/qa
+      - name: Generate historical evidence ledger
+        run: |
+          python3 audit/card_evidence_inventory.py --registry results/p003/engine/registry.json --xml results/p003/qa/all_tests.xml --catalog radiance/data/radiance_catalog.json --acceptance radiance/final64/mechanics_acceptance.json --historical-ledger radiance/coverage_ledger.py --output results/p003/card_evidence.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: p0-03-historical-card-evidence
+          path: results/p003/card_evidence.json
+          if-no-files-found: error
+          retention-days: 30
