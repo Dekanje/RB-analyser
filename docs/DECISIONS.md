@@ -37,3 +37,5 @@ Stop random seed screening after two inconclusive positive-control experiments. 
 Use canonical public identity allowlist generated from the same pinned registration gate, independent of deck contents, opt-in candidate only; exact native receipt required. No unrestricted fallback for empty restricted hidden/rune or missing legend pool. Keep historical approvals immutable, no official Worlds assumption from exclude-OGS configuration.
 
 Reuse verified format-aware candidate binary, original roster/manifest; fresh seed namespace and mirrored positions, reject policy and receipt mismatches. Explicitly test ambient prior replacement and native rejection boundary. Baseline screen is not a strength campaign.
+
+Close P0-03 only as Phase 0 baseline evidence/classification work after fresh all-58 certification. All later-phase legality, comprehensive behavior, privacy and tournament production gates remain unchanged; no production authorization. Proceed P0-04 rather than broadening baseline into Phase 1/2/4 implementation.

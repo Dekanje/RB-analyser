@@ -174,5 +174,22 @@
       1131
     ],
     "all_errata_behavior_verified": false
+  },
+  "baseline_reconciliation": {
+    "status": "accepted_scoped_baseline_audit",
+    "official_legal_pool_verified": false,
+    "variant_equivalence_verified": false,
+    "production_authorized": false,
+    "latest_core_enabled_pass": 3932,
+    "latest_core_disabled": 1,
+    "engine_sha256": "bd3b0abbeba26b87223e407a5317eba91e5d459bf36fd842a7371afa695f5287",
+    "registry_sha256": "0d6165c2ce08b3d60e423a9216150dc15c9527656f9358a6e119d94c6c189e0a",
+    "roster_run_id": 45460257917,
+    "roster_artifact_id": 14952208337,
+    "roster_report_sha256": "4b4436fe8c8e420aefe868dc1ff006c54c82727df383626efcb1e4d67ae7d68a",
+    "legend_coverage": 58,
+    "native_games_completed": 58,
+    "direct_native_negatives": 9,
+    "remaining_phase_owners": "docs/P0_03_BASELINE_RECONCILIATION.md"
   }
 }

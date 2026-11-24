@@ -123,3 +123,5 @@ Format prior CI 45450525906/45450594951 failed compile; corrective e1123124e0d20
 Format-aware acceptance CI 45454720801 artifacts 14950771953/14950742057, hashes in P0_03_ERRATA.md.
 
 Fresh format-aware roster candidate 93727c5393a0cfeb1b96cea057c94333fa992df1; CI 45460257917 observed in_progress/pending.
+
+Fresh roster CI 45460257917 artifact 14952208337 accepted; exact hashes in P0_03_ERRATA.md. Baseline matrix: P0_03_BASELINE_RECONCILIATION.md.

@@ -16,3 +16,5 @@ This is the navigation hub for the active RB-Analyser research branch. Specs are
 | Historical evidence | [Evidence index](EVIDENCE_INDEX.md) · [Decisions](DECISIONS.md) · [Changelog](CHANGELOG.md) |
 
 Historical documents are indexed in [Evidence index](EVIDENCE_INDEX.md), rather than deleted or moved while reproducibility dependencies remain unreviewed.
+
+- [P0-03 baseline reconciliation and later-phase blockers](P0_03_BASELINE_RECONCILIATION.md)
