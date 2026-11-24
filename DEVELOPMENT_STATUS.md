@@ -19,3 +19,6 @@ Active implementation baseline: `research/competitive-agent-benchmark-v1-2026-11
 15–17 NOT VERIFIED: full Swiss/cut tournament, UI and maintenance require audit/implementation.
 No phase gate is accepted in this session. No engine code altered, no fresh simulations or tests executed.
 Next: Phase 0. Read docs/HANDOVER.md; reconcile artifact evidence and test coverage before further candidate adoption.
+
+## Repository hygiene follow-up
+2026-11-24: inspected 44 branch refs and 105 workflow paths; verified active/main divergence (839 ahead, 1 behind at pre-cleanup comparison). Added navigation, contribution policy, branch/workflow/evidence indexes and local ignore rules. No executable code or workflow modified, no branch deleted. Reviewed Swiss sensitivity script: it is a hypothetical independent Bernoulli threshold model, not a full Swiss simulator. Phase 0 remains open; next P0-01 as before, with ancestry/dependency audit prior to main consolidation.

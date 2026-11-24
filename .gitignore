@@ -1,0 +1,19 @@
+# Local Python environment / build byproducts
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.venv/
+venv/
+/.env
+/.env.local
+/.idea/
+/.vscode/
+.DS_Store
+Thumbs.db
+# Root-only generated run outputs (tracked files remain tracked)
+/build/
+/engine_build/
+/results/
+/decks_legal_candidate/
+# Do not blanket-ignore data/, radiance/, optimization/ or workflow launch inputs.

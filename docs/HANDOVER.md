@@ -6,3 +6,6 @@ Current task P0-01: consolidate evidence on active branch `research/competitive-
 4. Record component-by-component verified/partial/missing/defective/unknown matrix, reproduce build locally or document blocker, verify license, establish throughput benchmark and agent-strength evidence.
 5. Update status and limitations with exact evidence; choose smallest highest-risk missing test/implementation, on a new branch. Do not begin further large screening until baseline is audited.
 Existing useful docs: COMPETITIVE_VALIDATION_V1.md, ../radiance/qa/2026-11-23-full-qa.md, ../scripts/tournament_bo3_policy.py and ../scripts/synergy_multicard_screen.py. Keep prior evidence intact.
+
+## Repository organization follow-up
+Read [repository guide](REPOSITORY_GUIDE.md), [branch register](BRANCH_REGISTER.md), [workflow catalog](WORKFLOW_CATALOG.md) and [evidence index](EVIDENCE_INDEX.md). The active branch remains unchanged in name; main is an entry point until integration review. Before consolidation, compare historical branches against active, audit workflow/path and artifact dependency chains, and verify a reproducible build. Do not restart completed screenings or rename workflows just to tidy the repository.

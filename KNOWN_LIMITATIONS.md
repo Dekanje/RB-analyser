@@ -9,3 +9,5 @@
 - Full Swiss, tiebreaks, intermediate qualification, playoff seeding, format versions and championship optimization not yet certified.
 - Local PC hardware/throughput, checkpoint recovery and resource budgets unknown. No guaranteed global optimum; simulation confidence intervals exclude systematic engine/pilot bias.
 - Public repository: do not publish secrets, private deck results or full protected text without authorization; visibility unchanged.
+
+- Existing Swiss threshold sensitivity script is a hypothetical independent-match projection, not actual Swiss pairings, cut or playoff logic. Existing workflow branch/path filters and pinned artifacts make mass deletion or renaming unsafe until dependency audit.

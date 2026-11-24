@@ -1,0 +1,18 @@
+# Documentation index
+
+This is the navigation hub for the active RB-Analyser research branch. Specs are requirements, not evidence of completed implementation.
+
+| Topic | Document |
+|---|---|
+| Mission and roadmap | [Master plan](../MASTER_PLAN.md) |
+| Current status | [Development status](../DEVELOPMENT_STATUS.md) |
+| Start here for next task | [Handover](HANDOVER.md) |
+| Risks and limitations | [Known limitations](../KNOWN_LIMITATIONS.md) |
+| Architecture and implementation | [Architecture](ARCHITECTURE.md) · [Engine](ENGINE_SPEC.md) · [Rules](RULES_SPEC.md) |
+| Agents and search | [Agent specification](AGENT_SPEC.md) · [Optimization](OPTIMIZATION_SPEC.md) |
+| Competitive tournament model | [Tournament specification](TOURNAMENT_SPEC.md) |
+| Quality | [QA](QA_REQUIREMENTS.md) · [Card coverage](CARD_COVERAGE.json) · [Benchmarks](BENCHMARKS.md) · [Reproducibility](REPRODUCIBILITY.md) |
+| Repository operations | [Repository guide](REPOSITORY_GUIDE.md) · [Branch register](BRANCH_REGISTER.md) · [Workflow catalog](WORKFLOW_CATALOG.md) |
+| Historical evidence | [Evidence index](EVIDENCE_INDEX.md) · [Decisions](DECISIONS.md) · [Changelog](CHANGELOG.md) |
+
+Historical documents are indexed in [Evidence index](EVIDENCE_INDEX.md), rather than deleted or moved while reproducibility dependencies remain unreviewed.
