@@ -5,7 +5,7 @@ from neeko_candidate_gateway import CandidateGateway,EXTRA
 from format_match_v2 import transition,digest
 
 ENGINE="55b01acfd2b5fdb723ee5325191339a0b1573c54a8ce8924efb1fef744855f4a"
-SEEDS=(2026112431,2026112432,2026112433,2026112434)
+SEEDS=(2026112441,2026112442,2026112443,2026112444)
 AGENT="ismcts:sims=24,world=sampled"
 OWNER="random-player:pass=0"
 MARK="MODE_PROMPT: Neeko: choose a legend"
@@ -32,6 +32,11 @@ def main():
     assert v["Legend"]==[252] and 56 in v["Sideboard"] and 811 in v["MainDeck"]
     v["Sideboard"][v["Sideboard"].index(56)]=1131
     v=transition(v,{"swaps":[{"main_out":811,"side_in":1131,"copies":1}]})
+    # Diagnostic exposure fixture: replace two Back Off copies with Neeko.
+    assert g.gate.ids[604]['name']=='Back Off' and v['MainDeck'].count(604)==3
+    assert v['MainDeck'].count(1131)==1 and 1131 not in v['Sideboard']
+    for _ in range(2):v['MainDeck'][v['MainDeck'].index(604)]=1131
+    assert v['MainDeck'].count(1131)==3 and len(v['MainDeck'])==39
     other=g.render(g.gate.validate((selected/"akali_rogue_assassin.txt").read_bytes()))
     pools=([249],[254,256,259])
     expected_names={249:"Loose Cannon",254:"Blind Monk",256:"Unforgiven",259:"Swift Scout"}
@@ -42,8 +47,8 @@ def main():
     rows=[];report={**g.provenance(),"status":"FAILED_OR_INCOMPLETE","cases":rows,
                    "owner_agent":OWNER,"observer_agent":AGENT,"seeds":list(SEEDS),
                    "extra_pools":[list(p) for p in pools],"extra_names":expected_names,
-                   "fitness_evaluated":False,"adopted":0}
-    path=root/"neeko_agent_noninterference.json"
+                   "fixture":"three_neeko_active_copies","fixture_replaced_main_ids":[604,604],"fitness_evaluated":False,"adopted":0}
+    path=root/"neeko_agent_noninterference_v2.json"
     def run(raw,seat,seed,tmp):
         a,b=Path(tmp)/"one.txt",Path(tmp)/"two.txt"
         a.write_bytes(raw if seat==1 else other);b.write_bytes(other if seat==1 else raw)
@@ -58,10 +63,15 @@ def main():
         terminal=re.findall(r"^Game over: winner=([12]) \| reason=(.+) \| turns=(\d+)$",p.stdout,re.M)
         if len(terminal)!=1:raise RuntimeError("missing terminal")
         from neeko_candidate_gateway import receipt_v3
-        if receipt_v3(p.stdout,g.definitions)!=[g.gate.validate(a.read_bytes()),g.gate.validate(b.read_bytes())]:
+        observed=receipt_v3(p.stdout,g.definitions)
+        if observed!=[g.gate.validate(a.read_bytes()),g.gate.validate(b.read_bytes())]:
             raise RuntimeError("registration receipt mismatch")
         prefix,choices,multi,reached,picked=analyze(p.stdout,"P"+str(3-seat))
-        return prefix,{"deck_sha256":[digest(a.read_bytes()),digest(b.read_bytes())],
+        mentions=[l.strip() for l in p.stdout.splitlines() if l.lstrip().startswith("[TRC]") and "Neeko" in l]
+        return prefix,{"native_vectors_sha256":[digest(json.dumps(x,sort_keys=True).encode()) for x in observed],
+                       "native_extra_legend_ids":[x[EXTRA] for x in observed],
+                       "neeko_trace_count":len(mentions),"neeko_trace_sample":mentions[:16],
+                       "deck_sha256":[digest(a.read_bytes()),digest(b.read_bytes())],
                        "prefix_sha256":digest("\n".join(prefix).encode()),"trace_lines":len(prefix),
                        "observer_choice_lines":choices,"observer_multi_action_main_decisions":multi,
                        "prompt_reached":reached,"picked":picked,"terminal":terminal[0],
