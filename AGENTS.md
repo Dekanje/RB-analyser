@@ -1,0 +1,7 @@
+# RB-Analyser 2.0 — AGENTS.md
+
+The authoritative development documentation is maintained on [the active research branch](https://github.com/Dekanje/RB-analyser/tree/research/competitive-agent-benchmark-v1-2026-11-23), not this historical engine branch.
+
+Read [AGENTS.md](https://github.com/Dekanje/RB-analyser/blob/research/competitive-agent-benchmark-v1-2026-11-23/AGENTS.md) on that branch before continuing. Documentation bootstrap verified at [f174f87932f2](https://github.com/Dekanje/RB-analyser/commit/f174f87932f2feab72b732249986d38bd48d2512). Always verify the latest branch head, CI and handover; this is a discovery pointer, not an assertion that the historical main engine is current.
+
+Do not start new engine work from main or merge experimental code without the Phase 0 audit. See [master plan](https://github.com/Dekanje/RB-analyser/blob/research/competitive-agent-benchmark-v1-2026-11-23/MASTER_PLAN.md), [status](https://github.com/Dekanje/RB-analyser/blob/research/competitive-agent-benchmark-v1-2026-11-23/DEVELOPMENT_STATUS.md), [limitations](https://github.com/Dekanje/RB-analyser/blob/research/competitive-agent-benchmark-v1-2026-11-23/KNOWN_LIMITATIONS.md), [handover](https://github.com/Dekanje/RB-analyser/blob/research/competitive-agent-benchmark-v1-2026-11-23/docs/HANDOVER.md) and [tournament specification](https://github.com/Dekanje/RB-analyser/blob/research/competitive-agent-benchmark-v1-2026-11-23/docs/TOURNAMENT_SPEC.md).
