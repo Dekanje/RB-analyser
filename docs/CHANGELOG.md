@@ -32,3 +32,5 @@
 2026-11-24 — P0-03R slice 3 accepted and integrated: corrected verifier rechecked 58 unchanged native games; 3 new guarded CLI games and two negative controls passed. No adoption.
 
 2026-11-24 — P0-03R slice 4 isolated implementation: named exact-byte approved research configurations, configuration-specific receipts and CLI controls. CI started; acceptance pending.
+
+2026-11-24 — P0-03R slice 4 scoped named execution configuration accepted after CI and artifact inspection. Exact tested files integrated, no native engine change or adoption.

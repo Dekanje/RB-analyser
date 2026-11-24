@@ -69,3 +69,5 @@ P0-03R slice 3 original failed CI 45307239080 artifact 14881287473 (58 completed
 P0-03R slice 3 corrective acceptance: CI 45307885961 artifact 14882380280; preserved 58-game evidence and three fresh CLI games, hashes in gateway report.
 
 P0-03R slice 4 CI 45343759670: named configurations and scoped native/negative controls, artifact acceptance pending; see gateway report.
+
+P0-03R slice 4 accepted: CI 45343759670 artifact 14896454760; hashes and scope in gateway report.

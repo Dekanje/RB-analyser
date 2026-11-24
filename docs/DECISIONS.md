@@ -15,3 +15,5 @@ D009: historical card evidence ledger distinguishes compiled definition, explici
 D010: use explicit dated format profiles; a Python ban list and compiled native flags may disagree. Historical evidence must remain unchanged; new execution requires centralized fail-closed enforcement. Standard November 23 snapshot accepted, not full legality.
 
 D011: guarded native match CLI is the new execution boundary; legacy raw native and Python campaign entry points are historical-only. Retain their exact versions. Scope all-58 compatibility separately from complete legal pool or rules certification.
+
+D011: named execution configurations require reviewed exact-byte allowlist and explicit research/hypothetical classification; no implicit official or Worlds claim.
