@@ -109,3 +109,5 @@ RAD-167 privacy acceptance CI 45424993677 artifacts 14936863216/14937080994; has
 Native ISMCTS noninterference candidate dba55104ccd19af7bc9575848d6e5d26facee9a3; CI 45427634377 observed in_progress/pending.
 
 ISMCTS screen CI 45427634377 failed before gameplay; no artifact. Corrective run 45433336373, pending.
+
+Behavioral screen CI 45433336373 artifact 14938719489: partial evidence only, overall gate failed. V2 5abd1f5c81b910413e72cf77cbc6438d65a2f0cd; CI 45435045728 observed in_progress/pending.

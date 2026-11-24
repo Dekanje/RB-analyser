@@ -74,3 +74,5 @@
 2026-11-24 — Scoped Neeko privacy correction accepted; added cached 18-game behavioral noninterference screen, pending validation.
 
 2026-11-24 — Corrected illegal private-registration test fixture after preflight failure; reran cached native behavioral screen.
+
+2026-11-24 — Recorded 18 completed native behavioral games with missing positive control; added three-Neeko diagnostic fixture and expanded trace receipts.
