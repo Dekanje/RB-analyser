@@ -30,7 +30,7 @@ def apply(root):
         auto n=std::stoull(part);
         if(n<=previous || n>std::numeric_limits<uint32_t>::max())
             throw std::invalid_argument("noncanonical public format identity list");
-        CardDefId id{static_cast<uint32_t>(n)};
+        const auto id=CardDefId::fromRaw(n);
         auto it=db.all().find(id);
         if(it==db.all().end() || it->second.banned || it->second.isTokenCard())
             throw std::invalid_argument("unknown, native-banned or token format identity");
@@ -135,7 +135,7 @@ TEST(NeekoFormatPriorTest, PublicPoolAndActualSampledWorlds){
     const auto& model=sampler.model();
     ASSERT_TRUE(model.formatRestricted());
     for(auto id:{26,77,110,160,168,177,182,183,194,195,242,271,279,280,285,287,343,371,443,521,771,1079})
-        EXPECT_FALSE(model.permits(CardDefId{static_cast<uint32_t>(id)}));
+        EXPECT_FALSE(model.permits(CardDefId::fromRaw(id)));
     for(const auto& [id,d]:db.all()){
         if(d.card_type!=CardType::Legend || !model.permits(id))continue;
         const auto& p=model.poolFor(id);
@@ -146,7 +146,7 @@ TEST(NeekoFormatPriorTest, PublicPoolAndActualSampledWorlds){
     }
     if(!model.permits(CardDefId{315})){
         EXPECT_THROW(model.poolFor(CardDefId{315}),std::logic_error);
-        for(uint32_t id=299;id<=322;++id)EXPECT_FALSE(model.permits(CardDefId{id}));
+        for(uint32_t id=299;id<=322;++id)EXPECT_FALSE(model.permits(CardDefId::fromRaw(id)));
     }
     for(const auto& bad:{"","0","249,","249,249","254,249"," 249","249x","4294967296","999999999","326","110"})
         EXPECT_THROW(DeckModel::parseFormatIds(db,bad),std::invalid_argument)<<bad;
