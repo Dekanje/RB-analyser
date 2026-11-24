@@ -25,3 +25,5 @@ RAD-081: accept scoped native source correction separately from approval of cand
 RAD-167: explicit October 9 card errata permits up to three; October 16 rules notes specify registration includes sideboard and shared distinct active pool. Use card erratum cardinality and resolution-time available-mask decision. Keep historical random builder's three-choice policy, separate from future optimized selection.
 
 RAD-167 guarded registration: keep old approved six-zone gateway intact; candidate-only seven-zone execution and explicit private native debug receipts until independent acceptance, privacy checks and new hash authorization.
+
+Neeko privacy: model unknown opponent extra legend pool with independent public-history-conditioned prior, not true registration count or IDs. Separate privacy correction from direct negative controls; latter reuse verified artifact rather than rebuild. New sampled-world RNG behavior invalidates historical fitness reuse for new engine.

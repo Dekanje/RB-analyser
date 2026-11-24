@@ -65,3 +65,5 @@
 - Candidate-only Neeko registration/receipt adapter implemented; CI acceptance pending. Native debug receipts contain private registration identities and must not be agent observations. Actual privacy and determinization audits, native direct negatives, updated engine approval and full roster revalidation remain open. Existing approved gateway remains unchanged.
 
 - Guarded candidate registration accepted for seven native games and four preflight negatives. Agent privacy/determinization and direct native negatives remain open; no production authorization.
+
+- Confirmed Neeko private-information leakage in sampled-world clone (opponent secret pool/count retained) and public mode-choice traces; corrective candidate implemented, native CI pending. Observer fingerprint correction pending; prior uncalibrated and registry-wide, new RNG sequence, public history same-game only; LogEvent audience and actual ISMCTS noninterference tests, broader view/continuation audit remain open. No candidate authorized.

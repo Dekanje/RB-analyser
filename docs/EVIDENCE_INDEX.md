@@ -99,3 +99,5 @@ RAD-167 native acceptance CI 45408784133 artifacts 14927646552/14928775400; hash
 Neeko guarded candidate 21a91e2600a435146c5c4a9b9274b2aaa644bccb; CI 45418796610 observed in_progress/pending. See P0_03_ERRATA.md.
 
 RAD-167 guarded CI 45418796610 artifacts 14933503891/14934146544; hashes in P0_03_ERRATA.md.
+
+RAD-167 privacy candidate CI 45421861900 and cached native negatives CI 45421973379; pending acceptance.

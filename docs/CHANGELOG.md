@@ -64,3 +64,5 @@
 2026-11-24 — Guarded Neeko candidate registration and native ordered receipts implemented; validation pending.
 
 2026-11-24 — Scoped guarded Neeko candidate accepted: seven native games and 28 independently reconstructed hashes, no authorization.
+
+2026-11-24 — Accepted guarded Neeko registrations and BO3; implemented privacy corrective candidate and cached direct native negative controls; both validation runs pending.
