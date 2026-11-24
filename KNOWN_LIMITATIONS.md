@@ -33,3 +33,5 @@
 - P0-03R slice 3 original CI failed on coverage verifier dictionary-count handling despite all 58 native games completing; independent receipt reconciliation passed. Corrected verifier and direct CLI tests implemented, corrective CI and independent receipt inspection passed. No original evidence relabeled or overwritten.
 
 - Scoped roster acceptance covers 58 historical registrations and 29 mirrored pairs, not all matchups or full mechanics. Existing native CLI and legacy scripts remain historical-only; new jobs use the verified gateway. Additional approved configurations and official legal pool still open.
+
+- P0-03R slice 4 implements named approved research configurations in isolation. Validation pending. Both configurations use the same dated ban snapshot; future Worlds/no-Legacy and other dated ban profiles require explicit legal pool/printing evidence and reviewed native support. Production optimizer/tournament integration remains open.

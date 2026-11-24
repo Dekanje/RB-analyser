@@ -67,3 +67,5 @@ P0-03R slice 3 CI 45307239080: planned 58 native roster games and targeted unit 
 P0-03R slice 3 original failed CI 45307239080 artifact 14881287473 (58 completed native receipts; verifier failure). Corrective CI 45307885961; independent hash audit and diagnosis in gateway report.
 
 P0-03R slice 3 corrective acceptance: CI 45307885961 artifact 14882380280; preserved 58-game evidence and three fresh CLI games, hashes in gateway report.
+
+P0-03R slice 4 CI 45343759670: named configurations and scoped native/negative controls, artifact acceptance pending; see gateway report.
