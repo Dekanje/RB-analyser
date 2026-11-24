@@ -139,3 +139,5 @@ P0-09 CI 45464663432 failed before configure; correction 6432f9832b147903ec82eaa
 P0-09 configuration artifact 14955535283 from 45464883262 and package preflight artifact 14954388764 from 45465382677 accepted for configuration only; hashes in P0_09_LOCAL_REPRODUCIBILITY.md. Native build still unaccepted.
 
 P0-09 native build artifact 14955681687 accepted for scoped reproducibility, hashes in P0_09_LOCAL_REPRODUCIBILITY.md. P0-05 historical agent audit f00273e240aef0822bc075e11d0b5ad9b76da635, CI 45468576206 pending; details in P0_05_AGENT_EVIDENCE.md.
+
+P0-05 historical agent audit artifact 14954189936 accepted; exact hashes and caveats in P0_05_AGENT_EVIDENCE.md.

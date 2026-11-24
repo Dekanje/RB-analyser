@@ -104,3 +104,5 @@
 2026-11-24 — Accepted P0-09 observed configuration receipt; implemented and independently verified 59-package read-only preflight plan. Clean native build remains in progress.
 
 2026-11-24 — Independently verified clean native build evidence and 12 cross-build replay games. Started read-only P0-05 historical agent receipt audit, preserving prior engines and results.
+
+2026-11-24 — Independently accepted P0-05 historical receipt audit, preserving engine-specific and repeated-condition limitations.
