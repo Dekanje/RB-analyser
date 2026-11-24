@@ -113,3 +113,5 @@
 - P0-06 historical expanded optimizer: invalid 85/201 training and 10/30 holdout evaluations, same opponent panel, invalid-first sort defect, nine provisional selections across eight legends with compatible unadjusted paired p lower bounds >=0.0625. Aggregate only, no current adoption; auditor CI pending.
 
 - P0-06 historical aggregate subgate accepted; actual historical min-gain 1 differs from README 2; Miss Fortune +1 training accepted historically, not current approval. All nine provisional rounds statistically inconclusive; broader provenance remains open.
+
+- P0-06 baseline accepted only: original source acquisition/blind provenance unknown; incumbent mutations are not independent archetypes. 2320 broad candidates per historical version, 13 Neeko extra-section changes, two legends screened and ten held out, zero confirmed. Historical engine/fixed-deck aggregates are not current guarded native or tournament validation. All Phase 6–14 implementation gates remain open.

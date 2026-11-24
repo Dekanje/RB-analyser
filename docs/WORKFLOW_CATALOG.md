@@ -139,3 +139,6 @@ The reviewed competitive workflow definitions explicitly reference the current r
 - [Independent package preflight](https://github.com/Dekanje/RB-analyser/blob/6dee53a2249b06216bc3da07c0628e61b092c8df/.github/workflows/p0-09-package-preflight.yml) — run 45465382677, no compilation.
 
 - [P0-05 guarded current agent calibration](https://github.com/Dekanje/RB-analyser/blob/a1a753648227b134c0a06a8583c53546acb7c70b/.github/workflows/p0-05-current-agent-calibration.yml) — 24 planned native games, research only.
+
+- [P0-06 shard lineage and diversity](https://github.com/Dekanje/RB-analyser/blob/3c0d64b5ef8587048ea9fa26ab43a394827969df/.github/workflows/p0-06-shard-diversity.yml) — read-only historical evidence.
+- [P0-06 broad population and holdout audit](https://github.com/Dekanje/RB-analyser/blob/b9f4d72cda587df96c73f90b230e0951a0a0d49d/.github/workflows/p0-06-broad-evidence.yml) — read-only historical evidence.

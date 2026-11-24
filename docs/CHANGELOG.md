@@ -112,3 +112,5 @@
 2026-11-24 — Accepted scoped current ISMCTS calibration; initiated P0-06 historical optimizer aggregate and promotion lineage audit.
 
 2026-11-24 — Corrected P0-06 auditor to actual historical CLI threshold and accepted aggregate evidence without adopting decks.
+
+2026-11-24 — P0-06 scoped baseline accepted after exact 12-shard, source correction, synergy, broad-population and holdout audits. Ten additional Python tests passed. No new simulations or deck adoption.

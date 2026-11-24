@@ -147,3 +147,5 @@ P0-05 current candidate a1a753648227b134c0a06a8583c53546acb7c70b, CI 45469188236
 P0-05 artifact 14956431078 independently accepted for scoped calibration; P0-06 historical aggregate 14823477036 and audit CI 45469892233, pending acceptance; see P0_06_OPTIMIZER_EVIDENCE.md.
 
 P0-06 artifact 14957251191 accepted for historical aggregate only; correction CI 45470156919, original failure 45469892233; hashes in P0_06_OPTIMIZER_EVIDENCE.md.
+
+P0-06 shard/diversity artifact 14956499424 (CI 45471739789), broad-population/holdout artifact 14956712876 (CI 45472092896) accepted for historical audit only; hashes in P0_06_OPTIMIZER_EVIDENCE.md.

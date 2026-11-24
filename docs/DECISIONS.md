@@ -55,3 +55,5 @@ P0-05: current candidate calibration uses explicit sampled-world checks, fixed s
 P0-05 scoped baseline accepted without agent promotion; retain Phase 4 requirements. P0-06: preserve historical selected lists as diagnostic incumbents, classify prior promotions as exploratory, never treat marginal p bounds as actual paired observations. Correct invalid-first ranking only in separately validated future optimizer paths.
 
 P0-06: distinguish actual historical CLI min-gain 1 from README threshold 2, do not retroactively change experiment or lower current promotion requirements. Preserve failed initial audit.
+
+P0-06: close inventory scope after reconciling historical lineage and diversity. Preserve all source versions; distinguish name multisets from functional identities and reported paired BO3 observations from independent game execution. Do not certify original acquisition as blind; defer autonomous discovery and optimization to their master-plan phases. Proceed P0-07.
