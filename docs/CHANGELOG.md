@@ -62,3 +62,5 @@
 2026-11-24 — Scoped RAD-167 native correction accepted: six focused and 3928 enabled tests pass.
 
 2026-11-24 — Guarded Neeko candidate registration and native ordered receipts implemented; validation pending.
+
+2026-11-24 — Scoped guarded Neeko candidate accepted: seven native games and 28 independently reconstructed hashes, no authorization.
