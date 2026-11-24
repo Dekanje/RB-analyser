@@ -121,3 +121,5 @@ Format-aware prior candidate CI 45450525906 superseded by 45450594951; pending a
 Format prior CI 45450525906/45450594951 failed compile; corrective e1123124e0d20164a3a063d73363d200c59cb5fb CI 45454720801 pending; independent expected policy counts/hashes in P0_03_ERRATA.md.
 
 Format-aware acceptance CI 45454720801 artifacts 14950771953/14950742057, hashes in P0_03_ERRATA.md.
+
+Fresh format-aware roster candidate 93727c5393a0cfeb1b96cea057c94333fa992df1; CI 45460257917 observed in_progress/pending.

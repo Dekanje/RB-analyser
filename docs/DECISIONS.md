@@ -35,3 +35,5 @@ Keep failed behavioral experiment immutable, retain strict both-seat positive se
 Stop random seed screening after two inconclusive positive-control experiments. Use native OpenSpiel search summaries on naturally reached scripted checkpoints and separate funded legal-play fixture, explicitly report the latter as synthetic. Keep prior artifacts immutable, no engine promotion from partial evidence.
 
 Use canonical public identity allowlist generated from the same pinned registration gate, independent of deck contents, opt-in candidate only; exact native receipt required. No unrestricted fallback for empty restricted hidden/rune or missing legend pool. Keep historical approvals immutable, no official Worlds assumption from exclude-OGS configuration.
+
+Reuse verified format-aware candidate binary, original roster/manifest; fresh seed namespace and mirrored positions, reject policy and receipt mismatches. Explicitly test ambient prior replacement and native rejection boundary. Baseline screen is not a strength campaign.

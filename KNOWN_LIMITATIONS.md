@@ -87,3 +87,5 @@
 - Format-aware candidate builds failed on runtime StrongId construction before native testing. Parser and native assertions corrected; retry CI 45454720801 pending. Static public allowlist expectations 1091/1067, not native certification.
 
 - Scoped format-aware prior accepted in two public configurations; 128 worlds, 6528 unknown slots, 12 paired searches/576 worlds, 8 funded controls and four guarded games. Remaining copy-limit and floating-known fallbacks, broader privacy, official completeness and calibration assigned to later detailed gates; no production approval or fresh roster yet.
+
+- Fresh 58-legend format-aware candidate certification implemented, pending native CI; no production authorization. Historical registrations preserved, no strength claim. Direct native extra-section omission remains outside new roster negative controls.

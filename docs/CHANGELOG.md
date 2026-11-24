@@ -86,3 +86,5 @@
 2026-11-24 — Corrected three runtime strong-ID conversions after native compilation failure; recorded independently reconstructed public format policy counts and hashes.
 
 2026-11-24 — Accepted public format-aware opponent prior within two tested configurations.
+
+2026-11-24 — Accepted format-aware prior; implemented pinned cached all-58 fresh native roster screen and nine direct native format boundary negatives.
