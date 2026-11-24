@@ -135,5 +135,31 @@
       "UNL-T04",
       "UNL-T08"
     ]
+  },
+  "printing_evidence": {
+    "run_id": 45396801069,
+    "artifact_id": 14922335192,
+    "archive_sha256": "99a1756a1f57bf4a92e151f3be7cb2d055e0bb5f4eb43ff986ba040b21ca1e9f",
+    "report_sha256": "c2640f2826d5cce69d45a86e453025919e48d8096ec986b580e7d9855337eaf1",
+    "rows": 285,
+    "references": 297,
+    "one_equal": 131,
+    "multiple_equal": 11,
+    "metadata_only": 143,
+    "multi_candidate": 12,
+    "cross_set": 51,
+    "banned_candidates": [
+      "SFD-020a/221",
+      "RAD-043a/167"
+    ],
+    "rad": {
+      "rows": 52,
+      "one_equal": 11,
+      "metadata_only": 41,
+      "cross_set": 17
+    },
+    "null_hash_candidates": 18,
+    "approved_aliases": 0,
+    "equivalence_verified": false
   }
 }
