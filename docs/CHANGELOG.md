@@ -90,3 +90,5 @@
 2026-11-24 — Accepted format-aware prior; implemented pinned cached all-58 fresh native roster screen and nine direct native format boundary negatives.
 
 2026-11-24 — Accepted fresh format-aware 58-legend compatibility and nine negative controls; reconciled and closed P0-03 baseline scope, retained detailed phase blockers; next P0-04.
+
+2026-11-24 — Started P0-04 pinned interaction evidence triage, reviewed disabled Baron placeholder and alternate enabled basic aura test.

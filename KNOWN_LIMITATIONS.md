@@ -91,3 +91,5 @@
 - Fresh 58-legend format-aware candidate certification implemented, pending native CI; no production authorization. Historical registrations preserved, no strength claim. Direct native extra-section omission remains outside new roster negative controls.
 
 - P0-03 baseline audit closed within inventory/reproducibility scope; fresh 58-legend certification and nine native direct negatives accepted. Full official pool, printing equivalence, all errata/rules behavior, comprehensive privacy and production authorization remain false; see docs/P0_03_BASELINE_RECONCILIATION.md. No lowering of later phase gates.
+
+- P0-04 initial evidence triage pending CI. All 37 historical questions remain open; name leads do not prove interaction coverage. Disabled Baron test is an explicit skip-only placeholder; engine-backed enabled upstream test provides basic aura evidence. Wider Baron coverage remains unverified.
