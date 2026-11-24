@@ -13,3 +13,5 @@ D008: preserve exact ordered playable sections for sideboard-only comparisons; n
 D009: historical card evidence ledger distinguishes compiled definition, explicit passing scenario, official legality and unresolved printing equivalence. No promotion from registry metadata or short test-name links alone.
 
 D010: use explicit dated format profiles; a Python ban list and compiled native flags may disagree. Historical evidence must remain unchanged; new execution requires centralized fail-closed enforcement. Standard November 23 snapshot accepted, not full legality.
+
+D011: guarded native match CLI is the new execution boundary; legacy raw native and Python campaign entry points are historical-only. Retain their exact versions. Scope all-58 compatibility separately from complete legal pool or rules certification.

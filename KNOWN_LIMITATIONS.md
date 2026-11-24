@@ -28,6 +28,8 @@
 
 - P0-03R slice 2 implemented on isolated branch: scoped native resolved vectors and declared BO3 validation accepted; 58/58 preflight and seven native games. Only one approved ban profile pinned; additional format approvals, direct native enforcement, full official catalog, wider optimizer/tournament integration and broad native roster certification remain outstanding.
 
-- P0-03R slice 3 isolated roster gate/guarded CLI implemented; full-roster native receipt acceptance pending. CLI currently only supports one pinned ban snapshot and explicit set selection, not alternate official format approval or comprehensive legality. End-to-end CLI and optimizer/tournament adoption remain pending.
+- P0-03R slice 3 isolated roster gate/guarded CLI implemented; scoped all-58 native receipt acceptance passed. CLI currently only supports one pinned ban snapshot and explicit set selection, not alternate official format approval or comprehensive legality. End-to-end CLI passed; optimizer/tournament adoption remains pending.
 
-- P0-03R slice 3 original CI failed on coverage verifier dictionary-count handling despite all 58 native games completing; independent receipt reconciliation passed. Corrected verifier and direct CLI tests implemented, corrective CI acceptance remains pending. No original evidence relabeled or overwritten.
+- P0-03R slice 3 original CI failed on coverage verifier dictionary-count handling despite all 58 native games completing; independent receipt reconciliation passed. Corrected verifier and direct CLI tests implemented, corrective CI and independent receipt inspection passed. No original evidence relabeled or overwritten.
+
+- Scoped roster acceptance covers 58 historical registrations and 29 mirrored pairs, not all matchups or full mechanics. Existing native CLI and legacy scripts remain historical-only; new jobs use the verified gateway. Additional approved configurations and official legal pool still open.
