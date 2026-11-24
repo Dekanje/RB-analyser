@@ -33,10 +33,15 @@ def main():
     v["Sideboard"][v["Sideboard"].index(56)]=1131
     v=transition(v,{"swaps":[{"main_out":811,"side_in":1131,"copies":1}]})
     other=g.render(g.gate.validate((selected/"akali_rogue_assassin.txt").read_bytes()))
-    pools=([249],[254,256,258])
+    pools=([249],[254,256,259])
+    expected_names={249:"Loose Cannon",254:"Blind Monk",256:"Unforgiven",259:"Swift Scout"}
+    for i,name in expected_names.items():
+        assert (g.gate.ids[i]["card_type"],g.gate.ids[i]["name"])==("legend",name),i
+    assert not set(pools[0]) & set(pools[1])
     variants=[g.render({**v,EXTRA:list(ids)}) for ids in pools]
     rows=[];report={**g.provenance(),"status":"FAILED_OR_INCOMPLETE","cases":rows,
                    "owner_agent":OWNER,"observer_agent":AGENT,"seeds":list(SEEDS),
+                   "extra_pools":[list(p) for p in pools],"extra_names":expected_names,
                    "fitness_evaluated":False,"adopted":0}
     path=root/"neeko_agent_noninterference.json"
     def run(raw,seat,seed,tmp):
