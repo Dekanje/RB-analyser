@@ -63,3 +63,5 @@ P0-07: keep existing historical gateways unchanged, isolate new points-only diag
 P0-07: retain accepted points-only evidence; validate Champion changes from both registered main and sideboard, multi-card simultaneous swaps, and immutable G3 restoration on separately declared diagnostic fixtures, not optimization or general legality proof.
 
 P0-07: accept only bounded points-only declared match evidence. Do not promote as full tournament BO3 or extrapolate match fitness. P0-08 inventory next.
+
+P0-08: preserve historical projections as nonpredictive; do not infer official Worlds format or conflate OGS with Legacy; require exact versioned legal identity policy. Accept baseline audit only, not any full event capability. Proceed P0-09.

@@ -146,3 +146,5 @@ The reviewed competitive workflow definitions explicitly reference the current r
 - [P0-07 guarded current declared BO3](https://github.com/Dekanje/RB-analyser/blob/0a3068f94261ed67929a9f88b40762c8da65af2e/.github/workflows/p0-07-guarded-bo3.yml) — four research-only native series.
 
 - [P0-07 Champion and multi-swap native controls](https://github.com/Dekanje/RB-analyser/blob/f7619ab3c80096791b446db2d748f0186ce70ad1/.github/workflows/p0-07-champion-multiswap.yml) — two guarded diagnostic series.
+
+- [P0-08 historical tournament projection evidence](https://github.com/Dekanje/RB-analyser/blob/988d48b28ee50c91fff1a6bb36f670c8eb85b965/.github/workflows/p0-08-tournament-evidence.yml) — read-only archive audit, not a tournament simulator.

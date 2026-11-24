@@ -155,3 +155,5 @@ P0-07 current guarded BO3 a candidate at 0a3068f94261ed67929a9f88b40762c8da65af2
 P0-07 artifact 14957173260 accepted, CI 45472890301; initial failed artifact 14958701121 retained. Champion/multi-swap CI 45481302454 pending; see P0_07_BO3_EVIDENCE.md.
 
 P0-07 Champion/multi-swap artifact 14960658892 (CI 45481302454) independently accepted; P0-07 scoped baseline closed. See P0_07_BO3_EVIDENCE.md.
+
+P0-08 historical projection evidence artifact 14961579369, CI 45481940927, accepted read-only audit. See P0_08_TOURNAMENT_EVIDENCE.md for exact pins and TR-01–25 inventory.

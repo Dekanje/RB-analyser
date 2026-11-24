@@ -121,3 +121,5 @@
 - P0-07 guarded current points-only BO3 subgate accepted (four series, ten games). No actual G1 first-player receipt, complete privacy, tournament time/draw/non-points adjudication or adaptive sideboard/mulligan proof. Champion and multi-swap native control pending; Phase 9 obligations unchanged.
 
 - P0-07 scoped baseline accepted after six declared points-only series (14 native games); native champion switches and multi-swaps passed. No complete tournament BO3 certification; Phase 9 clock/draw/general terminal adjudication, information boundaries, adaptive policy, actual G1 receipt and unused-plan legality remain open.
+
+- P0-08 baseline accepted; full event simulator absent in reviewed integration tree. TR-01–25: 19 missing, five partial, one defective; no full event certification. Historical 919-lineup projections reproduced but declared five-set format was not enforced (four OGS-only legend resolutions, seven nonlegend OGS-only rows, 189 affected triples); not evidence OGS is officially illegal. All Phase 9/15 requirements remain open.
