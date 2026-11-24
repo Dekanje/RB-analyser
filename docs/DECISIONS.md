@@ -21,3 +21,5 @@ D011: named execution configurations require reviewed exact-byte allowlist and e
 D012: raw gallery hash equality requires non-null hashes, never authorizes aliasing; preserve ambiguous, cross-set and banned candidates, independently review official errata and native behavior.
 
 RAD-081: accept scoped native source correction separately from approval of candidate binary for match execution; preserve historical pins and artifacts.
+
+RAD-167: explicit October 9 card errata permits up to three; October 16 rules notes specify registration includes sideboard and shared distinct active pool. Use card erratum cardinality and resolution-time available-mask decision. Keep historical random builder's three-choice policy, separate from future optimized selection.

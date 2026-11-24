@@ -57,3 +57,5 @@
 - RAD-081 follow-up interaction tests written, native results pending. Hidden play uses prehidden fixture (not initial Hide payment or full legal-action gate); removal fixture queues trigger and kills source directly, not a full response sequence. Approved binary still unchanged.
 
 - RAD-081 follow-up accepted within six native scenarios; hidden payment and full response sequence remain outside scope. No candidate binary authorization; build hashes differ despite identical registry and unchanged gameplay source in follow-up.
+
+- RAD-167 candidate native correction written; additional legend cardinality, sideboard registration, shared active pool and resolve-time choice addressed in source. Full legal registrations, guarded BO3, ban/set gate, private observation and prompt leakage remain open; native CI acceptance pending.

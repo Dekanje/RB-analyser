@@ -91,3 +91,5 @@ RAD-081 target correction scoped acceptance: CI 45403995961 artifacts 1492558133
 RAD-081 follow-up commit 616f24ec9e73d6057b23665781f96a9fc9fb7897; CI 45406368094 observed in_progress/pending.
 
 RAD-081 follow-up CI 45406368094 artifacts 14926203012 and 14925843467; hashes in P0_03_ERRATA.md.
+
+RAD-167 candidate 5f803fe336ac698fd2652a694d611198a3284acf; CI 45408784133 observed in_progress/pending; Set up job:completed:success; Run actions/checkout@v4:completed:success; Install pinned AlphaRune C++ compilation dependencies:in_progress:; Apply all 167 Radiance definitions, repaired semantics and actual first-player control:pending:; Run actions/cache/restore@v4:pending:; Compile actual matching ISMCTS and all C++ tests:pending:; Focused Neeko native regression:pending:; Full repaired AlphaRune C++ regression with starting-player change:pending:; Run actions/upload-artifact@v4:pending:; Run actions/upload-artifact@v4:pending:; Post Run actions/checkout@v4:pending:. See P0_03_ERRATA.md.

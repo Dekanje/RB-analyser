@@ -56,3 +56,5 @@
 2026-11-24 — Elnuk additional hidden-play/recycling and source-removal native regressions implemented in isolation; acceptance pending.
 
 2026-11-24 — Elnuk follow-up six focused tests and 3922 enabled native tests accepted; no gameplay source change in follow-up.
+
+2026-11-24 — Native Neeko errata corrective candidate and six targeted regression tests implemented in isolation; acceptance pending.
