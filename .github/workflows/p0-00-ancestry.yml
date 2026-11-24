@@ -1,0 +1,23 @@
+name: Phase 0 frozen branch ancestry and workflow dependency inventory
+on:
+  push:
+    branches: [feature/p0-00-ancestry-audit]
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: python3 -m unittest discover -s audit -p 'test_p0_00_ancestry.py' -v
+      - name: Compare frozen tips and inventory distinct workflow versions
+        run: |
+          git fetch --no-tags origin '+refs/heads/*:refs/remotes/origin/*'
+          python3 audit/p0_00_ancestry.py --pins audit/p0_00_branch_pins.json --output results/p0_00/ancestry.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: p0-00-ancestry-inventory
+          path: results/p0_00/ancestry.json
