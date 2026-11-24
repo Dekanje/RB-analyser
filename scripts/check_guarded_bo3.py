@@ -24,8 +24,8 @@ def main():
     with a.output.open("x") as f:
         try:
             for idx,flip,choice,policy,raws in cases:
-                result=series(g,raws,policy,202611241930+idx)
-                report["series"].append({"case":idx,"registration_flipped":flip,"choice":choice,"policy":policy,"series_seed":202611241930+idx,"result":result})
+                result=series(g,raws,policy,2026112430+idx)
+                report["series"].append({"case":idx,"registration_flipped":flip,"choice":choice,"policy":policy,"series_seed":2026112430+idx,"result":result})
                 print("P007_SERIES",idx,result["status"],flush=True)
             require(all(x["result"]["status"]=="complete_declared_points_bo3" and x["result"]["sideboarding_applied"] for x in report["series"]),"incomplete series")
             report["games_completed"]=sum(len(x["result"]["games"]) for x in report["series"])
