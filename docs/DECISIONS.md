@@ -43,3 +43,5 @@ Close P0-03 only as Phase 0 baseline evidence/classification work after fresh al
 P0-04: accept triage provenance separately from behavior. Preserve all 37 historical questions; classify exact assertions, distinguish hand-play fixture/direct triggers/metadata, never close questions from test names or infer missing gameplay from missing assertions. Complete overlay and critical source checks before baseline closure.
 
 P0-04: accept reconstructed source provenance and classified baseline backlog only. Keep all 37 card interaction questions open in Phase 2; retain suppressed Baron placeholder and alternate evidence. Fixture hand play bypasses legal-action membership. Reuse historical XML only as historical evidence. Advance remaining Phase 0 work without asserting rules completeness.
+
+P0-09: distinguish recorded observed package lock from archived installable snapshot; verify Git dependency revisions before compile; disable object-cache reuse for first clean reproduction; require exact registry/core outcome and bounded cross-build trace equivalence, not timestamp-dependent binary byte equality. No redistribution or production authorization.

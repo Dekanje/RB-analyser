@@ -1,2 +1,4 @@
 # Reproducibility
 Pin exact Git commit, AlphaRune revision/overlay, catalog and ruleset hashes, binary build flags, agent versions/search budgets, registered deck hashes and sideboard policy, scenario and random seeds, optimization/training/holdout split, sample counts and error statuses, event profile, dependency versions and machine. Store artifact IDs and hashes in immutable run manifests. Use paired seats where appropriate. Checkpoint atomic job IDs and deterministic seed assignment; resume without double counting. Publish exact commands and verify replay. Local WSL2 setup guidance exists in COMPETITIVE_VALIDATION_V1.md; audit before assuming a given binary is available.
+
+P0-09 candidate implementation and exact commands: [P0-09 local toolchain](P0_09_LOCAL_REPRODUCIBILITY.md). Clean-build/replay validation pending; captured selected package lock is not yet an archival system-package lock.

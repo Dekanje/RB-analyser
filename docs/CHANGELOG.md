@@ -96,3 +96,5 @@
 2026-11-24 — Independently accepted P0-04 triage artifact and reviewed actual named behavioral test bodies for all 37 historical questions; recorded residual test gaps and two evidenced subcases. No new native gameplay.
 
 2026-11-24 — Implemented and accepted isolated P0-04 overlay provenance audit (four Python tests, 23 overlay scripts, 96 historical test IDs); reviewed common mechanics, fixture and Baron bodies. Closed baseline inventory only; all 37 detailed interaction questions remain open.
+
+2026-11-24 — Implemented isolated P0-09 clean local toolchain capture, exact source/dependency pins and cross-build native replay gate; CI initiated; no new native results accepted.
