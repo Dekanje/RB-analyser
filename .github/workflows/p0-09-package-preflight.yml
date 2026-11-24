@@ -1,0 +1,25 @@
+name: P0-09 independent package lock preflight
+on:
+  push:
+    branches: [feature/p0-09-package-preflight]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  receipt:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m unittest discover -s audit -p 'test_p0_09_package_preflight.py' -v
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45464883262
+          github-token: ${{ github.token }}
+          name: p0-09-toolchain-lock
+          path: results/p0_09_reference
+      - run: python3 audit/p0_09_package_preflight.py --lock results/p0_09_reference/toolchain_lock.json --output results/p0_09_reference/package_plan.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: p0-09-package-preflight
+          path: results/p0_09_reference/package_plan.json
