@@ -27,3 +27,5 @@
 - Ahri, Inquisitive (119/539) and Yasuo, Windrider (205/546) have ambiguous compiled names and different tags. Historical parser receipts now confirm OGN IDs 119/205 and explicit registrations match sampled behavior; alternate-print equivalence remains unresolved.
 
 - P0-03R slice 2 implemented on isolated branch: scoped native resolved vectors and declared BO3 validation accepted; 58/58 preflight and seven native games. Only one approved ban profile pinned; additional format approvals, direct native enforcement, full official catalog, wider optimizer/tournament integration and broad native roster certification remain outstanding.
+
+- P0-03R slice 3 isolated roster gate/guarded CLI implemented; full-roster native receipt acceptance pending. CLI currently only supports one pinned ban snapshot and explicit set selection, not alternate official format approval or comprehensive legality. End-to-end CLI and optimizer/tournament adoption remain pending.

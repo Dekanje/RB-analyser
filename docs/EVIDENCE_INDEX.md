@@ -61,3 +61,5 @@ P0-03R first slice: CI 45306245276 artifact 14881506274, independently inspected
 P0-03R slice 2 CI 45306837115, native identity/declared BO3 evidence pending; see gateway report.
 
 P0-03R slice 2 accepted: CI 45306837115 artifact 14881960327, exact hashes and scope in gateway report.
+
+P0-03R slice 3 CI 45307239080: planned 58 native roster games and targeted unit tests; receipt pending. See gateway report.

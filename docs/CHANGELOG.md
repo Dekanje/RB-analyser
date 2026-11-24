@@ -24,3 +24,5 @@
 2026-11-24 — P0-03R slice 2 implemented in isolation: approved profile pin, frozen match, native ordered ID receipts and declared BO3. Targeted CI launched; native acceptance pending.
 
 2026-11-24 — P0-03R slice 2 scoped acceptance and integration: 58 registration hashes, seven native vector receipts, sideboard pool and first-player results independently reconciled. No adoption.
+
+2026-11-24 — P0-03R slice 3 implemented in isolation: pinned full-roster native certification, four negative/immutability tests, explicit guarded CLI. Targeted CI launched; acceptance pending.
