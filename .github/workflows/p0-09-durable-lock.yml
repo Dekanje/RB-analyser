@@ -1,0 +1,65 @@
+name: P0-09 durable exact receipts and host availability
+on:
+  push:
+    branches: [feature/p0-09-durable-lock]
+    paths:
+      - '.github/workflows/p0-09-durable-lock.yml'
+      - 'audit/p0_09_durable_lock.py'
+      - 'audit/test_p0_09_durable_lock.py'
+permissions:
+  contents: read
+  actions: read
+jobs:
+  preserve:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m unittest discover -s audit -p 'test_p0_09_durable_lock.py' -v
+      - name: Download and verify exact accepted configuration bytes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p results/p0_09/archives
+          for id in 14955535283 14954388764; do
+            curl --fail --silent --show-error --location --retry 2 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/artifacts/$id/zip" -o "results/p0_09/archives/$id.zip"
+          done
+          python3 audit/p0_09_durable_lock.py --archives results/p0_09/archives --directory audit/locks/p0-09-2026-11-24
+      - name: Commit only exact verified lock and plan on this isolated branch
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = refs/heads/feature/p0-09-durable-lock
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          git add -- audit/locks/p0-09-2026-11-24/toolchain_lock.json audit/locks/p0-09-2026-11-24/package_plan.json
+          test "$(git diff --cached --name-only | wc -l)" -eq 2
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'evidence: retain exact accepted P0-09 lock and package plan'
+          git push origin HEAD:refs/heads/feature/p0-09-durable-lock
+          git rev-parse HEAD
+  availability:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download original pinned receipts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p results/p0_09/archives
+          for id in 14955535283 14954388764; do
+            curl --fail --silent --show-error --location --retry 2 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/artifacts/$id/zip" -o "results/p0_09/archives/$id.zip"
+          done
+          python3 audit/p0_09_durable_lock.py --archives results/p0_09/archives --directory results/p0_09/reference
+      - name: Refresh runner package metadata only
+        run: |
+          if ! sudo timeout 90s apt-get -o Acquire::Retries=0 update -qq; then
+            echo '::warning::APT index refresh failed; observation uses available indexes'
+          fi
+      - name: Read-only host package and executable observation
+        run: python3 audit/p0_09_durable_lock.py --directory results/p0_09/reference --probe-output results/p0_09/availability.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: p0-09-durable-lock-availability
+          path: results/p0_09/availability.json
