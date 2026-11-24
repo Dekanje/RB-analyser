@@ -50,3 +50,5 @@
 2026-11-24 — P0-03 official errata heading inventory accepted; 67 entries mapped, source defects in Neeko and Elnuk identified. No native code changed.
 
 2026-11-24 — Isolated RAD-081 Elnuk errata correction and three native regression tests implemented; full rebuild/QA launched, acceptance pending.
+
+2026-11-24 — RAD-081 target correction accepted within three native regression scenarios; 3919 enabled full suite tests passed. Candidate engine not authorized.

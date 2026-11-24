@@ -51,3 +51,5 @@
 - P0-03 errata inventory accepted in scope, 67 headings mapped to 68 compiled identity references; 54 have test-name leads only. Confirmed source defects: Neeko requires exactly three instead of up to three and guarded format parser lacks NeekoLegends; Elnuk Herd excludes itself as target despite errata. No fix yet; Forbidden Technique and Last Caress wording review still open. See docs/P0_03_ERRATA.md.
 
 - RAD-081 Elnuk native correction implemented in isolated post-baseline overlay; three native tests and full QA pending acceptance. Face-down and source-removal cases still require separate regressions. Current approved engine unchanged; no corrected gameplay claims yet.
+
+- RAD-081 target-selection correction accepted in candidate build (3/3 focused, 3919 enabled full suite). Candidate is not yet authorized by approved gateway. Face-down recycling and source-removal interactions still open. Historical binary remains immutable.

@@ -19,3 +19,5 @@ D011: guarded native match CLI is the new execution boundary; legacy raw native 
 D011: named execution configurations require reviewed exact-byte allowlist and explicit research/hypothetical classification; no implicit official or Worlds claim.
 
 D012: raw gallery hash equality requires non-null hashes, never authorizes aliasing; preserve ambiguous, cross-set and banned candidates, independently review official errata and native behavior.
+
+RAD-081: accept scoped native source correction separately from approval of candidate binary for match execution; preserve historical pins and artifacts.

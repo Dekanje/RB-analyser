@@ -85,3 +85,5 @@ P0-03 printing ledger CI 45396801069 artifact 14922335192; hashes and counts in 
 P0-03 errata inventory CI 45403609402 artifact 14925085962: [evidence](P0_03_ERRATA.md).
 
 Elnuk candidate native QA CI 45403995961; pending artifact acceptance. See P0_03_ERRATA.md.
+
+RAD-081 target correction scoped acceptance: CI 45403995961 artifacts 14925581330 and 14926435438; hashes in P0_03_ERRATA.md.
