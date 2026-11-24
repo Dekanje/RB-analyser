@@ -36,3 +36,5 @@
 2026-11-24 — P0-03R slice 4 scoped named execution configuration accepted after CI and artifact inspection. Exact tested files integrated, no native engine change or adoption.
 
 2026-11-24 — P0-03 direct public gallery acquisition and metadata-only reconciliation implemented in isolation. Duplicate-name registry differences reviewed; CI acceptance pending. No gameplay or legality promotion.
+
+2026-11-24 — P0-03 official source acquisition accepted in bounded scope: 1408 visible gallery records, 1121 exact compiled matches, explicit eight-row deficit and unresolved printings. No gameplay changes.

@@ -106,7 +106,16 @@
   "official_gallery_audit": {
     "feature_commit": "e18b39d2f45b68034fdbd718f4bf243c25d4164c",
     "run_id": 45374674457,
-    "status": "pending_artifact_acceptance",
-    "official_pool_verified": false
+    "status": "acquisition_accepted_source_completeness_open",
+    "official_pool_verified": false,
+    "artifact_id": 14909474273,
+    "archive_sha256": "96f55e0a0aed11a4df7ea174ca2ef2828589e312fd564c04a97bb11dd082b5a8",
+    "report_sha256": "87a5a3eb9f17e2d3d4e4ce91ce12cebf379ee68b45f70321ae9e034bdcd801b4",
+    "advertised": 1416,
+    "observed": 1408,
+    "exact_engine_ids": 1121,
+    "engine_without_exact_code": 2,
+    "candidate_only": 285,
+    "unmatched": 2
   }
 }

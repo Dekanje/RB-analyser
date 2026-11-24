@@ -37,3 +37,5 @@
 - P0-03R slice 4 implements named approved research configurations in isolation. Scoped validation accepted. Both configurations use the same dated ban snapshot; future Worlds/no-Legacy and other dated ban profiles require explicit legal pool/printing evidence and reviewed native support. Production optimizer/tournament integration remains open.
 
 - P0-03 duplicate-name audit: 13/20 groups differ in inspected compiled fields, seven do not; no equivalence certified. Direct official gallery acquisition implemented; CI receipt pending. Gallery row coverage, legal-pool enumeration, errata and 52 historical RAD nonbase printing equivalences still open. See docs/P0_03_OFFICIAL_GALLERY.md.
+
+- Direct official gallery acquisition succeeded, but source count mismatch (1408/1416) remains unresolved. 1121/1123 compiled IDs exact-code matched; two gameplay tokens absent. 285 candidate-only printings, two unmatched UNL gallery records (Buff/XP Tracker), and 52 RAD nonbase printings within candidate-only remain unresolved. All numbered main-set ranges present, OGS 24 exact codes. Gallery metadata is not complete official legality or mechanical equivalence.
