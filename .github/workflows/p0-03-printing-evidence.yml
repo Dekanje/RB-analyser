@@ -1,0 +1,32 @@
+name: P0-03 printing evidence ledger
+on:
+  push:
+    branches: [feature/p0-03-printing-evidence]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m unittest discover -s audit -p 'test_printing_evidence.py' -v
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45374674457
+          github-token: ${{ github.token }}
+          name: p0-03-official-gallery-inventory
+          path: gallery
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45282108093
+          github-token: ${{ github.token }}
+          name: competitive-guidebot-rule407-verified-engine-binary
+          path: engine
+      - run: python3 audit/printing_evidence.py --gallery gallery/report.json --registry engine/registry.json --profile rulesets/standard-global-2026-11-23.json --output printing_evidence.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: p0-03-printing-evidence
+          path: printing_evidence.json
+          if-no-files-found: error
