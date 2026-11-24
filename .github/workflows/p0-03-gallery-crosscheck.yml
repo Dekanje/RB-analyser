@@ -1,0 +1,25 @@
+name: P0-03 independent pagination crosscheck
+on:
+  push:
+    branches: [feature/p0-03-gallery-crosscheck]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m unittest discover -s audit -p 'test_gallery_crosscheck.py' -v
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45374674457
+          github-token: ${{ github.token }}
+          name: p0-03-official-gallery-inventory
+          path: prior
+      - run: python3 audit/gallery_crosscheck.py --prior prior/report.json --output crosscheck.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gallery-crosscheck
+          path: crosscheck.json
