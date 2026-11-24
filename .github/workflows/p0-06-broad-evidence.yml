@@ -1,0 +1,27 @@
+name: P0-06 broad population and heldout evidence audit
+on:
+  push:
+    branches: [feature/p0-06-broad-evidence]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m unittest discover -s audit -p 'test_p0_06_broad_evidence.py' -v
+      - name: Verify two population versions and historical screen/holdout
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p results/p0_06/archives
+          for id in 14823477036 14842711299 14849185083 14843051242 14845061918; do
+            curl --fail --silent --show-error --location --retry 2 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/artifacts/$id/zip" -o "results/p0_06/archives/$id.zip"
+          done
+          python3 audit/p0_06_broad_evidence.py --archives results/p0_06/archives --output results/p0_06/broad_report.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: p0-06-broad-evidence
+          path: results/p0_06/broad_report.json
