@@ -21,6 +21,16 @@ class RosterTests(unittest.TestCase):
         with self.assertRaises(FormatRejected):
             verify_coverage(rows,names)
 
+    def test_real_roster_mapping_input(self):
+        roster={str(i):b"registration" for i in range(58)}
+        rows=[{**r,"receipt":{"status":"complete","winner":1,"native_ids_verified":True}} for r in schedule(roster)]
+        verify_coverage(rows,roster)
+        with self.assertRaises(FormatRejected):
+            verify_coverage(rows,{k:v for k,v in roster.items() if k!="0"})
+        rows[0]["two"]=rows[0]["one"]
+        with self.assertRaises(FormatRejected):
+            verify_coverage(rows,roster)
+
     def test_missing_legend(self):
         with self.assertRaises(FormatRejected):
             schedule([str(i) for i in range(57)])

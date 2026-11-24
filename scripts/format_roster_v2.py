@@ -58,6 +58,7 @@ def schedule(names):
     return result
 
 def verify_coverage(rows, names):
+    names = tuple(names)  # mapping keys, never mapping values as Counter counts
     if len(rows)!=58 or {r["index"] for r in rows}!=set(range(58)):
         raise FormatRejected("incomplete or duplicate game receipts")
     expected=schedule(names)
@@ -71,16 +72,63 @@ def verify_coverage(rows, names):
         if Counter(r[key] for r in rows)!=Counter(names):
             raise FormatRejected("not all legends represented in both seats")
 
+FAILED_REPORT_SHA="4d19740581dd20eea1d9ef33e439a9168cf5c0d9ac2dd8f5d1fdc6202bfa9d9f"
+
+def recheck_report(g, roster, path):
+    """Verify unchanged native evidence after fixing only the Python coverage gate."""
+    raw=path.read_bytes()
+    if digest(raw)!=FAILED_REPORT_SHA:
+        raise FormatRejected("unexpected archived native report")
+    report=json.loads(raw)
+    if (report["status"]!="FAILED" or report["roster_count"]!=58
+        or report["native_games_completed"]!=58 or report["agent"]!=AGENT
+        or report["source_manifest_report_sha256"]!=MANIFEST_REPORT_SHA
+        or report["adopted"]!=0 or report["fitness_evaluated"] is not False):
+        raise FormatRejected("archived report metadata mismatch")
+    provenance=g.provenance()
+    if any(report.get(k)!=v for k,v in provenance.items()):
+        raise FormatRejected("archived report provenance mismatch")
+    rows=report["games"]
+    verify_coverage(rows,roster)
+    vectors={n:digest(json.dumps(g.gate.validate(r),sort_keys=True).encode())
+             for n,r in roster.items()}
+    hashes={n:digest(r) for n,r in roster.items()}
+    for row in rows:
+        r=row["receipt"];names=(row["one"],row["two"])
+        if (any(r.get(k)!=v for k,v in provenance.items())
+            or r.get("seed")!=row["seed"] or r.get("agent")!=AGENT
+            or r.get("deck_sha256")!=[hashes[n] for n in names]
+            or r.get("native_vectors_sha256")!=[vectors[n] for n in names]
+            or r.get("forced_starting_player") is not None
+            or type(r.get("turns")) is not int or r["turns"]<=0
+            or not r.get("reason")):
+            raise FormatRejected("native receipt provenance or vector mismatch")
+    return {**provenance,"status":"PASS_SCOPED_NATIVE_ROSTER_RECHECK",
+            "source_report_sha256":digest(raw),
+            "source_manifest_report_sha256":MANIFEST_REPORT_SHA,
+            "native_games_completed":len(rows),"fresh_native_games":0,
+            "roster_count":len(roster),"mirrored_pairs":29,
+            "verified_deck_hashes":2*len(rows),"verified_vector_hashes":2*len(rows),
+            "adopted":0,"fitness_evaluated":False,"games":rows}
+
 def main():
     p=argparse.ArgumentParser(description=__doc__)
     for n in ("engine","registry","profile","selected","prior","output"):
         p.add_argument("--"+n,type=Path,required=True)
     p.add_argument("--workers",type=int,default=2)
+    p.add_argument("--recheck",type=Path,help="Verify the pinned original 58-game report without replaying games")
     a=p.parse_args()
     if not 1<=a.workers<=4:
         p.error("workers must be 1–4")
     g=VerifiedGateway(a.engine,a.registry,a.profile,("OGN","OGS","SFD","UNL","VEN","RAD"))
     roster=load_roster(g,a.selected,a.prior)
+    if a.recheck is not None:
+        report=recheck_report(g,roster,a.recheck)
+        a.output.parent.mkdir(parents=True,exist_ok=True)
+        with a.output.open("x",encoding="utf-8") as out:
+            json.dump(report,out,indent=2)
+        print(report["status"],report["native_games_completed"])
+        return
     cases=schedule(roster)
     a.output.parent.mkdir(parents=True,exist_ok=True)
     with a.output.open("x",encoding="utf-8") as out:
