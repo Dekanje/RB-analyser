@@ -81,3 +81,5 @@
 - V2 behavioral screen: all eight pairs matched but no actual Neeko selection observed, so overall gate failed. Controlled OpenSpiel search-summary and funded legal-play test implemented, pending CI. Separate synthetic positive play is not a naturally reached competitive position or end-to-end privacy proof. Historical approved engine unchanged.
 
 - Controlled ISMCTS noninterference accepted in scoped six paired searches and four distinct legal-play controls (288 sampled worlds). Positive play separate synthetic snapshot; broader continuation/feature privacy, format-aware prior and all-58 fresh certification remain open. No production approval.
+
+- Format-aware sampled identity universe implemented on candidate branch; native results pending. Heuristic prior and existing copy-limit/known placement fallbacks, broader privacy, official completeness, all-58 certification and production migration remain unresolved. Historical approved engine unchanged.

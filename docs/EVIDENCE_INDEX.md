@@ -115,3 +115,5 @@ Behavioral screen CI 45433336373 artifact 14938719489: partial evidence only, ov
 Behavioral v2 CI 45435045728 artifact 14939968366 partial evidence only; controlled native candidate CI 45436085679 pending.
 
 Controlled Neeko CI 45436085679 artifacts 14943110527/14942811133; hashes in P0_03_ERRATA.md.
+
+Format-aware prior candidate CI 45450525906 superseded by 45450594951; pending acceptance.
