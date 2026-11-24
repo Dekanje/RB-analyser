@@ -8,3 +8,5 @@
 2026-11-24 — P0-02 source/build audit and read-only ordered-registration audit; 6 local tests passed, historical cross-tab reproduced. Found sideboard proposal ordering confound; native fix/validation pending. No runtime changes or new gameplay.
 
 2026-11-24 — P0-02R isolated correction implemented; eight unit tests and 174-registration repair step green; native replay acceptance pending. No engine or historical evidence overwritten.
+
+2026-11-24 — P0-02R scoped native acceptance: independently reconstructed all 174 corrected registrations and inspected all 32 native game receipts; 8/8 controlled comparisons matched. Integrated exact tested scripts from isolated branch. No deck adoption.

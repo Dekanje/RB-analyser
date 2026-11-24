@@ -45,3 +45,5 @@ See [P0-01 historical artifact audit](P0_01_ARTIFACT_AUDIT.md) for hashes, recom
 [P0-02 architecture and order audit](P0_02_ARCHITECTURE_AUDIT.md): source trace and reproducible historical candidate-order cross-tab, not a new native simulation.
 
 [P0-02R correction](P0_02R_CORRECTION.md) — isolated serialization fix and scoped native regression; acceptance pending independent receipt verification.
+
+P0-02R native acceptance: [run 45304720496](https://github.com/Dekanje/RB-analyser/actions/runs/45304720496), artifact 14880102318; independently verified hashes and receipts in [correction report](P0_02R_CORRECTION.md).

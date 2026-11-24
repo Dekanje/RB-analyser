@@ -16,4 +16,4 @@
 
 - P0-02: historical order confound established (135/174 sideboard candidates reordered playable sections; all 239 mismatches occur in reordered group). Direct sideboard RNG coupling not demonstrated. Corrected serialization and native replay gate pending; preserve historical evidence. Archived binary cannot run in current sandbox without libboost_context.so.1.83.0; clean build/version lock and upstream redistribution rights unresolved. See docs/P0_02_ARCHITECTURE_AUDIT.md.
 
-- P0-02R isolated serializer and strict gate implemented; eight unit tests and all-174 repair step passed in CI. Native gameplay gate and integration pending. Historical screening scripts have not been redirected to the new experiment format; do not rerun them for adoption.
+- P0-02R scoped correction accepted: 8/8 native comparison cases, 32 games; no corrected trace mismatch. This verifies the ordering defect and repair within sampled conditions, not universal determinism. Historical screening scripts remain unchanged; no rerun for adoption. Future v2 screening needs manifest and strict ordered-input gate plus fresh native certification.
