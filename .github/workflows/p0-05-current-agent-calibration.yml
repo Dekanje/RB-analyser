@@ -1,0 +1,48 @@
+name: P0-05 current sampled ISMCTS calibration
+on:
+  push:
+    branches: [feature/p0-05-current-agent-calibration]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  calibration:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 80
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m unittest discover -s scripts -p 'test_p0_05_current_agent.py' -v
+      - run: sudo apt-get install -y -qq --no-install-recommends libboost-context1.83.0 libboost-program-options1.83.0
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45454720801
+          github-token: ${{ github.token }}
+          name: format-aware-prior-binary
+          path: results/engine
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45181493632
+          github-token: ${{ github.token }}
+          name: expanded-optimized-58-independent-radiance-bo3
+          path: results/selected
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45306837115
+          github-token: ${{ github.token }}
+          name: p0-03r-native-receipts
+          path: results/prior
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45460257917
+          github-token: ${{ github.token }}
+          name: format-prior-roster
+          path: results/roster
+      - name: Guarded current candidate mixed-budget mirrors
+        run: |
+          chmod +x results/engine/riftbound
+          python3 -u scripts/p0_05_current_agent.py --engine results/engine/riftbound --registry results/engine/registry.json --profile rulesets/standard-global-2026-11-23.json --selected results/selected/selected_decks --prior results/prior/report.json --roster results/roster/format_prior_roster.json --output results/p0_05/current_agent.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p0-05-current-agent-calibration
+          path: results/p0_05/current_agent.json
