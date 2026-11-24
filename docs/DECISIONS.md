@@ -65,3 +65,5 @@ P0-07: retain accepted points-only evidence; validate Champion changes from both
 P0-07: accept only bounded points-only declared match evidence. Do not promote as full tournament BO3 or extrapolate match fitness. P0-08 inventory next.
 
 P0-08: preserve historical projections as nonpredictive; do not infer official Worlds format or conflate OGS with Legacy; require exact versioned legal identity policy. Accept baseline audit only, not any full event capability. Proceed P0-09.
+
+P0-09: preserve immutable small lock/plan bytes on tested dependency branch via narrowly scoped one-time commit job. Treat current apt-index and solver observations separately from package download/clean-host availability and exact historical executable bytes. No forced downgrades; physical PC requires read-only preflight and reviewed host setup.

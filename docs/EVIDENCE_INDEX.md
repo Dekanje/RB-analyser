@@ -157,3 +157,5 @@ P0-07 artifact 14957173260 accepted, CI 45472890301; initial failed artifact 149
 P0-07 Champion/multi-swap artifact 14960658892 (CI 45481302454) independently accepted; P0-07 scoped baseline closed. See P0_07_BO3_EVIDENCE.md.
 
 P0-08 historical projection evidence artifact 14961579369, CI 45481940927, accepted read-only audit. See P0_08_TOURNAMENT_EVIDENCE.md for exact pins and TR-01–25 inventory.
+
+P0-09 durable lock commit 08110a8; CI 45482620464, availability artifact 14962760522. Original lock/plan hashes and fresh runner observation in P0_09_LOCAL_REPRODUCIBILITY.md.

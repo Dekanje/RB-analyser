@@ -123,3 +123,5 @@
 - P0-07 scoped baseline accepted after six declared points-only series (14 native games); native champion switches and multi-swaps passed. No complete tournament BO3 certification; Phase 9 clock/draw/general terminal adjudication, information boundaries, adaptive policy, actual G1 receipt and unused-plan legality remain open.
 
 - P0-08 baseline accepted; full event simulator absent in reviewed integration tree. TR-01–25: 19 missing, five partial, one defective; no full event certification. Historical 919-lineup projections reproduced but declared five-set format was not enforced (four OGS-only legend resolutions, seven nonlegend OGS-only rows, 189 affected triples); not evidence OGS is officially illegal. All Phase 9/15 requirements remain open.
+
+- P0-09 lock and plan durably committed at 08110a8; fresh runner availability observation accepted, 56/59 exact versions listed, three missing from indexes but already installed, apt simulation passes only on observed runner; 26 selected/28 total recorded mismatches. Original standalone executable hashes and clean package downloads/installation unknown. Physical user's PC still unverified; P0-09 OPEN.

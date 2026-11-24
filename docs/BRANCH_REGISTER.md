@@ -50,3 +50,5 @@ Snapshot before repository cleanup, 2026-11-24: 44 branches. Heads below are imm
 | `research/competitive-agent-benchmark-v1-2026-11-23` | [f174f87932f2](https://github.com/Dekanje/RB-analyser/commit/f174f87932f2feab72b732249986d38bd48d2512) | Active integration |
 
 The active branch was 839 commits ahead and 1 behind main at comparison time; merge base `0b6d0c2eda7e6dc829d635f8a14e05ab0e669724`. Do not infer that every historical branch is contained in the active branch. Phase 0 consolidation requires actual comparison before moving main or retiring branches.
+
+- `feature/p0-09-durable-lock` — [08110a8](https://github.com/Dekanje/RB-analyser/commit/08110a8c1ca5d8eca7c8f578663e072621d99030), retain exact accepted configuration evidence; dependency on package-preflight and clean-build commits, consolidation pending.
