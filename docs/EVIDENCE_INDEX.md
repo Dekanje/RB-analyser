@@ -129,3 +129,5 @@ Fresh roster CI 45460257917 artifact 14952208337 accepted; exact hashes in P0_03
 P0-04 triage e0774ada633727945357c36786df47305173a84a; CI 45461392357 observed in_progress/pending.
 
 P0-04 triage CI 45461392357 completed/success, artifact 14952707499 independently reconciled against original ledger/core XML; see P0_04_EDGE_CASE_EVIDENCE.md for pinned source review.
+
+P0-04 overlay provenance CI 45463414756 completed/success at 39cc94bf866d61b3638b216fe6c4e45f0b77204d; artifact 14953186999 independently checked; hashes and scope in P0_04_EDGE_CASE_EVIDENCE.md. P0-04 baseline inventory closed; Phase 2 backlog retained.

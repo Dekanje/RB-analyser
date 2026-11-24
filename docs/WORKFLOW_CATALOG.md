@@ -130,3 +130,6 @@ The reviewed competitive workflow definitions explicitly reference the current r
 - [export-alpharune-snapshot.yml](../.github/workflows/export-alpharune-snapshot.yml)
 - [export-current-radiance-overlay.yml](../.github/workflows/export-current-radiance-overlay.yml)
 - [inspect-original-ornn.yml](../.github/workflows/inspect-original-ornn.yml)
+
+### P0-04 provenance (isolated candidate branch)
+- [p0-04-overlay-provenance.yml](https://github.com/Dekanje/RB-analyser/blob/39cc94bf866d61b3638b216fe6c4e45f0b77204d/.github/workflows/p0-04-overlay-provenance.yml) — pinned read-only overlay reconstruction and historical XML reconciliation, run 45463414756. No C++ build. Retain candidate ancestry.

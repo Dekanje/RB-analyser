@@ -94,3 +94,5 @@
 2026-11-24 — Started P0-04 pinned interaction evidence triage, reviewed disabled Baron placeholder and alternate enabled basic aura test.
 
 2026-11-24 — Independently accepted P0-04 triage artifact and reviewed actual named behavioral test bodies for all 37 historical questions; recorded residual test gaps and two evidenced subcases. No new native gameplay.
+
+2026-11-24 — Implemented and accepted isolated P0-04 overlay provenance audit (four Python tests, 23 overlay scripts, 96 historical test IDs); reviewed common mechanics, fixture and Baron bodies. Closed baseline inventory only; all 37 detailed interaction questions remain open.

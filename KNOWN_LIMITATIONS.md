@@ -95,3 +95,5 @@
 - P0-04 initial evidence triage pending CI. All 37 historical questions remain open; name leads do not prove interaction coverage. Disabled Baron test is an explicit skip-only placeholder; engine-backed enabled upstream test provides basic aura evidence. Wider Baron coverage remains unverified.
 
 - P0-04 triage receipt independently verified; source-level partial evidence matrix for all 37 questions. No full interaction question closed; two subcases directly evidenced. Consult Predict lacks assertion. Candidate overlay/fixture provenance and baseline-critical ruling checks pending. All 37 remain open Phase 2 backlog; no new production approval.
+
+- P0-04 baseline inventory accepted; 37/37 classified, 37 still open for Phase 2. Historical 96-test source provenance passed; no new native behavior run. Hand-built intents bypass legal-list verification; direct fixture assertions cannot certify end-to-end actions, priority, costs or interactions. Shared mechanics/Baron evidence is bounded; no production approval.

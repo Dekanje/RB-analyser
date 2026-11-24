@@ -41,3 +41,5 @@ Reuse verified format-aware candidate binary, original roster/manifest; fresh se
 Close P0-03 only as Phase 0 baseline evidence/classification work after fresh all-58 certification. All later-phase legality, comprehensive behavior, privacy and tournament production gates remain unchanged; no production authorization. Proceed P0-04 rather than broadening baseline into Phase 1/2/4 implementation.
 
 P0-04: accept triage provenance separately from behavior. Preserve all 37 historical questions; classify exact assertions, distinguish hand-play fixture/direct triggers/metadata, never close questions from test names or infer missing gameplay from missing assertions. Complete overlay and critical source checks before baseline closure.
+
+P0-04: accept reconstructed source provenance and classified baseline backlog only. Keep all 37 card interaction questions open in Phase 2; retain suppressed Baron placeholder and alternate evidence. Fixture hand play bypasses legal-action membership. Reuse historical XML only as historical evidence. Advance remaining Phase 0 work without asserting rules completeness.
