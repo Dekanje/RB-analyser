@@ -1,0 +1,34 @@
+name: P0-03 official gallery identity inventory
+on:
+  push:
+    branches: ['feature/p0-03-official-gallery']
+    paths:
+      - 'audit/official_gallery_inventory.py'
+      - 'audit/test_official_gallery_inventory.py'
+      - '.github/workflows/p0-03-official-gallery.yml'
+permissions:
+  contents: read
+  actions: read
+jobs:
+  gallery:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Gallery audit unit tests
+        run: python3 -m unittest discover -s audit -p 'test_official_gallery_inventory.py' -v
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45282108093
+          github-token: ${{ github.token }}
+          name: competitive-guidebot-rule407-verified-engine-binary
+          path: results/p003gallery/engine
+      - name: Acquire official public gallery and reconcile metadata
+        run: python3 audit/official_gallery_inventory.py --registry results/p003gallery/engine/registry.json --output results/p003gallery/report.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p0-03-official-gallery-inventory
+          path: results/p003gallery/report.json
+          if-no-files-found: warn
+          retention-days: 30
