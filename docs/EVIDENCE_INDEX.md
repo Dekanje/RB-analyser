@@ -83,3 +83,5 @@ P0-03 crosscheck CI 45382955404 artifact 14915052140; hashes and scope in galler
 P0-03 printing ledger CI 45396801069 artifact 14922335192; hashes and counts in P0_03_OFFICIAL_GALLERY.md.
 
 P0-03 errata inventory CI 45403609402 artifact 14925085962: [evidence](P0_03_ERRATA.md).
+
+Elnuk candidate native QA CI 45403995961; pending artifact acceptance. See P0_03_ERRATA.md.

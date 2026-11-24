@@ -48,3 +48,5 @@
 2026-11-24 — Printing evidence ledger accepted and integrated. 285 candidate rows, 297 references; strict non-null hash classification, cross-set/ban flags; no alias approval.
 
 2026-11-24 — P0-03 official errata heading inventory accepted; 67 entries mapped, source defects in Neeko and Elnuk identified. No native code changed.
+
+2026-11-24 — Isolated RAD-081 Elnuk errata correction and three native regression tests implemented; full rebuild/QA launched, acceptance pending.
