@@ -1,0 +1,27 @@
+name: P0-06 historical shard lineage and diversity
+on:
+  push:
+    branches: [feature/p0-06-shard-diversity]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m unittest discover -s audit -p 'test_p0_06_shard_diversity.py' -v
+      - name: Reconstruct historical lineage from pinned archives
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p results/p0_06/archives
+          for id in 14822422608 14823327101 14823665542 14822826850 14823535034 14821144074 14822547707 14822756903 14823970195 14823650727 14822896655 14823340048 14823477036 14876264231; do
+            curl --fail --silent --show-error --location --retry 2 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/artifacts/$id/zip" -o "results/p0_06/archives/$id.zip"
+          done
+          python3 audit/p0_06_shard_diversity.py --archives results/p0_06/archives --source data/optimized_58_decks.json.gz.b64 --output results/p0_06/shard_report.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: p0-06-shard-diversity
+          path: results/p0_06/shard_report.json
