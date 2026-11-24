@@ -1,0 +1,25 @@
+name: P0-06 historical optimizer selection evidence
+on:
+  push:
+    branches: [feature/p0-06-optimizer-evidence]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m unittest discover -s audit -p 'test_p0_06_optimizer_evidence.py' -v
+      - name: Download immutable selected roster aggregate
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p results/p0_06
+          curl --fail --silent --show-error --location --retry 2 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/artifacts/14823477036/zip" -o results/p0_06/source.zip
+          python3 audit/p0_06_optimizer_evidence.py --archive results/p0_06/source.zip --output results/p0_06/report.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: p0-06-optimizer-evidence
+          path: results/p0_06/report.json
