@@ -133,3 +133,5 @@ P0-04 triage CI 45461392357 completed/success, artifact 14952707499 independentl
 P0-04 overlay provenance CI 45463414756 completed/success at 39cc94bf866d61b3638b216fe6c4e45f0b77204d; artifact 14953186999 independently checked; hashes and scope in P0_04_EDGE_CASE_EVIDENCE.md. P0-04 baseline inventory closed; Phase 2 backlog retained.
 
 P0-09 candidate 5f08f952e9b1a9fe6b61afe54628b9c4c1830ec4; CI 45464663432. See P0_09_LOCAL_REPRODUCIBILITY.md for pending acceptance and local procedure.
+
+P0-09 CI 45464663432 failed before configure; correction 6432f9832b147903ec82eaa3e61e278e77c3e5df, retry 45464883262 pending acceptance.

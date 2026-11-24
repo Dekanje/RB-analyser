@@ -98,3 +98,5 @@
 2026-11-24 — Implemented and accepted isolated P0-04 overlay provenance audit (four Python tests, 23 overlay scripts, 96 historical test IDs); reviewed common mechanics, fixture and Baron bodies. Closed baseline inventory only; all 37 detailed interaction questions remain open.
 
 2026-11-24 — Implemented isolated P0-09 clean local toolchain capture, exact source/dependency pins and cross-build native replay gate; CI initiated; no new native results accepted.
+
+2026-11-24 — Fixed P0-09 shallow-checkout ancestry failure; replacement CI initiated.

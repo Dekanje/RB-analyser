@@ -16,7 +16,7 @@ sudo apt-get update
 sudo apt-get install gcc-13 g++-13 cmake ninja-build git python3 libboost-program-options-dev libboost-filesystem-dev libboost-system-dev libboost-context-dev nlohmann-json3-dev
 git clone --branch feature/p0-09-local-reproducibility https://github.com/Dekanje/RB-analyser.git rb-local-p009
 cd rb-local-p009
-git checkout --detach 5f08f952e9b1a9fe6b61afe54628b9c4c1830ec4
+git checkout --detach 6432f9832b147903ec82eaa3e61e278e77c3e5df
 python3 -m unittest discover -s audit -p 'test_p0_09_toolchain.py' -v
 RB_BUILD_JOBS=3 bash audit/p0_09_local.sh configure
 RB_BUILD_JOBS=3 bash audit/p0_09_local.sh build
@@ -26,3 +26,6 @@ For exact toolchain replay, download the accepted toolchain-lock artifact when a
 ## Limitations and next
 Initial lock captures observed installed package versions (selected compiler/runtime package families), not a fully archived/pinned apt snapshot or all transitive system packages. Exact captured lock can be supplied for fail-closed comparison on a matching host; OS, package/tool versions and flags including job cap must agree. GitHub runner is not the user's physical PC. Native cross-build trace equivalence, not bitwise-identical executable (upstream embeds build timestamp); registry and full core outcome equality required. No binary authorization, distribution or deck adoption. P0-09 remains open pending actual clean build, artifact inspection, exact package lock follow-up and local PC reproduction.
 Immediate next: inspect run 45464663432 and configuration-lock artifact; correct actual configure/build/test failures if any; independently verify the lock, native core XML and 12 planned replay receipts (two seeds × both seats × fresh/repeat/reference). Record actual toolchain/dependency versions and package replay procedure. Do not launch duplicate full builds or mass optimization.
+
+## Shallow-checkout correction
+2026-11-24: original CI 45464663432 failed before upstream clone/configure (exit 128, `fatal: bad object e1123124...`); checkout default depth one omitted pinned candidate ancestor. All five Python tests and package installation passed, no native build, no lock artifact. Corrective commit [6432f983](https://github.com/Dekanje/RB-analyser/commit/6432f9832b147903ec82eaa3e61e278e77c3e5df) sets actions/checkout fetch-depth: 0 to preserve strict source comparison. Replacement [CI 45464883262](https://github.com/Dekanje/RB-analyser/actions/runs/45464883262) observed in_progress/pending. No acceptance yet; review actual configure/lock and native results. Local full clone already contains ancestry; use corrective commit rather than initial commit. Preserve original failed run.
