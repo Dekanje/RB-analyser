@@ -22,3 +22,6 @@ Next: Phase 0. Read docs/HANDOVER.md; reconcile artifact evidence and test cover
 
 ## Repository hygiene follow-up
 2026-11-24: inspected 44 branch refs and 105 workflow paths; verified active/main divergence (839 ahead, 1 behind at pre-cleanup comparison). Added navigation, contribution policy, branch/workflow/evidence indexes and local ignore rules. No executable code or workflow modified, no branch deleted. Reviewed Swiss sensitivity script: it is a hypothetical independent Bernoulli threshold model, not a full Swiss simulator. Phase 0 remains open; next P0-01 as before, with ancestry/dependency audit prior to main consolidation.
+
+## P0-01 priority artifact audit
+2026-11-24: [audit report](docs/P0_01_ARTIFACT_AUDIT.md). Verified archive provenance, 580 compatibility receipts, 348 package hashes/deltas, native QA XML and 12 sideboard holdout shards. 1624 synergy BO3, 928 sideboard training BO3, 576 sideboard holdout BO3; older structural holdout aggregate 576 BO3. Zero confirmed upgrades in these experiments. Corrected engine Game 1 paired winner mismatch 183/696 training and 56/288 holdout. No fresh native execution. P0-01 priority scope complete; historical coverage remains bounded; Phase 0 not accepted. Next P0-02 architecture and reproducible build/dependency audit, including RNG path risk.

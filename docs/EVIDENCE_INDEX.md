@@ -38,3 +38,6 @@ Aggregate synergy artifact 14877427266 from run 45297203812 is screening only; i
 
 ## Evidence boundaries
 The historical QA report is not independent current certification. Native game completion is not proof of rules correctness; agent strength requires controlled comparisons; matchup screening is not adoption. Swiss sensitivity does not model actual pairings, draws or playoff seeding. Phase 0 must reconcile exact artifact hashes, test counts and unresolved coverage before production use.
+
+## Independently inspected priority evidence
+See [P0-01 historical artifact audit](P0_01_ARTIFACT_AUDIT.md) for hashes, recomputed receipts/statistics, limitations and disposition. No new native simulation.
