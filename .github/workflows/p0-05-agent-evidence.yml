@@ -1,0 +1,27 @@
+name: P0-05 historical agent evidence audit
+on:
+  push:
+    branches: [feature/p0-05-agent-evidence]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  historical:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m unittest discover -s audit -p 'test_p0_05_agent_evidence.py' -v
+      - name: Download pinned archives without executing historical binaries
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p results/p0_05/archives
+          for id in 14823477036 14833662301 14854411637 14839198370 14841005482 14859210516 14858910569 14858730345 14858091240 14857800869 14857665884 14855454553; do
+            curl --fail --silent --show-error --location --retry 2 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/artifacts/$id/zip" -o "results/p0_05/archives/$id.zip"
+          done
+          python3 audit/p0_05_agent_evidence.py --archives results/p0_05/archives --output results/p0_05/report.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: p0-05-historical-agent-evidence
+          path: results/p0_05/report.json
