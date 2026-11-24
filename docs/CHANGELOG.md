@@ -16,3 +16,5 @@
 2026-11-24 — P0-03 official Standard ban reconciliation: found ten absent native ban flags, mapped all 22 to compiled identities, created isolated dated profile and read-only audit. CI acceptance pending; no native changes.
 
 2026-11-24 — P0-03 Standard ban audit accepted and integrated after CI and independent artifact verification. 638 registrations scanned, zero banned-name hits; native enforcement correction remains open.
+
+2026-11-24 — P0-03R first isolated format gateway slice implemented; targeted CI started. Native receipt acceptance and tournament sideboard integration pending. Historical binary unchanged.
