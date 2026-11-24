@@ -26,3 +26,5 @@
 2026-11-24 — P0-03R slice 2 scoped acceptance and integration: 58 registration hashes, seven native vector receipts, sideboard pool and first-player results independently reconciled. No adoption.
 
 2026-11-24 — P0-03R slice 3 implemented in isolation: pinned full-roster native certification, four negative/immutability tests, explicit guarded CLI. Targeted CI launched; acceptance pending.
+
+2026-11-24 — P0-03R slice 3 original native roster run completed 58 games but Python coverage verifier failed. Independent receipt audit passed; corrected mapping-count bug, added regression, pinned receipt recheck and guarded CLI smoke. Corrective CI acceptance pending.
