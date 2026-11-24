@@ -82,3 +82,5 @@
 2026-11-24 — Accepted scoped controlled native ISMCTS search and legal-play test (6 pairs/288 worlds, 4 grants).
 
 2026-11-24 — Accepted controlled ISMCTS noninterference evidence; implemented candidate public format-aware sampling and native receipt binding, pending validation.
+
+2026-11-24 — Corrected three runtime strong-ID conversions after native compilation failure; recorded independently reconstructed public format policy counts and hashes.

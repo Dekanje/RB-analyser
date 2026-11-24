@@ -83,3 +83,5 @@
 - Controlled ISMCTS noninterference accepted in scoped six paired searches and four distinct legal-play controls (288 sampled worlds). Positive play separate synthetic snapshot; broader continuation/feature privacy, format-aware prior and all-58 fresh certification remain open. No production approval.
 
 - Format-aware sampled identity universe implemented on candidate branch; native results pending. Heuristic prior and existing copy-limit/known placement fallbacks, broader privacy, official completeness, all-58 certification and production migration remain unresolved. Historical approved engine unchanged.
+
+- Format-aware candidate builds failed on runtime StrongId construction before native testing. Parser and native assertions corrected; retry CI 45454720801 pending. Static public allowlist expectations 1091/1067, not native certification.
