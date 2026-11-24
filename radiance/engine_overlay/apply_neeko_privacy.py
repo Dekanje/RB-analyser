@@ -93,7 +93,7 @@ def apply(root):
     old="""        RIFT_TRACE(ctx.events, "MODE_PICKED: " + label + " = mode#" +
                              std::to_string(m) +
                              (m < static_cast<int>(mode_labels.size())
-                                 ? " (" + mode_labels[m] + ")" : ""));"""
+                                ? " (" + mode_labels[m] + ")" : ""));"""
     new="""        if(label=="Neeko: choose a legend"){
             RIFT_TRACE_PRIVATE(ctx.events,ctx.controller,"MODE_PICKED: " + label + " = mode#" +
                              std::to_string(m) +
@@ -156,6 +156,34 @@ TEST_F(RadianceFinal64Test, PrivacyNeekoObservationHidesOpponentPoolButIncludesO
  variant.player(P1).neeko_legend_choices={CardDefId{252},CardDefId{254},CardDefId{256}};
  EXPECT_EQ(ObserverView(state,P2,card_db).fingerprint(),ObserverView(variant,P2,card_db).fingerprint());
  EXPECT_NE(ObserverView(state,P1,card_db).fingerprint(),ObserverView(variant,P1,card_db).fingerprint());
+}
+TEST_F(RadianceFinal64Test, PrivacyNeekoModeTraceIsControllerOnlyBothSeats){
+ for(auto controller:{P1,P2}){
+   const auto other=opponent(controller);
+   state.player(controller).neeko_legend_choices={CardDefId{249},CardDefId{252},CardDefId{254}};
+   auto source=addUnit(controller,CardDefId{1131},4,0);
+   std::vector<LogEvent> trace;
+   auto connection=events.on_log.connect([&](const LogEvent& log){trace.push_back(log);});
+   fireTriggerThroughEngine(source,TriggerType::WhenYouPlayMe);
+   connection.disconnect();
+   ASSERT_EQ(state.player(controller).neeko_granted_legends.size(),1u);
+   int prompts=0,picks=0;
+   for(const auto& log:trace){
+      bool prompt=log.message.find("MODE_PROMPT: Neeko: choose a legend")!=std::string::npos;
+      bool pick=log.message.find("MODE_PICKED: Neeko: choose a legend")!=std::string::npos;
+      if(!prompt && !pick)continue;
+      prompts+=prompt;picks+=pick;
+      EXPECT_TRUE(log.visibleTo(controller));
+      EXPECT_FALSE(log.visibleTo(other));
+      EXPECT_FALSE(log.isPublic());
+      if(prompt){
+         for(auto id:state.player(controller).neeko_legend_choices)
+             EXPECT_NE(log.message.find(card_db.get(id).name),std::string::npos);
+      }
+   }
+   EXPECT_EQ(prompts,1);
+   EXPECT_EQ(picks,1);
+ }
 }
 """
     p.write_text(once(s,marker,tests+"\n"+marker))
