@@ -1,0 +1,31 @@
+name: P0-03 dated official errata inventory
+on:
+  push:
+    branches: [feature/p0-03-errata-inventory]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m unittest discover -s audit -p 'test_errata_inventory.py' -v
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45282108093
+          github-token: ${{ github.token }}
+          name: competitive-guidebot-rule407-verified-engine-binary
+          path: results/engine
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45282108093
+          github-token: ${{ github.token }}
+          name: competitive-guidebot-rule407-compiled-qa-evidence
+          path: results/qa
+      - run: python3 audit/errata_inventory.py --registry results/engine/registry.json --xml results/qa/all_tests.xml --index audit/data/official_errata_index_2026-11-24.json --output results/errata.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: official-errata-inventory
+          path: results/errata.json
