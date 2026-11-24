@@ -54,3 +54,5 @@
 2026-11-24 — RAD-081 target correction accepted within three native regression scenarios; 3919 enabled full suite tests passed. Candidate engine not authorized.
 
 2026-11-24 — Elnuk additional hidden-play/recycling and source-removal native regressions implemented in isolation; acceptance pending.
+
+2026-11-24 — Elnuk follow-up six focused tests and 3922 enabled native tests accepted; no gameplay source change in follow-up.

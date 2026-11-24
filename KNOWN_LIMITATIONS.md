@@ -55,3 +55,5 @@
 - RAD-081 target-selection correction accepted in candidate build (3/3 focused, 3919 enabled full suite). Candidate is not yet authorized by approved gateway. Face-down recycling and source-removal interactions still open. Historical binary remains immutable.
 
 - RAD-081 follow-up interaction tests written, native results pending. Hidden play uses prehidden fixture (not initial Hide payment or full legal-action gate); removal fixture queues trigger and kills source directly, not a full response sequence. Approved binary still unchanged.
+
+- RAD-081 follow-up accepted within six native scenarios; hidden payment and full response sequence remain outside scope. No candidate binary authorization; build hashes differ despite identical registry and unchanged gameplay source in follow-up.

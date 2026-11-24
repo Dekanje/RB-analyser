@@ -89,3 +89,5 @@ Elnuk candidate native QA CI 45403995961; pending artifact acceptance. See P0_03
 RAD-081 target correction scoped acceptance: CI 45403995961 artifacts 14925581330 and 14926435438; hashes in P0_03_ERRATA.md.
 
 RAD-081 follow-up commit 616f24ec9e73d6057b23665781f96a9fc9fb7897; CI 45406368094 observed in_progress/pending.
+
+RAD-081 follow-up CI 45406368094 artifacts 14926203012 and 14925843467; hashes in P0_03_ERRATA.md.
